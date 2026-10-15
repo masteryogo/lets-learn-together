@@ -1,5 +1,12 @@
 # lets-learn-together
 
+<img src="logo/icon-512.png" alt="" width="110">
+
+Roadmaps de estudo em português, com prioridade, critério de conclusão e
+progresso salvo no navegador.
+
+**→ [Abrir o roadmap](https://masteryogo.github.io/lets-learn-together/)**
+
 ## Para quem é
 
 - Quem está **migrando para a área** e precisa de um norte.
@@ -18,6 +25,10 @@ Seu progresso fica salvo no próprio navegador, via `localStorage`. Sem conta,
 sem servidor, sem ninguém medindo o seu ritmo.
 
 ## Rodando
+
+O site publicado está em
+[masteryogo.github.io/lets-learn-together](https://masteryogo.github.io/lets-learn-together/)
+— rodar local só é necessário para desenvolver.
 
 Sem build, sem dependência, sem `npm install`. Abra o `index.html` no navegador,
 ou sirva a pasta:
