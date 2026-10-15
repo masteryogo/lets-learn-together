@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="pt-BR" data-tema="claro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Roadmap de estudos</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ============================ cabeçalho ============================ -->
+  <header class="topo">
+    <div class="topo__faixa">
+      <div class="topo__identidade">
+        <h1 id="titulo"></h1>
+        <p id="subtitulo" class="topo__sub"></p>
+      </div>
+
+      <div class="topo__acoes">
+        <select id="trilha" class="seletor" aria-label="Trilha"></select>
+        <input id="busca" class="busca" type="search"
+               placeholder="Buscar tópico…" aria-label="Buscar tópico"
+               autocomplete="off">
+        <button id="btn-tema" class="botao botao--icone" type="button"
+                title="Alternar tema" aria-label="Alternar tema">◐</button>
+        <button id="btn-reset" class="botao" type="button">Zerar progresso</button>
+      </div>
+    </div>
+
+    <div class="progresso">
+      <div class="progresso__barra" role="progressbar"
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+           aria-label="Progresso total do roadmap">
+        <span id="progresso-preenchido" class="progresso__preenchido"></span>
+      </div>
+      <p id="progresso-texto" class="progresso__texto">0 de 0 tópicos concluídos</p>
+    </div>
+
+    <div class="legenda">
+      <div class="legenda__grupo" id="legenda-prioridade"></div>
+      <p class="legenda__dica">
+        <strong>Clique</strong> cicla o estado · <strong>Shift + clique</strong> abre o detalhe
+      </p>
+    </div>
+  </header>
+
+  <!-- ============================ roadmap ============================ -->
+  <main class="mapa" id="mapa" aria-label="Roadmap de estudos">
+    <!-- preenchido por app.js -->
+  </main>
+
+  <footer class="rodape">
+    <div class="rodape__linha">
+      <p class="rodape__credito">
+        <span class="rodape__label">Feito por</span>
+        <a class="rodape__chip" href="https://github.com/masteryogo"
+           target="_blank" rel="noopener noreferrer">@masteryogo</a>
+      </p>
+      <button type="button" class="botao botao--destaque" id="contribuir">Contribuir</button>
+    </div>
+    <p class="rodape__nota">
+      Progresso salvo apenas neste navegador, via <code>localStorage</code>.
+    </p>
+  </footer>
+
+  <!-- ============================ drawer ============================ -->
+  <div id="sobreposicao" class="sobreposicao" hidden></div>
+
+  <aside id="drawer" class="drawer" role="dialog" aria-modal="true"
+         aria-labelledby="drawer-titulo" hidden>
+    <div class="drawer__topo">
+      <span id="drawer-etiqueta" class="etiqueta"></span>
+      <button id="drawer-fechar" class="botao botao--icone" type="button"
+              aria-label="Fechar painel">✕</button>
+    </div>
+
+    <h2 id="drawer-titulo"></h2>
+    <p id="drawer-trilha" class="drawer__trilha"></p>
+    <p id="drawer-desc" class="drawer__desc"></p>
+    <div id="drawer-detalhe" class="drawer__detalhe"></div>
+
+    <section class="drawer__secao" id="drawer-secao-grupo" hidden>
+      <h3 id="drawer-grupo-titulo"></h3>
+      <p id="drawer-grupo-desc" class="drawer__nota"></p>
+    </section>
+
+    <section class="drawer__secao" id="drawer-secao-estados">
+      <h3>Marcar como</h3>
+      <div id="drawer-estados" class="drawer__estados"></div>
+    </section>
+
+    <section class="drawer__secao" id="drawer-secao-criterios" hidden>
+      <h3>Marque como feito quando</h3>
+      <ul id="drawer-criterios" class="lista"></ul>
+    </section>
+
+    <section class="drawer__secao" id="drawer-secao-recursos" hidden>
+      <h3>Recursos da etapa</h3>
+      <ul id="drawer-recursos" class="lista"></ul>
+    </section>
+
+    <section class="drawer__secao" id="drawer-secao-projetos" hidden>
+      <h3>Projetos sugeridos</h3>
+      <ul id="drawer-projetos" class="lista"></ul>
+    </section>
+  </aside>
+
+  <!-- trilhas.js lê ?trilha= da URL, injeta os dados daquela trilha
+       e, por último, o app.js. O manifesto fica dentro dele. -->
+  <script src="trilhas.js"></script>
+</body>
+</html>

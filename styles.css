@@ -1,0 +1,703 @@
+/* ============================================================
+   Roadmap de Machine Learning — estilos
+   Visual inspirado em roadmap.sh: espinha vertical central,
+   nós com borda dura e sombra deslocada, ramos laterais.
+   ============================================================ */
+
+/* ----------------------------- tokens ----------------------------- */
+:root {
+  color-scheme: light;
+  --fundo:            #f8f7f4;
+  --fundo-elevado:    #ffffff;
+  --texto:            #15141a;
+  --texto-suave:      #65636d;
+  --linha:            #15141a;
+  --borda-sutil:      #dedbd4;
+
+  --amarelo:          #ffe599;
+  --amarelo-forte:    #f5c518;
+  --roxo:             #cfc3ff;
+  --roxo-forte:       #7c5cf0;
+  --cinza:            #ebe9e4;
+  --verde:            #b7e4c7;
+  --verde-forte:      #2d8a4e;
+
+  --raio:             6px;
+  --mono:             "SF Mono", "Cascadia Code", Consolas, "Liberation Mono", monospace;
+  --sombra-dura:      3px 3px 0 var(--linha);
+  --sombra-dura-sm:   2px 2px 0 var(--linha);
+
+  --largura-max:      1180px;
+  --col-centro:       260px;
+}
+
+:root[data-tema="escuro"] {
+  color-scheme: dark;
+  --fundo:            #16151a;
+  --fundo-elevado:    #201f26;
+  --texto:            #f1efe9;
+  --texto-suave:      #a09daa;
+  --linha:            #6b6878;
+  --borda-sutil:      #343240;
+
+  --amarelo:          #6b5a1f;
+  --amarelo-forte:    #f5c518;
+  --roxo:             #3f3470;
+  --roxo-forte:       #a78bfa;
+  --cinza:            #2c2a34;
+  --verde:            #1f4a33;
+  --verde-forte:      #5ddb94;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 0 4rem;
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+               Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ----------------------------- topo ----------------------------- */
+.topo {
+  max-width: var(--largura-max);
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 1.5rem;
+}
+
+.topo__faixa {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.topo h1 {
+  margin: 0;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  letter-spacing: -0.02em;
+}
+
+.topo__sub {
+  margin: 0.25rem 0 0;
+  color: var(--texto-suave);
+}
+
+.topo__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.botao {
+  font: inherit;
+  font-size: 0.8125rem;
+  padding: 0.4rem 0.75rem;
+  background: var(--fundo-elevado);
+  color: var(--texto);
+  border: 1.5px solid var(--linha);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-dura-sm);
+  cursor: pointer;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.botao:hover { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--linha); }
+.botao:active { transform: translate(2px, 2px); box-shadow: none; }
+
+.botao--icone { width: 2rem; padding: 0.4rem 0; text-align: center; }
+
+.busca {
+  font: inherit;
+  font-size: 0.8125rem;
+  width: 12rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--fundo-elevado);
+  color: var(--texto);
+  border: 1.5px solid var(--linha);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-dura-sm);
+}
+
+.busca::placeholder { color: var(--texto-suave); }
+.busca:focus { outline: 2px solid var(--roxo-forte); outline-offset: 1px; }
+
+/* seletor de trilha — mesma caixa dos botões, com seta própria: a
+   seta nativa é desenhada pelo sistema e destoa da borda dura. */
+.seletor {
+  font: inherit;
+  font-size: 0.8125rem;
+  width: 11rem;
+  padding: 0.4rem 1.7rem 0.4rem 0.6rem;   /* folga à direita p/ a seta */
+  background-color: var(--fundo-elevado);
+  color: var(--texto);
+  border: 1.5px solid var(--linha);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-dura-sm);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  text-overflow: ellipsis;
+  transition: transform 0.08s, box-shadow 0.08s;
+
+  /* chevron em dois triângulos de gradiente. Usa currentColor, então
+     acompanha o tema sem precisar de um ícone por tema. */
+  background-image:
+    linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-size: 5px 5px;
+  background-position:
+    calc(100% - 1.05rem) calc(50% - 1px),
+    calc(100% - 0.7rem)  calc(50% - 1px);
+  background-repeat: no-repeat;
+}
+
+/* mesma micro-interação dos botões: afunda na direção da sombra */
+.seletor:hover  { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--linha); }
+.seletor:active { transform: translate(2px, 2px); box-shadow: none; }
+.seletor:focus { outline: 2px solid var(--roxo-forte); outline-offset: 1px; }
+
+.seletor option { background: var(--fundo-elevado); color: var(--texto); }
+
+/* Chrome/Edge 134+: o popup do seletor passa a ser desenhado na própria
+   página, então aceita o mesmo visual do resto. Onde não houver suporte,
+   tudo acima continua valendo — o popup fica a cargo do color-scheme. */
+@supports (appearance: base-select) {
+  .seletor,
+  .seletor::picker(select) { appearance: base-select; }
+
+  .seletor {
+    background-image: none;   /* o chevron passa a ser ::picker-icon */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.4rem 0.6rem;   /* sem a folga do chevron de gradiente */
+
+    /* base-select torna o campo um flex container, e o rótulo longo
+       passaria a quebrar em duas linhas em vez de cortar com reticências */
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .seletor::picker-icon {
+    flex: none;
+    color: var(--texto-suave);
+    transition: transform 0.15s ease;
+  }
+  .seletor:open::picker-icon { transform: rotate(180deg); }
+
+  .seletor::picker(select) {
+    background: var(--fundo-elevado);
+    border: 1.5px solid var(--linha);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra-dura);   /* a sombra 3px dos nós do mapa */
+    padding: 0.25rem;
+    margin-top: 0.35rem;
+  }
+
+  .seletor option {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8125rem;
+    cursor: pointer;
+  }
+
+  .seletor option:hover,
+  .seletor option:focus { background: var(--cinza); outline: none; }
+
+  .seletor option:checked { background: var(--amarelo); font-weight: 600; }
+  .seletor option::checkmark { color: var(--texto-suave); }
+}
+
+/* trechos de código no painel — vem de `crase` nos dados */
+.drawer code {
+  font-family: var(--mono);
+  font-size: 0.85em;           /* em, não rem: acompanha o tamanho do pai */
+  padding: 0.08em 0.22em;      /* lateral curto: o vizinho costuma ser pontuação */
+  background: var(--cinza);
+  color: var(--texto);
+  border: 1px solid var(--borda-sutil);
+  border-radius: 4px;
+
+  /* quebra só quando o trecho não cabe: identificadores curtos, que
+     são a maioria, continuam inteiros. box-decoration-break faz a
+     borda e o padding fecharem nos dois pedaços do que quebrou. */
+  overflow-wrap: break-word;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* --------------------------- progresso --------------------------- */
+.progresso { margin-top: 1.5rem; }
+
+.progresso__barra {
+  height: 10px;
+  background: var(--cinza);
+  border: 1.5px solid var(--linha);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progresso__preenchido {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--verde-forte);
+  transition: width 0.25s ease;
+}
+
+.progresso__texto {
+  margin: 0.4rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--texto-suave);
+}
+
+/* ---------------------------- legenda ---------------------------- */
+.legenda {
+  margin-top: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.legenda__grupo { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+.legenda__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8125rem;
+  color: var(--texto-suave);
+}
+
+.legenda__amostra {
+  width: 1.5rem;
+  height: 0.9rem;
+  border-radius: 3px;
+  border: 1.5px solid var(--linha);
+}
+
+.legenda__amostra[data-prioridade="fundamental"] { background: var(--amarelo); }
+.legenda__amostra[data-prioridade="importante"]   { background: var(--roxo); }
+.legenda__amostra[data-prioridade="opcional"]     { background: var(--cinza); border-style: dashed; }
+
+.legenda__dica { margin: 0; font-size: 0.8125rem; color: var(--texto-suave); }
+
+/* ----------------------------- mapa ----------------------------- */
+.mapa {
+  position: relative;
+  max-width: var(--largura-max);
+  margin: 2.5rem auto 0;
+  padding: 0 1.5rem;
+}
+
+/* espinha vertical central */
+.mapa::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 3rem;
+  left: 50%;
+  width: 0;
+  border-left: 2.5px dashed var(--linha);
+  opacity: 0.45;
+  z-index: 0;
+}
+
+/* ----------------------------- etapa ----------------------------- */
+.etapa {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr var(--col-centro) 1fr;
+  align-items: start;
+  column-gap: 2.5rem;
+  margin-bottom: 3.5rem;
+}
+
+/* nó central da etapa — é um <button>, abre a introdução da etapa */
+.etapa__nucleo {
+  grid-column: 2;
+  grid-row: 1;
+  position: sticky;
+  top: 1rem;
+  width: 100%;
+  font: inherit;
+  color: var(--texto);
+  background: var(--amarelo);
+  border: 2px solid var(--linha);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-dura);
+  padding: 0.85rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.etapa__nucleo:hover { transform: translate(1px, 1px); box-shadow: 2px 2px 0 var(--linha); }
+.etapa__nucleo:active { transform: translate(3px, 3px); box-shadow: none; }
+.etapa__nucleo:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: 3px; }
+
+.etapa__numero {
+  display: block;
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.etapa__titulo {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.etapa__meta {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--texto-suave);
+}
+
+.etapa__anel {
+  display: block;
+  margin-top: 0.6rem;
+  height: 5px;
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.etapa__anel span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--verde-forte);
+  transition: width 0.25s ease;
+}
+
+/* ----------------------------- ramos ----------------------------- */
+.ramo { grid-row: 1; display: flex; flex-direction: column; gap: 1.5rem; }
+.ramo--esq { grid-column: 1; align-items: flex-end; text-align: right; }
+.ramo--dir { grid-column: 3; align-items: flex-start; }
+
+.grupo { position: relative; max-width: 24rem; width: 100%; }
+
+.grupo__titulo {
+  margin: 0 0 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.grupo__duracao {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.8;
+}
+
+.grupo__topicos { display: flex; flex-direction: column; gap: 0.4rem; }
+.ramo--esq .grupo__topicos { align-items: flex-end; }
+
+/* conector tracejado do grupo até a espinha */
+.grupo::after {
+  content: "";
+  position: absolute;
+  top: 0.55rem;
+  width: 2.5rem;
+  border-top: 2px dashed var(--linha);
+  opacity: 0.45;
+}
+.ramo--esq .grupo::after { right: -2.5rem; }
+.ramo--dir .grupo::after { left: -2.5rem; }
+
+/* ---------------------------- tópico ---------------------------- */
+.topico {
+  font: inherit;
+  font-size: 0.8125rem;
+  text-align: inherit;
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.42rem 0.7rem;
+  border: 1.5px solid var(--linha);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-dura-sm);
+  background: var(--cinza);
+  color: var(--texto);
+  cursor: pointer;
+  transition: transform 0.08s, box-shadow 0.08s, background 0.15s, opacity 0.15s;
+}
+
+.topico:hover { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--linha); }
+.topico:active { transform: translate(2px, 2px); box-shadow: none; }
+.topico:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: 2px; }
+
+/* prioridade define a cor de repouso */
+.topico[data-prioridade="fundamental"] { background: var(--amarelo); }
+.topico[data-prioridade="importante"]   { background: var(--roxo); }
+.topico[data-prioridade="opcional"]     { background: var(--cinza); border-style: dashed; }
+
+/* estado sobrescreve */
+.topico[data-estado="feito"] {
+  background: var(--verde);
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+
+.topico[data-estado="estudando"] {
+  background: var(--fundo-elevado);
+  border-color: var(--roxo-forte);
+  border-width: 2px;
+  box-shadow: 2px 2px 0 var(--roxo-forte);
+}
+
+.topico[data-estado="pulado"] {
+  opacity: 0.4;
+  text-decoration: line-through;
+  box-shadow: none;
+}
+
+.topico__marca {
+  display: inline-block;
+  width: 1rem;
+  font-weight: 700;
+  color: var(--verde-forte);
+}
+
+/* busca: o que não bate some do fluxo, mantendo o mapa compacto */
+.topico[data-oculto] { display: none; }
+
+/* durante a busca, grupos sem nenhum resultado colapsam o título */
+.mapa[data-filtrando] .grupo:not(:has(.topico:not([data-oculto]))) { display: none; }
+.mapa[data-filtrando] .grupo::after { display: none; }
+
+.topico[data-estado="estudando"] .topico__marca { color: var(--roxo-forte); }
+.topico[data-estado="pulado"] .topico__marca    { color: var(--texto-suave); }
+
+/* ---------------------------- rodapé ---------------------------- */
+.rodape {
+  max-width: var(--largura-max);
+  margin: 3rem auto 0;
+  padding: 1.5rem;
+  border-top: 1.5px solid var(--borda-sutil);
+  font-size: 0.8125rem;
+  color: var(--texto-suave);
+  text-align: center;
+}
+
+.rodape a { color: var(--roxo-forte); }
+.rodape__nota { margin-bottom: 0; }
+
+.rodape__linha {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.rodape__credito {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+}
+
+.rodape__label { color: var(--texto-suave); }
+
+.rodape a.rodape__chip {
+  padding: 0.2rem 0.6rem;
+  background: var(--roxo-forte);
+  color: #15141a;
+  border: 1.5px solid var(--linha);
+  border-radius: 999px;
+  box-shadow: var(--sombra-dura-sm);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.rodape a.rodape__chip:hover { transform: translate(1px, 1px); box-shadow: none; }
+
+.botao--destaque {
+  font-weight: 700;
+  padding: 0.5rem 1.1rem;
+  background: var(--roxo-forte);
+  color: #15141a;
+  box-shadow: var(--sombra-dura);
+}
+
+.botao--destaque:hover { box-shadow: var(--sombra-dura-sm); }
+
+/* ---------------------------- drawer ---------------------------- */
+.sobreposicao {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 40;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 50;
+  width: min(26rem, 100vw);
+  height: 100vh;
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem 3rem;
+  background: var(--fundo-elevado);
+  border-left: 2px solid var(--linha);
+  animation: entrar 0.18s ease-out;
+}
+
+@keyframes entrar { from { transform: translateX(100%); } to { transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer { animation: none; }
+  * { transition-duration: 0.01ms !important; }
+}
+
+.drawer__topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.etiqueta {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border: 1.5px solid var(--linha);
+  border-radius: 999px;
+}
+
+.etiqueta[data-prioridade="fundamental"] { background: var(--amarelo); }
+.etiqueta[data-prioridade="importante"]   { background: var(--roxo); }
+.etiqueta[data-prioridade="opcional"]     { background: var(--cinza); }
+
+.drawer h2 { margin: 0; font-size: 1.375rem; letter-spacing: -0.01em; }
+
+.drawer__trilha {
+  margin: 0.3rem 0 0;
+  font-size: 0.75rem;
+  color: var(--texto-suave);
+}
+
+/* linha curta do checklist — o "o quê", para revisão rápida */
+.drawer__desc {
+  margin: 0.9rem 0 0;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+/* explicação longa — o "por quê" */
+.drawer__detalhe {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1.5px solid var(--borda-sutil);
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--texto);
+}
+
+.drawer__detalhe p { margin: 0 0 0.85rem; }
+.drawer__detalhe p:last-child { margin-bottom: 0; }
+
+.drawer__nota {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--texto-suave);
+}
+
+.drawer__secao { margin-top: 1.75rem; }
+
+.drawer__secao h3 {
+  margin: 0 0 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.drawer__estados { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+.estado-btn {
+  font: inherit;
+  font-size: 0.8125rem;
+  padding: 0.35rem 0.7rem;
+  background: var(--fundo);
+  color: var(--texto);
+  border: 1.5px solid var(--linha);
+  border-radius: var(--raio);
+  cursor: pointer;
+}
+
+.estado-btn[aria-pressed="true"] {
+  background: var(--verde);
+  box-shadow: var(--sombra-dura-sm);
+  font-weight: 600;
+}
+
+.lista { margin: 0; padding-left: 1.1rem; }
+.lista li { margin-bottom: 0.5rem; line-height: 1.55; }
+.lista a { color: var(--roxo-forte); }
+.lista__nota { color: var(--texto-suave); }
+
+/* o drawer fica mais largo porque agora carrega texto de leitura */
+.drawer { width: min(32rem, 100vw); }
+
+/* ---------------------------- responsivo ---------------------------- */
+@media (max-width: 900px) {
+  .mapa::before { left: 1.5rem; }
+
+  .etapa {
+    grid-template-columns: 1fr;
+    row-gap: 1.25rem;
+    padding-left: 2.5rem;
+  }
+
+  .etapa__nucleo,
+  .ramo--esq,
+  .ramo--dir { grid-column: 1; grid-row: auto; }
+
+  .etapa__nucleo { position: static; text-align: left; }
+
+  .ramo--esq { align-items: flex-start; text-align: left; }
+  .ramo--esq .grupo__topicos { align-items: flex-start; }
+
+  .grupo { max-width: none; }
+  .grupo::after { display: none; }
+
+  /* a barra de ações quebra em duas linhas e a busca ocupa a sobra,
+     em vez de empurrar a página para fora da tela */
+  .topo__acoes { justify-content: flex-start; width: 100%; }
+  .busca { flex: 1 1 8rem; width: auto; min-width: 0; }
+  .seletor { flex: 1 1 10rem; min-width: 0; }
+}
