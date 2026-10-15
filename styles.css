@@ -99,6 +99,8 @@ body {
 .botao {
   font: inherit;
   font-size: 0.8125rem;
+  display: inline-block;
+  text-decoration: none;
   padding: 0.4rem 0.75rem;
   background: var(--fundo-elevado);
   color: var(--texto);
@@ -503,7 +505,6 @@ body {
   text-align: center;
 }
 
-.rodape a { color: var(--roxo-forte); }
 .rodape__nota { margin-bottom: 0; }
 
 .rodape__linha {
@@ -526,7 +527,7 @@ body {
 
 .rodape__label { color: var(--texto-suave); }
 
-.rodape a.rodape__chip {
+.rodape__chip {
   padding: 0.2rem 0.6rem;
   background: var(--roxo-forte);
   color: #15141a;
@@ -537,7 +538,7 @@ body {
   font-weight: 600;
 }
 
-.rodape a.rodape__chip:hover { transform: translate(1px, 1px); box-shadow: none; }
+.rodape__chip:hover { transform: translate(1px, 1px); box-shadow: none; }
 
 .botao--destaque {
   font-weight: 700;
