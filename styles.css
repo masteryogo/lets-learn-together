@@ -78,6 +78,53 @@ body {
   flex-wrap: wrap;
 }
 
+.topo__identidade {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.topo__logo {
+  flex-shrink: 0;
+  display: block;
+  animation: flutuar 3.4s ease-in-out infinite;
+}
+
+.topo__logo svg {
+  display: block;
+  width: clamp(7rem, 13vw, 11rem);
+  height: auto;
+}
+
+/* piscada: pausa longa, dois fechamentos rapidos em sequencia */
+.logo__olho {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: piscar 5.2s ease-in-out infinite;
+}
+
+/* brilho so aparece no hover, recortado pela forma do visor */
+.logo__brilho { opacity: 0; }
+.topo__logo:hover .logo__brilho { animation: varrer 0.75s ease-out; }
+
+@keyframes flutuar {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+
+@keyframes piscar {
+  0%, 88%, 100% { transform: scaleY(1); }
+  90%, 92%      { transform: scaleY(0.1); }
+  94%           { transform: scaleY(1); }
+  96%, 97%      { transform: scaleY(0.1); }
+  99%           { transform: scaleY(1); }
+}
+
+@keyframes varrer {
+  from { opacity: 0.5; transform: skewX(-18deg) translateX(0); }
+  to   { opacity: 0.5; transform: skewX(-18deg) translateX(620px); }
+}
+
 .topo h1 {
   margin: 0;
   font-size: clamp(1.75rem, 4vw, 2.5rem);
@@ -576,6 +623,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .drawer { animation: none; }
+  .topo__logo,
+  .logo__olho { animation: none; }
   * { transition-duration: 0.01ms !important; }
 }
 
