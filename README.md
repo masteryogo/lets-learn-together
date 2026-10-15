@@ -42,10 +42,15 @@ Troque de trilha pelo seletor no topo ou pela URL: `?trilha=ml` (padrão),
 
 ## Usando o mapa
 
-- **Clique** em um tópico cicla o estado dele (não iniciado → em andamento →
-  concluído).
-- **Shift + clique** abre o painel lateral com a explicação completa, os
-  critérios, os recursos e os projetos daquela etapa.
+- **Clique** (ou toque) em um tópico cicla o estado dele:
+  Pendente → Estudando → Feito → Pulado → Pendente.
+- Para abrir o painel lateral com a explicação completa, os critérios, os
+  recursos e os projetos:
+  - no **computador**, `Shift + clique` no tópico — ou clique com o botão
+    direito;
+  - no **celular ou tablet**, toque no **ⓘ** dentro do tópico.
+- **Clique no cartão da etapa** abre a introdução dela.
+- No celular, o painel fecha pelo **✕** ou arrastando para a direita.
 - A barra no topo acompanha o progresso da trilha inteira.
 - Há busca por tópico e alternância entre tema claro e escuro.
 
