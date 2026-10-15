@@ -5,10 +5,6 @@
    Mesmo esquema da trilha de ML. A diferença estrutural é que
    aqui cada etapa traz seus próprios `criterios` (o "Critério
    de domínio" de cada iteração), em vez dos critérios globais.
-
-   Alguns tópicos trazem `inicial: "feito"`: são os itens que já
-   estavam marcados `- [x]` no Markdown de origem. O app usa isso
-   só na primeira visita, quando ainda não há nada no localStorage.
    ============================================================ */
 
 const ROADMAP_ETAPAS = [];

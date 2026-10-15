@@ -29,7 +29,6 @@
   /* índice id -> { topico, etapa, grupo } para o drawer e o progresso */
   var INDICE = {};
 
-  var tinhaProgresso = false;
   var progresso = carregarProgresso();
   var aberto = null; /* { tipo: "topico" | "etapa", id } */
 
@@ -44,7 +43,6 @@
         /* adota o progresso salvo antes de existirem trilhas */
         bruto = window.localStorage.getItem(CHAVE_LEGADA);
       }
-      tinhaProgresso = !!bruto;
       return bruto ? JSON.parse(bruto) : {};
     } catch (e) {
       return {};
@@ -98,26 +96,7 @@
     });
   }
 
-  /* primeira visita: adota o estado que o Markdown de origem já
-     trazia marcado (tópicos com `inicial`). Só roda quando não há
-     nada salvo, para nunca sobrescrever progresso do usuário. */
-  function semearProgresso() {
-    var mudou = false;
-    ROADMAP.etapas.forEach(function (etapa) {
-      etapa.grupos.forEach(function (grupo) {
-        grupo.topicos.forEach(function (t) {
-          if (t.inicial) {
-            progresso[t.id] = t.inicial;
-            mudou = true;
-          }
-        });
-      });
-    });
-    if (mudou) salvarProgresso();
-  }
-
   function montar() {
-    if (!tinhaProgresso) semearProgresso();
     document.title = "Roadmap de " + ROADMAP.titulo;
     montarSeletorTrilha();
     document.getElementById("titulo").textContent = ROADMAP.titulo;
