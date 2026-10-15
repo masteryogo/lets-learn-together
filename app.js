@@ -15,6 +15,17 @@
   var CICLO = ["pendente", "estudando", "feito", "pulado"];
   var MARCAS = { pendente: "", estudando: "◔", feito: "✓", pulado: "–" };
 
+  /* arraste para fechar o painel */
+  var INICIO_ARRASTO = 8;     /* px antes de decidir o eixo do gesto */
+  var FRACAO_FECHAR = 0.3;    /* fração da largura que confirma o fechamento */
+  var DURACAO_AJUSTE = 200;   /* ms do ajuste final — igual ao CSS */
+
+  /* o gesto de ler o detalhe muda com o aparelho; resolvido uma vez só */
+  var DICA_LER = (window.matchMedia &&
+                  window.matchMedia("(pointer: coarse)").matches)
+    ? "toque no ⓘ para ler"
+    : "shift + clique para ler";
+
   /* índice id -> { topico, etapa, grupo } para o drawer e o progresso */
   var INDICE = {};
 
@@ -113,6 +124,7 @@
     document.getElementById("subtitulo").textContent = ROADMAP.subtitulo;
 
     montarLegenda();
+    montarDica();
 
     var mapa = document.getElementById("mapa");
     ROADMAP.etapas.forEach(function (etapa) {
@@ -137,6 +149,30 @@
       el.appendChild(amostra);
       el.appendChild(document.createTextNode(item.rotulo));
       alvo.appendChild(el);
+    });
+  }
+
+  /* ------------------------------------------------------------
+     dica da legenda — o gesto anunciado tem que ser o gesto que o
+     aparelho tem. `pointer: coarse` descreve o ponteiro primário,
+     que é o dedo em celular e tablet. Montada em nós, não em
+     innerHTML, pela mesma razão de escreverComCodigo().
+     ------------------------------------------------------------ */
+  function montarDica() {
+    var toque = window.matchMedia &&
+                window.matchMedia("(pointer: coarse)").matches;
+
+    var alvo = document.getElementById("legenda-dica");
+    alvo.textContent = "";
+
+    (toque
+      ? [["Toque", " cicla o estado · "], ["ⓘ", " abre o detalhe"]]
+      : [["Clique", " cicla o estado · "], ["Shift + clique", " abre o detalhe"]]
+    ).forEach(function (par) {
+      var forte = document.createElement("strong");
+      forte.textContent = par[0];
+      alvo.appendChild(forte);
+      alvo.appendChild(document.createTextNode(par[1]));
     });
   }
 
@@ -278,6 +314,12 @@
   }
 
   function criarTopico(topico) {
+    /* o ⓘ não pode morar dentro do tópico: button dentro de button é
+       HTML inválido. Os dois viram irmãos num invólucro, que passa a
+       ser o item da lista no lugar do botão. */
+    var par = document.createElement("div");
+    par.className = "topico-par";
+
     var botao = document.createElement("button");
     botao.type = "button";
     botao.className = "topico";
@@ -303,8 +345,19 @@
       abrirTopico(topico.id);
     });
 
+    var info = document.createElement("button");
+    info.type = "button";
+    info.className = "topico__info";
+    info.textContent = "ⓘ";
+    info.title = "Ler o detalhe de " + topico.titulo;
+    info.setAttribute("aria-label", "Detalhe de " + topico.titulo);
+    info.addEventListener("click", function () { abrirTopico(topico.id); });
+
+    par.appendChild(botao);
+    par.appendChild(info);
+
     aplicarEstado(botao, estadoDe(topico.id), topico.titulo);
-    return botao;
+    return par;
   }
 
   function ciclar(id) {
@@ -321,8 +374,7 @@
     botao.setAttribute("data-estado", estado);
     botao.querySelector(".topico__marca").textContent = MARCAS[estado];
     botao.setAttribute("aria-label", titulo + " — " + rotuloEstado(estado));
-    botao.title =
-      titulo + " — " + rotuloEstado(estado) + " (shift + clique para ler)";
+    botao.title = titulo + " — " + rotuloEstado(estado) + " (" + DICA_LER + ")";
   }
 
   function rotuloEstado(chave) {
@@ -457,6 +509,82 @@
     }
     aberto = null;
   }
+
+  /* ------------------------------------------------------------
+     arrastar o painel para a direita fecha — em telas de toque o
+     painel cobre a sobreposição inteira, então o ✕ era a única
+     saída. Só toque e caneta: com mouse já existem o ✕, o clique
+     fora e o Esc.
+     ------------------------------------------------------------ */
+  var arrasto = null;
+
+  function limparArrasto() {
+    drawer.classList.remove("drawer--ajustando");
+    drawer.style.transform = "";
+    sobreposicao.style.opacity = "";
+  }
+
+  drawer.addEventListener("pointerdown", function (ev) {
+    if (ev.pointerType === "mouse") return;
+    arrasto = { x0: ev.clientX, y0: ev.clientY, eixo: null, dx: 0 };
+  });
+
+  drawer.addEventListener("pointermove", function (ev) {
+    if (!arrasto) return;
+
+    var dx = ev.clientX - arrasto.x0;
+    var dy = ev.clientY - arrasto.y0;
+
+    /* o eixo se decide no primeiro movimento que passa do tremor do
+       dedo, e não muda mais: sem travar, um arraste meio torto ficaria
+       alternando entre rolar o texto e empurrar o painel */
+    if (arrasto.eixo === null) {
+      if (Math.abs(dx) < INICIO_ARRASTO && Math.abs(dy) < INICIO_ARRASTO) return;
+      arrasto.eixo = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+    }
+    if (arrasto.eixo === "y") return;   /* é rolagem: o navegador cuida */
+
+    /* só para a direita: para a esquerda não há para onde o painel ir */
+    arrasto.dx = Math.max(0, dx);
+    drawer.style.transform = "translateX(" + arrasto.dx + "px)";
+    sobreposicao.style.opacity = String(1 - arrasto.dx / drawer.offsetWidth);
+  });
+
+  drawer.addEventListener("pointerup", function () {
+    if (!arrasto) return;
+    var dx = arrasto.dx;
+    var horizontal = arrasto.eixo === "x";
+    arrasto = null;
+
+    /* toque parado ou rolagem: nada a desfazer, e o click segue
+       normalmente para o botão ou link que estava sob o dedo */
+    if (!horizontal) { limparArrasto(); return; }
+
+    drawer.classList.add("drawer--ajustando");
+
+    if (dx > drawer.offsetWidth * FRACAO_FECHAR) {
+      /* sai deslizando e só então some, para não piscar no meio da tela */
+      drawer.style.transform = "translateX(100%)";
+      sobreposicao.style.opacity = "0";
+      window.setTimeout(function () {
+        fecharDrawer();
+        limparArrasto();
+      }, DURACAO_AJUSTE);
+      return;
+    }
+
+    /* não foi longe o bastante: volta ao lugar */
+    drawer.style.transform = "";
+    sobreposicao.style.opacity = "";
+    window.setTimeout(function () {
+      drawer.classList.remove("drawer--ajustando");
+    }, DURACAO_AJUSTE);
+  });
+
+  drawer.addEventListener("pointercancel", function () {
+    arrasto = null;
+    limparArrasto();
+  });
 
   function etiqueta(texto, prioridade) {
     var el = document.getElementById("drawer-etiqueta");

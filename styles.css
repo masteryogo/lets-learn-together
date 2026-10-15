@@ -29,6 +29,8 @@
 
   --largura-max:      1180px;
   --col-centro:       260px;
+  --pad-lateral:      1.5rem;   /* encolhe no celular, via media query */
+  --recuo-ramo:       2.5rem;   /* recuo da etapa = comprimento do galho */
 }
 
 :root[data-tema="escuro"] {
@@ -67,7 +69,7 @@ body {
 .topo {
   max-width: var(--largura-max);
   margin: 0 auto;
-  padding: 2.5rem 1.5rem 1.5rem;
+  padding: 2.5rem var(--pad-lateral) 1.5rem;
 }
 
 .topo__faixa {
@@ -155,6 +157,8 @@ body {
   border-radius: var(--raio);
   box-shadow: var(--sombra-dura-sm);
   cursor: pointer;
+  touch-action: manipulation;              /* mata o atraso de 300ms do toque */
+  -webkit-tap-highlight-color: transparent;
   transition: transform 0.08s, box-shadow 0.08s;
 }
 
@@ -350,7 +354,7 @@ body {
   position: relative;
   max-width: var(--largura-max);
   margin: 2.5rem auto 0;
-  padding: 0 1.5rem;
+  padding: 0 var(--pad-lateral);
 }
 
 /* espinha vertical central */
@@ -463,7 +467,15 @@ body {
   opacity: 0.8;
 }
 
-.grupo__topicos { display: flex; flex-direction: column; gap: 0.4rem; }
+/* flex-start explicito: `normal` equivale a stretch, e o item do flex
+   agora e um <div>, que obedece ao stretch - ao contrario do <button>,
+   que o navegador dimensiona por fit-content e que mascarava a falta */
+.grupo__topicos {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
 .ramo--esq .grupo__topicos { align-items: flex-end; }
 
 /* conector tracejado do grupo até a espinha */
@@ -492,6 +504,14 @@ body {
   background: var(--cinza);
   color: var(--texto);
   cursor: pointer;
+  overflow-wrap: break-word;               /* titulo longo nao estoura a tela */
+  /* o toque longo e um gesto nosso: sem isto o iOS abre o balao de
+     selecao por cima dele e o Android pinta a selecao de texto */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: transform 0.08s, box-shadow 0.08s, background 0.15s, opacity 0.15s;
 }
 
@@ -531,12 +551,64 @@ body {
   color: var(--verde-forte);
 }
 
+/* topico e botao de detalhe andam juntos como uma unidade da lista */
+.topico-par {
+  position: relative;     /* ancora o info dentro da caixa do topico */
+  display: inline-block;
+  max-width: 100%;
+}
+
+/* a busca marca o topico; o par inteiro e quem sai do fluxo, senao o
+   info ficaria sozinho ocupando a linha de um topico escondido */
+.topico-par:has(.topico[data-oculto]) { display: none; }
+
+.topico__info {
+  display: none;             /* desktop ja tem Shift + clique e botao direito */
+  position: absolute;
+  right: 0.15rem;
+  top: 0;
+  bottom: 0;
+  margin: auto 0;            /* centraliza na vertical sem gastar o transform */
+  width: 2rem;               /* area de toque; o visivel e so o glifo */
+  height: 2rem;
+  padding: 0;
+  font: inherit;
+  font-size: 0.9375rem;
+  line-height: 1;
+  color: var(--texto);
+  opacity: 0.5;              /* discreto: o protagonista e o titulo */
+  background: transparent;   /* sem caixa propria: ele ja esta dentro de uma */
+  border: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.12s;
+}
+
+.topico__info:active { opacity: 1; }
+.topico__info:focus-visible {
+  outline: 2px solid var(--roxo-forte);
+  outline-offset: -2px;      /* para dentro: a borda do topico esta colada */
+  opacity: 1;
+  border-radius: 999px;
+}
+
+/* o info e irmao do topico, entao nao herda o esmaecer do estado pulado */
+.topico-par:has(.topico[data-estado="pulado"]) .topico__info { opacity: 0.22; }
+
+/* aparece onde o ponteiro e o dedo, e o topico abre espaco para ele */
+@media (pointer: coarse) {
+  .topico__info { display: block; }
+  .topico-par .topico { padding-right: 2.3rem; }
+}
+
 /* busca: o que não bate some do fluxo, mantendo o mapa compacto */
 .topico[data-oculto] { display: none; }
 
 /* durante a busca, grupos sem nenhum resultado colapsam o título */
 .mapa[data-filtrando] .grupo:not(:has(.topico:not([data-oculto]))) { display: none; }
-.mapa[data-filtrando] .grupo::after { display: none; }
+.mapa[data-filtrando] .grupo::after,
+.mapa[data-filtrando] .grupo::before { display: none; }
 
 .topico[data-estado="estudando"] .topico__marca { color: var(--roxo-forte); }
 .topico[data-estado="pulado"] .topico__marca    { color: var(--texto-suave); }
@@ -545,7 +617,7 @@ body {
 .rodape {
   max-width: var(--largura-max);
   margin: 3rem auto 0;
-  padding: 1.5rem;
+  padding: 1.5rem var(--pad-lateral);
   border-top: 1.5px solid var(--borda-sutil);
   font-size: 0.8125rem;
   color: var(--texto-suave);
@@ -612,14 +684,27 @@ body {
   z-index: 50;
   width: min(26rem, 100vw);
   height: 100vh;
+  height: 100dvh;                 /* dvh desconta a barra de endereco do celular */
   overflow-y: auto;
+  overscroll-behavior: contain;   /* o scroll do painel nao "vaza" para a pagina */
   padding: 1.25rem 1.5rem 3rem;
+  /* a rolagem vertical continua sendo do navegador; o eixo horizontal
+     fica para o arraste de fechar, e por isso nao gera pointercancel */
+  touch-action: pan-y;
   background: var(--fundo-elevado);
   border-left: 2px solid var(--linha);
   animation: entrar 0.18s ease-out;
 }
 
 @keyframes entrar { from { transform: translateX(100%); } to { transform: none; } }
+
+/* enquanto o dedo arrasta, o painel acompanha sem transicao - senao
+   ficaria borrachudo. A transicao entra so no ajuste final: a volta
+   ao lugar ou a saida de vez. */
+.drawer--ajustando,
+body:has(.drawer--ajustando) .sobreposicao {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .drawer { animation: none; }
@@ -723,31 +808,141 @@ body {
 /* o drawer fica mais largo porque agora carrega texto de leitura */
 .drawer { width: min(32rem, 100vw); }
 
+/* com o painel aberto o fundo nao rola atras dele - no celular o drawer
+   ocupa a tela toda e um scroll invisivel por baixo desorienta */
+body:has(.drawer:not([hidden])) { overflow: hidden; }
+
 /* ---------------------------- responsivo ---------------------------- */
 @media (max-width: 900px) {
-  .mapa::before { left: 1.5rem; }
+  .mapa::before { left: var(--pad-lateral); }   /* espinha na borda do conteudo */
 
   .etapa {
     grid-template-columns: 1fr;
-    row-gap: 1.25rem;
-    padding-left: 2.5rem;
+    row-gap: 1.5rem;                 /* mesmo ritmo do gap entre grupos */
+    padding-left: var(--recuo-ramo);
   }
 
   .etapa__nucleo,
   .ramo--esq,
   .ramo--dir { grid-column: 1; grid-row: auto; }
 
-  .etapa__nucleo { position: static; text-align: left; }
+  /* relative, nao static: o nucleo passa a ancorar o proprio galho e no */
+  .etapa__nucleo { position: relative; text-align: left; }
+
+  /* galho da etapa ate a espinha */
+  .etapa__nucleo::before {
+    content: "";
+    position: absolute;
+    top: 1.5rem;
+    left: calc(var(--recuo-ramo) * -1);
+    width: var(--recuo-ramo);
+    border-top: 2.5px dashed var(--linha);
+    opacity: 0.45;
+  }
+
+  /* no da etapa: quadrado cheio, do mesmo amarelo do nucleo */
+  .etapa__nucleo::after {
+    content: "";
+    position: absolute;
+    top: calc(1.5rem - 6px);
+    left: calc(var(--recuo-ramo) * -1 - 5px);
+    width: 12px;
+    height: 12px;
+    background: var(--amarelo);
+    border: 2px solid var(--linha);
+    border-radius: 3px;
+  }
 
   .ramo--esq { align-items: flex-start; text-align: left; }
   .ramo--esq .grupo__topicos { align-items: flex-start; }
 
   .grupo { max-width: none; }
-  .grupo::after { display: none; }
+
+  /* o galho do grupo deixa de apontar para o centro e passa a apontar
+     para a espinha a esquerda, dos dois ramos. `.ramo .grupo` empata em
+     especificidade com `.ramo--esq .grupo` e vence por vir depois. */
+  .ramo .grupo::after {
+    top: 0.55rem;
+    right: auto;
+    left: calc(var(--recuo-ramo) * -1);
+    width: var(--recuo-ramo);
+  }
+
+  /* no do grupo: menor e vazado, para a etapa seguir sendo o no forte */
+  .grupo::before {
+    content: "";
+    position: absolute;
+    top: calc(0.55rem - 4px);
+    left: calc(var(--recuo-ramo) * -1 - 3px);
+    width: 8px;
+    height: 8px;
+    background: var(--fundo);
+    border: 2px solid var(--linha);
+    border-radius: 999px;
+  }
+
+  /* grupo sem titulo (os meio-grupos divididos) comeca direto nos
+     topicos: o galho desce para o meio do primeiro botao em vez de
+     rasar o topo dele */
+  .ramo .grupo:not(:has(.grupo__titulo))::after  { top: 1.25rem; }
+  .grupo:not(:has(.grupo__titulo))::before { top: calc(1.25rem - 4px); }
 
   /* a barra de ações quebra em duas linhas e a busca ocupa a sobra,
      em vez de empurrar a página para fora da tela */
   .topo__acoes { justify-content: flex-start; width: 100%; }
   .busca { flex: 1 1 8rem; width: auto; min-width: 0; }
   .seletor { flex: 1 1 10rem; min-width: 0; }
+}
+
+/* ---------------------- responsivo: celular ---------------------- */
+@media (max-width: 600px) {
+  :root { --pad-lateral: 1rem; --recuo-ramo: 1.75rem; }
+
+  .topo { padding-top: 1.5rem; }
+
+  /* o logo divide a linha com o título: encolhe para o h1 não cair
+     em três linhas de uma palavra cada */
+  .topo__identidade { gap: 0.6rem; min-width: 0; }
+  .topo__logo svg   { width: 4.5rem; }
+  .topo h1          { font-size: 1.5rem; overflow-wrap: break-word; }
+  .topo__sub        { font-size: 0.8125rem; }
+
+  /* linha 1: a trilha inteira. linha 2: busca ocupa a sobra, tema e
+     reset ficam à direita no tamanho de que precisam */
+  .topo__acoes {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    width: 100%;
+  }
+  .seletor { grid-column: 1 / -1; width: 100%; }
+  .busca   { width: 100%; }
+
+  /* 16px (1rem) evita o zoom automático do Safari iOS ao focar o campo */
+  .busca,
+  .seletor { font-size: 1rem; padding-block: 0.5rem; }
+
+  /* alvos de toque: ~40px de altura no lugar dos ~28px do desktop */
+  .botao        { font-size: 0.875rem; padding: 0.55rem 0.85rem; }
+  .botao--icone { width: 2.75rem; padding: 0.55rem 0; }
+  .topico       { font-size: 0.875rem; padding: 0.6rem 0.85rem; }
+  .estado-btn   { font-size: 0.875rem; padding: 0.55rem 0.9rem; }
+  .grupo__topicos { gap: 0.5rem; }
+
+  .mapa          { margin-top: 1.75rem; }
+  .etapa         { margin-bottom: 2.5rem; }
+  .etapa__titulo { font-size: 1.0625rem; }
+
+  .legenda        { margin-top: 1rem; gap: 0.6rem; }
+  .legenda__grupo { gap: 0.75rem 1rem; }
+
+  /* painel de tela cheia: em 360px não sobra espaço para um drawer
+     lateral, e a faixa descoberta só servia para fechar sem querer */
+  .drawer {
+    width: 100vw;
+    border-left: none;
+    padding: 1rem var(--pad-lateral) calc(3rem + env(safe-area-inset-bottom));
+  }
+  .drawer h2 { font-size: 1.25rem; }
+
+  .rodape { margin-top: 2rem; }
 }
