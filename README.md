@@ -37,8 +37,17 @@ ou sirva a pasta:
 python -m http.server 8000
 ```
 
-Troque de trilha pelo seletor no topo ou pela URL: `?trilha=ml` (padrão),
-`?trilha=cv`, `?trilha=langchain`.
+São duas páginas:
+
+- `index.html` — a **mesa de cartas**, onde você escolhe a trilha. Cada
+  trilha é um mapa com a rota desenhada: um marco por etapa, o trecho em
+  tinta cheia é o que você já andou.
+- `roadmap.html` — o roadmap em si. Aceita `?trilha=ml` (padrão),
+  `?trilha=cv`, `?trilha=langchain`, e também dá para trocar pelo seletor
+  no topo. O logo leva de volta para a mesa.
+
+Um link antigo no formato `index.html?trilha=cv` continua valendo: a página
+de entrada o repassa para o roadmap.
 
 ## Usando o mapa
 
@@ -92,7 +101,24 @@ Toda contribuição aqui é alguém dizendo "no mundo real não é bem assim":
   mesmo para quem faz visão.
 - **Trocar um recurso** por um melhor, ou aposentar um desatualizado.
 - **Abrir uma trilha nova**: crie `trilhas/<id>/` com um `data.js` e os
-  `conteudo-*.js`, e registre o id no manifesto em `trilhas.js`.
+  `conteudo-*.js`, e registre o id no manifesto em `trilhas.js`. No
+  manifesto vão também a ficha da trilha e a rota da carta:
+
+  ```js
+  nlp: {
+    rotulo: "NLP",
+    etapas: 6,            // confira no rodapé do roadmap
+    topicos: 72,          // idem
+    rota: [[30,190], [90,160], [150,130], [210,100], [250,70], [275,45]],
+    pasta: "trilhas/nlp/",
+    arquivos: ["data.js", "conteudo-1-....js"],
+  }
+  ```
+
+  A `rota` é um marco por etapa, num quadro de 300×240 — é ela que a
+  página de entrada desenha. `etapas` e `topicos` são derivados dos dados,
+  mas ficam no manifesto porque descobri-los exigiria baixar as trilhas
+  inteiras só para montar a tela de escolha.
 
 Um tópico tem esta cara, mexer nele é editar cinco campos:
 

@@ -7,6 +7,13 @@
 
    Para acrescentar uma trilha: criar trilhas/<id>/ com um
    data.js e os conteudo-*.js, e registrar o id aqui embaixo.
+
+   O manifesto também carrega a ficha de cada trilha — etapas,
+   topicos e a rota desenhada na carta da página de entrada. Esses
+   números são derivaveis dos dados, mas descobri-los exigiria baixar
+   as tres trilhas inteiras so para montar a tela de escolha. Ao
+   mexer no conteudo, confira a contagem (o rodape do roadmap mostra
+   o total real) e acerte aqui.
    ============================================================ */
 (function () {
   "use strict";
@@ -14,6 +21,10 @@
   var TRILHAS = {
     ml: {
       rotulo: "Machine Learning",
+      etapas: 5,
+      topicos: 156,
+      /* a rota da carta: um marco por etapa, num quadro de 300x240 */
+      rota: [[32, 198], [96, 168], [152, 118], [216, 94], [272, 46]],
       pasta: "trilhas/ml/",
       arquivos: [
         "data.js",
@@ -27,6 +38,11 @@
     },
     cv: {
       rotulo: "Computer Vision",
+      etapas: 14,
+      topicos: 141,
+      rota: [[26, 212], [62, 196], [50, 166], [88, 150], [72, 122], [114, 108],
+             [98, 80], [142, 70], [134, 46], [182, 52], [198, 86], [230, 70],
+             [252, 102], [282, 78]],
       pasta: "trilhas/cv/",
       arquivos: [
         "data.js",
@@ -37,6 +53,10 @@
     },
     langchain: {
       rotulo: "LangChain e LangGraph",
+      etapas: 8,
+      topicos: 55,
+      rota: [[30, 168], [62, 202], [106, 198], [142, 168], [148, 126],
+             [188, 108], [234, 118], [272, 70]],
       pasta: "trilhas/langchain/",
       arquivos: [
         "data.js",
@@ -55,6 +75,10 @@
 
   window.TRILHAS = TRILHAS;
   window.TRILHA_ATUAL = id;
+
+  /* a pagina de entrada so precisa do manifesto: ela marca esta
+     bandeira para o carregador nao baixar uma trilha inteira */
+  if (window.SO_MANIFESTO) return;
 
   var fila = TRILHAS[id].arquivos.map(function (nome) {
     return TRILHAS[id].pasta + nome;
