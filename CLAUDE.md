@@ -47,6 +47,10 @@ por JS nasce `async` e executaria fora de ordem. A ordem importa:
 Daí as consequências: nada de módulos ES, nada de bundler, e novos arquivos
 de conteúdo precisam entrar na posição certa do array `arquivos`.
 
+Isso descreve o estado atual, não uma decisão definitiva: migrar para uma
+aplicação de componentes é item do quadro (ver *Quadro de trabalho*), e é
+justamente esse contrato que ela desfaz.
+
 Falha de rede em qualquer script levanta `window.TRILHA_FALHOU` e pinta um
 bloco de erro no `#mapa`; o `app.js` consulta essa bandeira para não montar
 meio mapa por cima.
@@ -113,3 +117,15 @@ acertar o manifesto.**
 `index.html?trilha=cv` ainda circula. O `index.html` tem um script inline,
 antes de qualquer desenho, que redireciona para `roadmap.html?trilha=cv` —
 mexer nisso quebra links já publicados.
+
+
+## Quadro de trabalho
+
+O `.kanban` na raiz é o quadro local — fora do versionamento, não é
+documentação. Quatro colunas: **A fazer**, **Bloqueado por BaaS**,
+**Em análise** e **Descartado**, cada item com o motivo da decisão.
+
+Vale ler antes de propor mudança grande: ideias já recusadas estão lá com
+o porquê (quiz por tópico), e as duas mudanças que reviram a arquitetura —
+componentes e Supabase para persistência — estão na fila com a ordem entre
+elas já decidida.
