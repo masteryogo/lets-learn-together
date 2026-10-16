@@ -444,12 +444,66 @@
      e mexer nele conserta os três de uma vez.
      ------------------------------------------------------------ */
   function montarMascotes() {
-    var original = document.querySelector(".lateral__logo svg");
+    /* `.obi__corpo > svg` e não `svg`: desde que o Obi ganhou
+       propulsores há dois svg dentro do link, e o da chama vem
+       primeiro no DOM */
+    var original = document.querySelector(".lateral__logo .obi__corpo > svg");
     if (!original) return;
 
     ["vazio-mascote", "completa-selo"].forEach(function (id) {
       var alvo = document.getElementById(id);
       if (alvo) alvo.appendChild(original.cloneNode(true));
+    });
+
+    darVidaAoObi();
+  }
+
+  /* ------------------------------------------------------------
+     O Obi do painel reage como o da mesa de cartas — o obi.js é o
+     mesmo nas duas páginas. A diferença é que aqui ele não tem chão:
+     volta flutuando em vez de pousar.
+     ------------------------------------------------------------ */
+  var cutucadas = 0;
+  var vezCutucadas = null;
+
+  function darVidaAoObi() {
+    var ninho = document.querySelector(".lateral__logo");
+    if (!ninho || !window.Obi) return;
+
+    var obi = window.Obi.animar(ninho, {
+      chao: false,
+
+      /* com o painel recolhido no celular não há de onde tirá-lo */
+      podeMexer: function () {
+        return !window.matchMedia ||
+               !window.matchMedia("(max-width: 900px)").matches;
+      },
+
+      /* a página inteira é o limite: fora do ninho ele não pertence
+         mais ao painel, e prendê-lo ali deixaria o gesto apertado
+         demais para valer a pena */
+      limite: function () {
+        var r = ninho.getBoundingClientRect();
+        return {
+          x: Math.max(window.innerWidth - r.right, r.left) + r.width,
+          y: Math.max(window.innerHeight - r.bottom, r.top) + r.height
+        };
+      },
+
+      /* insistir rende outra reação: a primeira graça é a surpresa, a
+         quinta seguida só seria repetição */
+      aoCutucar: function () {
+        cutucadas += 1;
+        window.clearTimeout(vezCutucadas);
+        vezCutucadas = window.setTimeout(function () { cutucadas = 0; }, 1800);
+
+        if (cutucadas >= 5) {
+          cutucadas = 0;
+          obi.reagir("tonto", 1500);
+        } else {
+          obi.reagir("susto", 480);
+        }
+      }
     });
   }
 

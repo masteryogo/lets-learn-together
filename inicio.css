@@ -42,6 +42,9 @@
   --alfinete:   #c0392b;
   --roxo:       #7c5cf0;
   --amarelo:    #f5c518;
+  /* só a chama dos propulsores do Obi usa este: é o único laranja da
+     mesa, e é de propósito — fogo não se confunde com nada daqui */
+  --laranja:    #f0802a;
   /* tinta sobre bloco sólido, como no roadmap: branca no roxo (que é
      escuro) e escura no amarelo (que é claro) */
   --tinta-roxo:   #ffffff;
@@ -299,6 +302,21 @@ body {
   100% { transform: scale(1, 1);       opacity: 1; }
 }
 
+/* ---------------------- o Obi tem vida ----------------------
+   As reações dele moram no obi.css, que o roadmap carrega também.
+   Aqui fica só o que é da mesa: a cor da chama, e a sombra batendo
+   no pouso — ele só tem chão nesta página.
+   ------------------------------------------------------------ */
+.ator {
+  --obi-chama:        var(--laranja);
+  --obi-chama-nucleo: var(--amarelo);
+}
+
+.ator[data-reagindo="pouso"] .ator__sombra {
+  animation: sombra-andando 0.4s ease-out 1;
+}
+
+
 .ator__olho {
   transform-box: fill-box;
   transform-origin: center;
@@ -442,9 +460,15 @@ body {
   .vaga { width: auto; min-height: 56px; flex-direction: row; align-self: auto; }
   .vaga__marca { font-size: 20px; }
 
-  /* sem ponteiro não há caminhada: o mascote volta a ser rodapé */
-  .ator { position: static; width: auto; margin: 28px auto 0; text-align: center; }
+  /* sem ponteiro não há caminhada: o Obi volta a ser rodapé. E sem
+     posição absoluta não há como carregá-lo no colo — o arrasto fica
+     de fora aqui, no JS e no CSS. */
+  .ator {
+    position: static; width: auto; margin: 28px auto 0; text-align: center;
+    cursor: default; touch-action: auto;
+  }
   .ator__sombra { display: none; }
+  .obi__fogo { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

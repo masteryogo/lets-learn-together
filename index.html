@@ -6,6 +6,7 @@
   <title>Lets learn together — escolha um território</title>
   <meta name="description"
         content="Roadmaps de estudo em português, com prioridade, critério de conclusão e progresso salvo no navegador.">
+  <link rel="stylesheet" href="obi.css">
   <link rel="stylesheet" href="inicio.css">
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="192x192" href="logo/icon-192.png">
@@ -27,17 +28,32 @@
 
   <h1 class="marca">Lets learn together</h1>
 
-  <!-- a mesa: as cartas em cima, o mascote de pé na frente delas -->
+  <!-- a mesa: as cartas em cima, o Obi de pé na frente delas -->
   <main class="mesa" id="mesa">
     <div class="cartas" id="cartas">
       <!-- preenchido por inicio.js, a partir do manifesto -->
     </div>
 
-    <div class="ator" id="ator">
-      <span class="ator__sombra"></span>
-      <span class="ator__corpo">
+    <div class="ator obi" id="ator">
+      <span class="ator__sombra obi__sombra"></span>
+      <span class="ator__corpo obi__corpo">
+        <!-- os propulsores do Obi: invisíveis até ele precisar pousar
+             depois de ser carregado no colo. Vêm antes do corpo no DOM
+             e ficam atrás dele por z-index, para a chama sair debaixo. -->
+        <span class="obi__fogo" aria-hidden="true">
+          <svg viewBox="0 0 72 60" width="72" height="60">
+            <g class="obi__chama">
+              <path d="M4 0h28L18 58z" fill="var(--obi-chama)"/>
+              <path d="M11 0h14l-7 36z" fill="var(--obi-chama-nucleo)"/>
+            </g>
+            <g class="obi__chama obi__chama--dir">
+              <path d="M40 0h28L54 58z" fill="var(--obi-chama)"/>
+              <path d="M47 0h14l-7 36z" fill="var(--obi-chama-nucleo)"/>
+            </g>
+          </svg>
+        </span>
         <svg viewBox="103 23 406 310" width="122" height="94" role="img"
-             id="ator-svg" aria-label="O mascote, esperando">
+             id="ator-svg" aria-label="Obi, esperando">
           <g fill="var(--roxo)">
             <rect x="113" y="152" width="69" height="88" rx="34"/>
             <rect x="430" y="152" width="69" height="88" rx="34"/>
@@ -45,8 +61,8 @@
           </g>
           <rect x="173" y="136" width="267" height="109" rx="54" fill="var(--amarelo)"/>
           <g fill="var(--roxo)" class="ator__cara" id="ator-cara">
-            <ellipse class="ator__olho" cx="247" cy="186" rx="13" ry="16"/>
-            <ellipse class="ator__olho" cx="364" cy="186" rx="13" ry="16"/>
+            <ellipse class="ator__olho obi__olho" cx="247" cy="186" rx="13" ry="16"/>
+            <ellipse class="ator__olho obi__olho" cx="364" cy="186" rx="13" ry="16"/>
             <path d="M292 201a14 14 0 0 0 28 0z"/>
           </g>
         </svg>
@@ -57,7 +73,7 @@
   <div class="ficha">
     <p class="ficha__titulo" id="ficha-titulo">Escolha um território</p>
     <p class="ficha__linha" id="ficha-linha">
-      Passe o ponteiro pelas cartas — o mascote vai junto.
+      Passe o ponteiro pelas cartas — o Obi vai junto.
     </p>
     <!-- o único lugar do site que avisa onde o progresso mora. Fica na
          linha onde o olho já está, e sai de cena quando você escolhe. -->
@@ -88,6 +104,7 @@
   <!-- SO_MANIFESTO impede o carregador de baixar uma trilha inteira:
        aqui só interessam os metadados de cada uma -->
   <script>window.SO_MANIFESTO = true;</script>
+  <script src="obi.js"></script>
   <script src="trilhas.js"></script>
   <script src="inicio.js"></script>
 </body>

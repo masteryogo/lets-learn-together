@@ -235,8 +235,8 @@
     vaga.target = "_blank";
     vaga.rel = "noopener noreferrer";
     vaga.setAttribute("aria-label", "Sugerir uma trilha nova");
-    vaga.appendChild(texto("span", "vaga__marca", "?"));
-    vaga.appendChild(texto("span", "vaga__texto", "território por mapear"));
+    vaga.appendChild(texto("span", "vaga__marca", "+"));
+    vaga.appendChild(texto("span", "vaga__texto", "DÊ a sugestão do seu proprio roadmap"));
     cartas.appendChild(vaga);
   }
 
@@ -300,23 +300,27 @@
         : "0 8px 18px rgba(21,20,26,0.2)";
     });
 
-    var x = foco === null ? meio() : centrosX[foco];
-    ator.style.left = Math.round(x - 61) + "px";
+    /* no colo ou pousando, a posição do Obi é do arrasto, não do foco:
+       mexer no `left` aqui o arrancaria da mão de quem o segura */
+    if (!obi || !obi.ocupado()) {
+      var x = foco === null ? meio() : centrosX[foco];
+      ator.style.left = Math.round(x - 61) + "px";
 
-    if (foco !== null && escolhido === null) ator.setAttribute("data-andando", "sim");
-    else ator.removeAttribute("data-andando");
+      if (foco !== null && escolhido === null) ator.setAttribute("data-andando", "sim");
+      else ator.removeAttribute("data-andando");
+    }
 
     cara.style.transform = foco === null ? "translateY(0)" : "translateY(-8px)";
 
     var t = foco === null ? null : nos[foco];
     document.getElementById("ator-svg").setAttribute("aria-label",
-      t ? "O mascote olhando a carta de " + t.dados.rotulo : "O mascote, esperando");
+      t ? "Obi olhando a carta de " + t.dados.rotulo : "Obi, esperando");
 
     document.getElementById("ficha-titulo").textContent =
       t ? t.dados.rotulo : "Escolha um território";
 
     document.getElementById("ficha-linha").textContent = !t
-      ? "Passe o ponteiro pelas cartas — o mascote vai junto."
+      ? "Passe o ponteiro pelas cartas — o Obi vai junto."
       : escolhido !== null
         ? "Rota traçada. Abrindo o roadmap de " + t.dados.rotulo + "…"
         : t.dados.etapas + " etapas · " + t.dados.topicos + " tópicos · " +
@@ -345,7 +349,7 @@
   });
 
   mesa.addEventListener("mousemove", function (ev) {
-    if (escolhido !== null) return;
+    if (escolhido !== null || obi.pegado()) return;
     var base = mesa.getBoundingClientRect();
     var x = ev.clientX - base.left;
     var melhor = null, menor = Infinity;
@@ -379,6 +383,46 @@
       });
     }
     pintar();
+  });
+
+  /* ------------------------------------------------------------
+     O Obi reage a quem mexe nele — encostar, cutucar e carregar no
+     colo moram no obi.js, que o roadmap também usa. O que é da mesa
+     entra aqui pelas opções: aqui ele tem chão, e cutucada é
+     cutucada mesmo (no roadmap ela segue o link).
+     ------------------------------------------------------------ */
+  var cutucadas = 0;
+  var vezCutucadas = null;
+
+  var obi = window.Obi.animar(ator, {
+    chao: true,
+
+    podeMexer: function () { return !estreito() && escolhido === null; },
+
+    /* o limite é a própria mesa: na mesa ele tem onde morar, e sair
+       dela o deixaria pairando sobre o rodapé */
+    limite: function () {
+      return { x: mesa.getBoundingClientRect().width / 2, y: 9999 };
+    },
+
+    /* insistir rende outra reação: a primeira graça é a surpresa, a
+       quinta seguida só seria repetição */
+    aoCutucar: function () {
+      cutucadas += 1;
+      window.clearTimeout(vezCutucadas);
+      vezCutucadas = window.setTimeout(function () { cutucadas = 0; }, 1800);
+
+      if (cutucadas >= 5) {
+        cutucadas = 0;
+        obi.reagir("tonto", 1500);
+        document.getElementById("ficha-linha").textContent =
+          "O Obi ficou tonto. Dá um tempo.";
+      } else {
+        obi.reagir("susto", 480);
+      }
+    },
+
+    aoChegar: function () { pintar(); }   /* devolve a ficha ao que dizia */
   });
 
   pintar();

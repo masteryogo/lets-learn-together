@@ -29,9 +29,10 @@ Duas páginas, um carregador no meio.
   `trilhas.js`, para que só os metadados sejam lidos.
 - `roadmap.html` + `styles.css` + `app.js` — o roadmap em si, montado no
   cliente a partir dos dados da trilha.
-- `trilhas.js` — **manifesto + carregador**, o único script que as páginas
-  conhecem. Lê `?trilha=` da querystring, injeta os `trilhas/<id>/*.js` e,
-  por último, o `app.js`.
+- `trilhas.js` — **manifesto + carregador**. Lê `?trilha=` da querystring,
+  injeta os `trilhas/<id>/*.js` e, por último, o `app.js`.
+- `obi.js` + `obi.css` — **o mascote**, a única coisa que as duas páginas
+  compartilham além do carregador. Ver *O Obi* abaixo.
 
 ### A ordem de carregamento é um contrato
 
@@ -71,6 +72,62 @@ bloqueados o site funciona, só não lembra.
 Os estados ciclam em `pendente → estudando → feito → pulado`. As marcas
 `□ ► ■ ×` existem porque a Departure Mono não tem `◔` nem `✓` — e porque o
 estado não deve depender só de cor.
+
+### O Obi
+
+O mascote se chama Obi e aparece nas duas páginas, com desenhos
+separados: na mesa ele usa a paleta da mesa, no roadmap os `--logo-*`
+(mais saturados, para aguentar o tema escuro). O que é comum — encostar,
+cutucar, carregar no colo e o voo de volta com propulsores — mora em
+`obi.css` e `obi.js`, carregados antes do resto nas duas páginas.
+
+O contrato com o HTML são quatro classes (`.obi`, `.obi__corpo`,
+`.obi__olho`, `.obi__fogo`, mais `.obi__sombra` onde houver chão) e os
+atributos de estado que o JS liga e desliga (`data-humor`,
+`data-pendurado`, `data-voltando`, `data-reagindo`). **Os dois eixos do
+arrasto vivem em elementos diferentes de propósito**: o horizontal no
+`.obi`, o vertical no `.obi__corpo`. É isso que deixa a sombra no chão
+enquanto ele sobe — junte os dois num transform só e o gesto passa a ler
+como a página deslizando.
+
+A posição de descanso nunca é escrita pelo `obi.js`: o arrasto é um
+transform por cima de onde a página colocou o Obi. Em compensação, quem
+o faz passear (o `inicio.js`) precisa consultar `ocupado()` antes de
+mexer na posição dele.
+
+O que muda de página para página entra pelas opções de `Obi.animar`, não
+por `if` dentro do módulo:
+
+| | Mesa | Roadmap |
+|---|---|---|
+| `chao` | `true`: pousa com quique e sombra | `false`: volta flutuando |
+| `aoCutucar` | susto e tonto, e a ficha avisa | susto e tonto, calado |
+| `limite` | a mesa | a janela inteira |
+
+O toque é reconhecido no `pointerup`, e não num listener de `click`:
+toque que não saiu do lugar é cutucada, o resto é arrasto. Os dois gestos
+nunca disparam juntos.
+
+O Obi do roadmap não leva a lugar nenhum e fica fora da árvore de
+acessibilidade (`aria-hidden`). **Com isso o roadmap não tem mais rota de
+volta para a mesa de cartas**: o seletor do título troca de trilha, mas
+não abre o `index.html`. Foi decisão deliberada, não esquecimento — se um
+dia essa rota fizer falta, ela precisa de um lugar próprio, não de um
+clique escondido no mascote.
+
+Fora do ninho ele sobrevoa a página, e o `obi.js` marca
+`data-obi-solto` na raiz: só o z-index dele não basta quando o que o
+cobre está noutro contexto de empilhamento (as faixas de etapa, que
+também são sticky e vêm depois no DOM).
+
+Arrastar só vale em tela larga, e não tem equivalente de teclado: como o
+gesto não produz nada — não navega, não salva, não muda estado — não há
+o que oferecer a quem não o faz, e o Obi fica fora da ordem de tabulação
+nas duas páginas.
+
+Uma armadilha que já custou caro: `.obi__olho` tem `animation: piscar`, e
+no CSS **animação ganha de `transform` declarado**. Todo estado novo que
+queira mandar nos olhos precisa de `animation: none` junto.
 
 ## Mexer nos dados
 

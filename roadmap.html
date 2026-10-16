@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Roadmap de estudos</title>
+  <link rel="stylesheet" href="obi.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="192x192" href="logo/icon-192.png">
@@ -76,25 +77,43 @@
     <aside class="lateral" id="lateral" aria-label="Painel da trilha">
 
       <div class="lateral__identidade">
-        <a class="lateral__logo" href="index.html"
-           aria-label="Voltar para a escolha de trilha"
-           title="Voltar para a escolha de trilha">
-          <!-- --logo-* e não --roxo-forte/--amarelo-forte: no tema escuro
-               o mascote é mais saturado que a interface à volta dele -->
-          <svg viewBox="103 23 406 310" width="112" height="86">
-            <g class="logo__corpo" fill="var(--logo-roxo)">
-              <rect x="113" y="152" width="69" height="88" rx="34"/>
-              <rect x="430" y="152" width="69" height="88" rx="34"/>
-              <ellipse cx="306" cy="178" rx="165" ry="145"/>
-            </g>
-            <rect x="173" y="136" width="267" height="109" rx="54" fill="var(--logo-amarelo)"/>
-            <g fill="var(--logo-roxo)">
-              <ellipse class="logo__olho" cx="247" cy="186" rx="13" ry="16"/>
-              <ellipse class="logo__olho" cx="364" cy="186" rx="13" ry="16"/>
-              <path d="M292 201a14 14 0 0 0 28 0z"/>
-            </g>
-          </svg>
-        </a>
+        <!-- o Obi não leva a lugar nenhum: é só bicho. Fica fora da
+             árvore de acessibilidade porque o que ele faz — reagir a
+             quem mexe nele — não tem como ser anunciado nem alcançado
+             sem ponteiro. -->
+        <div class="lateral__logo obi" draggable="false" aria-hidden="true">
+          <span class="obi__corpo">
+            <!-- aqui ele não tem chão: os propulsores não pousam, só o
+                 trazem de volta ao ninho flutuando -->
+            <span class="obi__fogo" aria-hidden="true">
+              <svg viewBox="0 0 72 60" width="72" height="60">
+                <g class="obi__chama">
+                  <path d="M4 0h28L18 58z" fill="var(--obi-chama)"/>
+                  <path d="M11 0h14l-7 36z" fill="var(--obi-chama-nucleo)"/>
+                </g>
+                <g class="obi__chama obi__chama--dir">
+                  <path d="M40 0h28L54 58z" fill="var(--obi-chama)"/>
+                  <path d="M47 0h14l-7 36z" fill="var(--obi-chama-nucleo)"/>
+                </g>
+              </svg>
+            </span>
+            <!-- --logo-* e não --roxo-forte/--amarelo-forte: no tema escuro
+                 o Obi é mais saturado que a interface à volta dele -->
+            <svg viewBox="103 23 406 310" width="112" height="86">
+              <g class="logo__corpo" fill="var(--logo-roxo)">
+                <rect x="113" y="152" width="69" height="88" rx="34"/>
+                <rect x="430" y="152" width="69" height="88" rx="34"/>
+                <ellipse cx="306" cy="178" rx="165" ry="145"/>
+              </g>
+              <rect x="173" y="136" width="267" height="109" rx="54" fill="var(--logo-amarelo)"/>
+              <g fill="var(--logo-roxo)">
+                <ellipse class="logo__olho obi__olho" cx="247" cy="186" rx="13" ry="16"/>
+                <ellipse class="logo__olho obi__olho" cx="364" cy="186" rx="13" ry="16"/>
+                <path d="M292 201a14 14 0 0 0 28 0z"/>
+              </g>
+            </svg>
+          </span>
+        </div>
 
         <!-- o título É o trocador de trilha: um select transparente cobre
              a área inteira, então o clique abre a lista nativa e o h1
@@ -291,6 +310,7 @@
 
   <!-- trilhas.js lê ?trilha= da URL, injeta os dados daquela trilha
        e, por último, o app.js. O manifesto fica dentro dele. -->
+  <script src="obi.js"></script>
   <script src="trilhas.js"></script>
 </body>
 </html>

@@ -49,6 +49,11 @@
      foram dessaturados de propósito para não vibrar sobre o chumbo. */
   --logo-roxo:        var(--roxo-forte);
   --logo-amarelo:     var(--amarelo-forte);
+  /* a chama dos propulsores é o único laranja da página, e literal e
+     não var(--amarelo-forte) pelo mesmo motivo do parágrafo acima:
+     amarelo aqui significa "prioridade fundamental", e fogo não pode
+     significar prioridade nenhuma */
+  --logo-chama:       #f0802a;
 
   --raio:             0;          /* pixel não tem curva */
   --mono:             "Departure Mono", ui-monospace, "Cascadia Mono",
@@ -125,6 +130,7 @@
      2,4:1 contra 1,6:1 de antes. */
   --logo-roxo:        #a259ff;
   --logo-amarelo:     #ffc800;
+  --logo-chama:       #ff9838;
 }
 
 * { box-sizing: border-box; }
@@ -242,13 +248,32 @@ body {
   min-width: 0;
 }
 
+/* o flutuar mudou de elemento: ele mora no corpo, e o involólucro
+   fica livre para o transform do arrasto. São dois eixos em dois
+   elementos — ver obi.css. */
 .lateral__logo {
   flex-shrink: 0;
+  display: block;
+  /* aqui ele é menor que na mesa, e a chama acompanha */
+  --obi-fogo-largura: 40px;
+  --obi-fogo-topo:    38px;
+  --obi-chama:        var(--logo-chama);
+  --obi-chama-nucleo: var(--logo-amarelo);
+}
+
+/* o Obi fora do ninho sobrevoa o mapa, e as faixas de etapa também
+   são sticky: vindo depois no DOM, cobririam ele. Enquanto durar o
+   passeio o painel inteiro sobe — é por isso que o obi.js marca a
+   raiz, e não só o próprio Obi. */
+[data-obi-solto] .lateral { z-index: 70; }
+
+.lateral__logo .obi__corpo {
   display: block;
   animation: flutuar 3.4s ease-in-out infinite;
 }
 
-.lateral__logo svg {
+/* só o desenho do Obi, e não o svg da chama, que tem tamanho próprio */
+.lateral__logo .obi__corpo > svg {
   display: block;
   width: 4rem;
   height: auto;
@@ -1334,7 +1359,7 @@ body:has(.drawer--ajustando) .sobreposicao {
 
 @media (prefers-reduced-motion: reduce) {
   .drawer { animation: none; }
-  .lateral__logo,
+  .lateral__logo .obi__corpo,
   .logo__olho { animation: none; }
   * { transition-duration: 0.01ms !important; }
 }
