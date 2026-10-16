@@ -5,6 +5,13 @@
    verde significam prioridade e estado, e não podem significar
    "trilha" aqui. O que distingue uma carta da outra é o traçado
    da rota, que é dado de verdade.
+
+   A rota também tem cor própria por trilha, declarada no manifesto
+   (`cor`) e aplicada como --rota na própria carta. Não contradiz o
+   parágrafo acima: quem distingue continua sendo a rota, e a cor
+   anda com ela — por isso o traço, os marcos e a barra do rodapé
+   viram juntos, sem nenhum deles saber de trilha. Um tom dessaturado,
+   de carta náutica: a mesa é de papel, não é um painel de controle.
    ============================================================ */
 
 @font-face {
@@ -16,7 +23,7 @@
 }
 
 :root {
-  --tampo:      #d9d6cc;
+  --tampo:      #b9bfa0;
   --papel:      #faf8f2;
   --borda:      #b9b0a0;
   --regua:      #ddd5c6;
@@ -24,8 +31,14 @@
   --relevo:     #cdbfa4;
   --tinta:      #2b3a45;
   --tinta-fraca:#6b6558;
+  /* o tampo oliva é bem mais escuro que o bege anterior, e o
+     --tinta-fraca (pensado para o papel claro da carta) caía para
+     3:1 em cima dele. Quem escreve ou risca sobre o tampo usa estes;
+     quem escreve sobre o papel continua no --tinta-fraca. */
+  --tinta-tampo:  #3f4636;
+  --borda-tampo:  #5e6448;
+  /* cor padrão da rota; cada carta redefine a sua, vinda do manifesto */
   --rota:       #2d6a8a;
-  --rota-falta: #9aa3a8;
   --alfinete:   #c0392b;
   --roxo:       #7c5cf0;
   --amarelo:    #f5c518;
@@ -50,7 +63,7 @@ body {
   /* luz caindo de cima no tampo: a queda nas bordas é o que dá
      profundidade sem virar lavagem decorativa */
   background: radial-gradient(130% 92% at 50% 4%,
-              #e2dfd6 0%, var(--tampo) 46%, #c7c3b8 100%);
+              #c4caac 0%, var(--tampo) 46%, #a3a98b 100%);
   color: #15141a;
   font-family: var(--mono);
   font-size: 13.75px;
@@ -139,7 +152,9 @@ body {
   justify-content: space-between;
   gap: 10px;
   padding: 9px 12px;
-  background: var(--tinta);
+  /* a faixa do topo é o único bloco sólido grande da carta, e aparece
+     mesmo com a trilha zerada — por isso é ela que carrega a cor */
+  background: var(--rota);
   color: #eef3f5;
   font-size: 10px;
   letter-spacing: 0.14em;
@@ -207,8 +222,8 @@ body {
   justify-content: center;
   gap: 14px;
   text-decoration: none;
-  color: #7d7667;
-  border: 2px dashed #b4ab99;
+  color: var(--tinta-tampo);
+  border: 2px dashed var(--borda-tampo);
   background: repeating-linear-gradient(45deg,
               rgba(0, 0, 0, 0.04) 0 7px, transparent 7px 14px);
 }
@@ -319,15 +334,16 @@ body {
   text-transform: uppercase;
 }
 
-.ficha__linha { margin: 5px 0 0; color: var(--tinta-fraca); }
+.ficha__linha { margin: 5px 0 0; color: var(--tinta-tampo); }
 
 .ficha__aviso {
   margin: 0;
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--tinta-fraca);
-  opacity: 0.8;
+  /* era opacity: 0.8, que derrubava o contraste abaixo de AA sobre o
+     tampo. A hierarquia já vem do tamanho — 10px contra 13,75px. */
+  color: var(--tinta-tampo);
 }
 
 .ficha__partir {
@@ -351,9 +367,9 @@ body {
   width: min(760px, 100%);
   margin: clamp(16px, 2.5vh, 32px) auto 0;
   padding: 1.25rem;
-  border: 2px solid var(--borda);
+  border: 2px solid var(--borda-tampo);
   font-size: 11px;
-  color: var(--tinta-fraca);
+  color: var(--tinta-tampo);
   text-align: center;
 }
 
@@ -373,7 +389,7 @@ body {
   font-size: 11px;
 }
 
-.rodape__label { color: var(--tinta-fraca); }
+.rodape__label { color: var(--tinta-tampo); }
 
 .rodape__chip {
   padding: 0.2rem 0.6rem;

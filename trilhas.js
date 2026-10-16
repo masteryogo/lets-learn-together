@@ -21,6 +21,8 @@
   var TRILHAS = {
     ml: {
       rotulo: "Machine Learning",
+      /* a cor da rota desta carta — ver o cabeçalho do inicio.css */
+      cor: "#2d6a8a",
       etapas: 5,
       topicos: 156,
       /* a rota da carta: um marco por etapa, num quadro de 300x240 */
@@ -38,6 +40,7 @@
     },
     cv: {
       rotulo: "Computer Vision",
+      cor: "#1c6e51",
       etapas: 14,
       topicos: 141,
       rota: [[26, 212], [62, 196], [50, 166], [88, 150], [72, 122], [114, 108],
@@ -53,6 +56,7 @@
     },
     langchain: {
       rotulo: "LangChain e LangGraph",
+      cor: "#6a4b9e",
       etapas: 8,
       topicos: 55,
       rota: [[30, 168], [62, 202], [106, 198], [142, 168], [148, 126],

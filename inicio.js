@@ -105,7 +105,11 @@
 
     /* o caminho inteiro, tracejado: o que ainda falta andar */
     raiz.appendChild(svg("path", {
-      d: d, fill: "none", stroke: "var(--rota-falta)", "stroke-width": "2.5",
+      /* o que falta andar é a cor da trilha esmaecida, não um cinza:
+         numa carta zerada o tracejado é o único desenho visível, e era
+         ele que deixava as três quase iguais */
+      d: d, fill: "none", stroke: "var(--rota)", "stroke-opacity": "0.4",
+      "stroke-width": "2.5",
       "stroke-dasharray": "7 6", "stroke-linecap": "round", "stroke-linejoin": "round",
     }));
 
@@ -175,6 +179,11 @@
       var a = document.createElement("a");
       a.className = "carta";
       a.href = "roadmap.html?trilha=" + id;
+
+      /* uma declaração pinta a carta inteira: o traço vencido, os marcos
+         já cumpridos e a barra do rodapé todos leem var(--rota), então
+         redefini-la aqui desce por herança até dentro do SVG */
+      if (t.cor) a.style.setProperty("--rota", t.cor);
       a.setAttribute("aria-label",
         t.rotulo + ", " + t.etapas + " etapas, " + t.topicos + " tópicos, " +
         feitos + " concluídos");
