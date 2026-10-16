@@ -41,7 +41,8 @@ const KANBAN_CARDS = [
         "Leitura de dados remotos. app.js monta o DOM uma vez, a partir de globais já carregados. Dado que chega depois — do Supabase, assíncrono, e que muda quando outra aba marca um tópico — não tem para onde ir.",
         "Criar componente novo fica barato. Drawer, ficha, chip de rodapé e carta hoje são funções que concatenam string e colam no DOM."
       ] },
-      { tipo: "p", texto: "Custo conhecido: quebra o contrato de ordem de carga do CLAUDE.md (s.async = false, ES5 em IIFE, sem bundler). A trilha vira import, e trilhas.js deixa de ser carregador para virar só manifesto." }
+      { tipo: "p", texto: "Custo conhecido: quebra o contrato de ordem de carga do CLAUDE.md (s.async = false, ES5 em IIFE, sem bundler). A trilha vira import, e trilhas.js deixa de ser carregador para virar só manifesto." },
+      { tipo: "p", texto: "O site ser estático é condição de protótipo, não decisão. O alvo é Svelte na frente, Supabase como BaaS e Deno edge para o que precisa de servidor — push agendado, segredo que não pode ir para o navegador, trabalho que não é do cliente. Os cards devem ser lidos contra esse alvo: limitação que só existe hoje (file://, sem build, sem conta) não é argumento para recusar nada." }
     ],
     porque: "Vem antes ou junto do Supabase, não depois — senão a camada de leitura é escrita duas vezes."
   },
@@ -68,6 +69,24 @@ const KANBAN_CARDS = [
   { id: "inverter-shift", titulo: "Inverter shift+clique", raia: "interface", coluna: "fazer",
     resumo: "Trocar o gesto com shift pelo clique normal.",
     porque: "O gesto mais usado deve ser o mais barato." },
+
+  { id: "aba-calendario", titulo: "Aba de calendário", raia: "interface", coluna: "fazer",
+    resumo: "Grade de mês no próprio site, para escrever as sessões de estudo — com conexão opcional ao Google Calendar.",
+    blocos: [
+      { tipo: "lista", itens: [
+        "Escrever no calendário do site: clicar num dia e anotar o que vai estudar, sem sair da página.",
+        "Um modo de cada vez: ou o calendário do Lets learn together, ou o do Google. Nunca os dois.",
+        "No modo Google a escrita é chamada de API; no modo Lets learn together é gravação no nosso banco. Mesma tela, dois destinos.",
+        "A exclusividade é o que torna o card barato: sem dois donos simultâneos, não existe sincronização — nem merge, nem conflito, nem evento duplicado.",
+        "O uso real é por trilha em blocos repetidos (Machine Learning 7:30pm, OpenCV 7:30pm), não por tópico — a grade deve falar essa língua."
+      ] },
+      { tipo: "p", texto: "Decidido: o calendário é dono dos eventos, não uma vista. No modo Google o dono é o Google e a escrita é chamada de API, com OAuth e escopo calendar.events. No modo Lets learn together o dono somos nós e a escrita vai para o Postgres do Supabase — depende do banco e da conta, não do localStorage." },
+      { tipo: "p", texto: "Consequência na ordem: o modo Google é construível primeiro, porque não espera o banco. O modo Lets learn together não sai antes do Supabase e da conta — o inverso não é indesejável, é impossível." },
+      { tipo: "p", texto: "O motivo de conectar o Google é notificação: o lembrete chega no celular com o site fechado. Dá para empatar no modo próprio — Web Push disparado por uma Edge Function em Deno, acordada por agendamento no banco — então não é limitação de arquitetura, é trabalho a mais. O que não se empata é o lembrete cair na agenda que a pessoa já abre todo dia, junto com o resto da vida dela, em vez de numa notificação isolada." },
+      { tipo: "p", texto: "Troca de modo, decidida: o site recusa trocar enquanto houver eventos locais, e oferece exportar antes. Perder plano escrito em silêncio é o pior desfecho, e migrar automático inventa eventos no calendário real de alguém." }
+    ],
+    porque: "É a única parte do projeto que sabe quando você estuda — o roadmap só sabe o quê. Fica em A fazer porque o modo Google não espera o banco; o modo próprio espera.",
+    vejaTambem: ["anotacoes", "supabase", "login"] },
 
   { id: "i18n", titulo: "Outros idiomas (i18n)", raia: "conteudo", coluna: "fazer",
     resumo: "Hoje o PT-BR está embutido no markup, nos dados das trilhas e nos próprios identificadores.",
