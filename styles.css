@@ -885,15 +885,12 @@ body {
   text-align: center;
 }
 
-.rodape__nota { margin-bottom: 0; }
-
 .rodape__linha {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
   flex-wrap: wrap;
-  margin-bottom: 0.75rem;
 }
 
 .rodape__credito {

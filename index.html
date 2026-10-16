@@ -59,6 +59,11 @@
     <p class="ficha__linha" id="ficha-linha">
       Passe o ponteiro pelas cartas — o mascote vai junto.
     </p>
+    <!-- o único lugar do site que avisa onde o progresso mora. Fica na
+         linha onde o olho já está, e sai de cena quando você escolhe. -->
+    <p class="ficha__aviso" id="ficha-aviso">
+      Seu progresso fica salvo neste navegador.
+    </p>
     <a class="ficha__partir" id="ficha-partir" href="roadmap.html" hidden>Partir</a>
   </div>
 
@@ -72,14 +77,10 @@
         <a class="rodape__chip" href="https://github.com/masteryogo"
            target="_blank" rel="noopener noreferrer">@masteryogo</a>
       </p>
-      <a class="rodape__acao"
+      <a class="botao botao--destaque" id="contribuir"
          href="https://github.com/masteryogo/lets-learn-together/fork"
          target="_blank" rel="noopener noreferrer">Contribuir</a>
     </div>
-    <p class="rodape__nota">
-      Progresso salvo apenas neste navegador, via <code>localStorage</code>.
-      Sem conta, sem servidor, sem ninguém medindo o seu ritmo.
-    </p>
   </footer>
 
   <!-- SO_MANIFESTO impede o carregador de baixar uma trilha inteira:

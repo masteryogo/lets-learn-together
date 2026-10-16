@@ -315,6 +315,10 @@
            : t.feitos >= t.dados.topicos ? "percorrida inteira"
            : t.feitos + " marcos vencidos");
 
+    /* o aviso é para quem está decidindo; com uma carta na mira, a
+       ficha dela é que importa */
+    document.getElementById("ficha-aviso").hidden = foco !== null;
+
     var partir = document.getElementById("ficha-partir");
     partir.hidden = escolhido === null;
     if (escolhido !== null) partir.href = "roadmap.html?trilha=" + nos[escolhido].id;
