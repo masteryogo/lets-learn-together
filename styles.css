@@ -43,6 +43,13 @@
   --tinta-bloco:      #15141a;
   --tinta-roxo:       #ffffff;
 
+  /* o mascote tem cor própria, desgarrada da paleta de interface. No
+     tema claro é a mesma coisa; no escuro ele sobe de saturação sozinho,
+     sem arrastar junto a barra de prioridade e o selo da etapa, que
+     foram dessaturados de propósito para não vibrar sobre o chumbo. */
+  --logo-roxo:        var(--roxo-forte);
+  --logo-amarelo:     var(--amarelo-forte);
+
   --raio:             0;          /* pixel não tem curva */
   --mono:             "Departure Mono", ui-monospace, "Cascadia Mono",
                       Consolas, monospace;
@@ -52,8 +59,11 @@
   /* escala em múltiplos de 5,5px: a fonte é desenhada numa grade de
      11px e só cai nítida em cima dela */
   --t-micro:          11px;       /* metadados, legenda, rodapé */
-  --t-base:           13.75px;    /* tópicos, botões, interface */
-  --t-leitura:        16.5px;     /* prosa longa do painel */
+  --t-base:           13.75px;    /* botões, campos, interface */
+  --t-leitura:        16.5px;     /* o que se lê de verdade: tópicos do
+                                     mapa, linhas do índice e prosa do
+                                     painel. A 13,75px a lista virava
+                                     legenda, não checklist. */
   --t-etapa:          clamp(22px, 4vw, 33px);
   --t-pagina:         clamp(27.5px, 6vw, 44px);
 
@@ -62,6 +72,10 @@
   --tracking-rotulo:  0.14em;
 
   --largura-max:      1180px;
+  --lateral-w:        21rem;    /* coluna da trilha; vira gaveta no celular.
+                                   21rem e não 19: com o índice em 16,5px,
+                                   19 fazia metade dos tópicos quebrarem
+                                   em duas linhas. */
   --pad-lateral:      1.5rem;   /* encolhe no celular, via media query */
   --pad-painel:       1.25rem;  /* respiro interno dos blocos moldurados */
   --medida:           58ch;     /* medida de leitura do painel */
@@ -72,24 +86,45 @@
                         90deg, #000 0 9px, transparent 9px 11px);
 }
 
+/* chumbo, não quase-preto. O desconforto do tema escuro anterior não
+   vinha só do piso baixo (#16151a): vinha da distância até o texto
+   quase-branco, 15,8:1. Aqui as duas pontas se aproximam — o fundo
+   sobe, o branco é dosado — e o contraste do corpo fica em ~12:1,
+   ainda acima do AAA da WCAG, que pede 7:1. */
 :root[data-tema="escuro"] {
   color-scheme: dark;
-  --fundo:            #16151a;
-  --fundo-elevado:    #201f26;
-  --texto:            #f1efe9;
-  --texto-suave:      #a09daa;
-  --linha:            #6b6878;
-  --borda-sutil:      #343240;
+  --fundo:            #22242a;
+  --fundo-elevado:    #2b2e36;
+  --texto:            #e2e4e7;
+  --texto-suave:      #a2a7b2;
+  --linha:            #767b88;
+  --borda-sutil:      #3d414b;
 
-  --amarelo:          #6b5a1f;
-  --amarelo-forte:    #f5c518;
-  --roxo:             #3f3470;
-  --roxo-forte:       #a78bfa;
-  --cinza:            #2c2a34;
-  --verde:            #1f4a33;
-  --verde-forte:      #5ddb94;
+  /* sobre quase-preto uma cor saturada dá um salto enorme de
+     luminância e vibra; sobre chumbo o salto é menor, então ela já
+     pesa mais sozinha — manter a saturação original a faria gritar */
+  --amarelo:          #5d5330;
+  --amarelo-forte:    #e8bf3f;
+  --roxo:             #413a63;
+  --roxo-forte:       #a996f5;
+  --cinza:            #353942;
+  --verde:            #2b4e3c;
+  --verde-forte:      #63cf93;
 
-  --tinta-roxo:       #15141a;   /* o roxo clareou: a tinta escurece */
+  --tinta-roxo:       #22242a;   /* o roxo clareou: a tinta escurece */
+
+  /* o chumbo é um cinza, e cinza rouba croma de tudo que encosta nele.
+     A interface aguenta isso — ela quer ser discreta. O mascote não:
+     ele é a única coisa viva da página, e apagado deixa de cumprir o
+     papel. Sobe de saturação só ele.
+
+     O lilás anterior (#b18cff) já estava com saturação no máximo: o que
+     o deixava fraco era a claridade, que puxa qualquer matiz para o
+     branco. Baixar a luminosidade é o que devolve croma. De quebra, o
+     roxo mais escuro separa melhor os olhos da faixa amarela do rosto:
+     2,4:1 contra 1,6:1 de antes. */
+  --logo-roxo:        #a259ff;
+  --logo-amarelo:     #ffc800;
 }
 
 * { box-sizing: border-box; }
@@ -115,14 +150,14 @@ body {
   font-synthesis: none;
 }
 
-/* as três faixas da página. min() em vez de max-width + padding: os
-   blocos têm moldura, e a borda não pode colar na beira da tela. */
-.topo,
-.mapa,
-.completa,
-.rodape {
-  width: min(var(--largura-max), 100% - var(--pad-lateral) * 2);
+/* a largura e o respiro lateral passaram a ser da coluna de conteúdo:
+   a lateral encosta na beira da tela e não pode ter margem nenhuma. */
+.conteudo {
+  min-width: 0;
+  width: 100%;
+  max-width: var(--largura-max);
   margin-inline: auto;
+  padding: 1.5rem var(--pad-lateral) 0;
 }
 
 /* texto só para leitor de tela — o selo da etapa mostra o algarismo,
@@ -139,38 +174,83 @@ body {
   border: 0;
 }
 
-/* ----------------------------- topo ----------------------------- */
-/* o cabeçalho é um painel único, dividido por réguas duras: nome,
-   controles, progresso e legenda. Lê-se como a moldura de um
-   terminal, não como um cabeçalho de site solto na página. */
-.topo {
-  margin-top: 2rem;
-  background: var(--fundo-elevado);
-  border: 2px solid var(--linha);
-  box-shadow: var(--sombra-dura);
+/* ============================ casca ============================ */
+/* duas colunas: a lateral da trilha e o mapa. Fechada, a coluna some
+   e a lateral sai pela esquerda — a largura dela continua fixa durante
+   o trajeto, senão o índice se espremeria e o texto refluiria a cada
+   quadro. */
+.aplicacao {
+  display: grid;
+  grid-template-columns: var(--lateral-w) minmax(0, 1fr);
+  align-items: start;
+  transition: grid-template-columns 0.2s ease;
 }
 
-/* display: contents dissolve o invólucro para que identidade e ações
-   virem linhas irmãs do painel, cada uma com a sua régua */
-.topo__faixa { display: contents; }
+.aplicacao[data-lateral="fechada"] { grid-template-columns: 0 minmax(0, 1fr); }
+.aplicacao[data-lateral="fechada"] .lateral {
+  transform: translateX(-100%);
+  visibility: hidden;
+  transition: transform 0.2s ease, visibility 0s linear 0.2s;
+}
+.aplicacao[data-lateral="fechada"] .conteudo { padding-left: 3.5rem; }
 
-.topo__identidade {
+/* aba de reabrir: existe só enquanto a lateral está fechada */
+.abrir-lateral {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  z-index: 40;
+  width: 2rem;
+  padding: 1.1rem 0;
+  font: inherit;
+  line-height: 1;
+  color: var(--tinta-bloco);
+  background: var(--amarelo-forte);
+  border: 2px solid var(--linha);
+  border-left: 0;
+  box-shadow: var(--sombra-dura-sm);
+  cursor: pointer;
+}
+.aplicacao[data-lateral="fechada"] .abrir-lateral { display: block; }
+.abrir-lateral:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: 2px; }
+
+/* ---------------------------- lateral ---------------------------- */
+/* cola na quina e vai de ponta a ponta: nada de painel flutuando. A
+   régua da direita é a única borda — ela separa lateral de mapa, e as
+   outras três encostariam na beira da tela sem separar nada.
+   Identidade e progresso são moldura fixa; só o índice rola. */
+.lateral {
+  position: sticky;
+  top: 0;
+  width: var(--lateral-w);
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--fundo-elevado);
+  border-right: 2px solid var(--linha);
+  transition: transform 0.2s ease;
+}
+
+.lateral__identidade {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
   padding: var(--pad-painel);
   min-width: 0;
 }
 
-.topo__logo {
+.lateral__logo {
   flex-shrink: 0;
   display: block;
   animation: flutuar 3.4s ease-in-out infinite;
 }
 
-.topo__logo svg {
+.lateral__logo svg {
   display: block;
-  width: clamp(4.5rem, 9vw, 7rem);
+  width: 4rem;
   height: auto;
 }
 
@@ -196,9 +276,9 @@ body {
   99%           { transform: scaleY(1); }
 }
 
-.topo h1 {
+.lateral h1 {
   margin: 0;
-  font-size: var(--t-pagina);
+  font-size: var(--t-etapa);
   font-weight: 400;              /* peso não é ferramenta: ver body */
   line-height: 1.05;
   letter-spacing: 0.01em;
@@ -206,19 +286,134 @@ body {
   overflow-wrap: break-word;
 }
 
-.topo__sub {
-  margin: 0.45rem 0 0;
-  font-size: var(--t-base);
-  color: var(--texto-suave);
+/* o título É o trocador de trilha: um <select> transparente cobre a
+   área inteira, então o clique abre a lista nativa do sistema e o h1
+   continua sendo o h1 na árvore de acessibilidade. Uma caixa a menos
+   na lateral, e o nome deixa de ser repetido em dois lugares. */
+.lateral__nome { min-width: 0; flex: 1 1 auto; }
+
+.lateral__trilha {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
-.topo__acoes {
+/* invisível por cor, não por `opacity: 0`: opacity cria contexto de
+   empilhamento e apagaria junto o ::picker(select), que é desenhado na
+   página e é justamente o que queremos estilizar abaixo. */
+.lateral__select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  font: inherit;
+  color: transparent;
+  background: transparent;
+  border: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+/* onde o popup ainda é desenhado pelo sistema, ele aceita pouca coisa —
+   mas aceita isto, e sem isto o tema escuro abre um retângulo branco */
+.lateral__select option {
+  background: var(--fundo-elevado);
+  color: var(--texto);
+  font-size: var(--t-base);
+}
+
+/* Chrome/Edge 135+: o popup passa a ser desenhado na própria página e
+   aceita a mesma moldura dura do resto. Onde não houver suporte, as
+   duas regras acima continuam valendo. */
+@supports (appearance: base-select) {
+  .lateral__select,
+  .lateral__select::picker(select) { appearance: base-select; }
+
+  /* o gatilho segue invisível: quem mostra o nome da trilha é o h1 que
+     fica atrás dele */
+  .lateral__select {
+    display: block;
+    padding: 0;
+    color: transparent;
+    background: transparent;
+    border: 0;
+  }
+  .lateral__select::picker-icon { display: none; }
+
+  .lateral__select::picker(select) {
+    width: max-content;
+    min-width: 12rem;
+    margin-top: 0.35rem;
+    padding: 0;
+    color: var(--texto);
+    background: var(--fundo-elevado);
+    border: 2px solid var(--linha);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra-dura);
+  }
+
+  .lateral__select option {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.7rem;
+    font-size: var(--t-base);
+    color: var(--texto);
+    background: var(--fundo-elevado);
+    cursor: pointer;
+  }
+
+  .lateral__select option:hover,
+  .lateral__select option:focus {
+    background: var(--texto);
+    color: var(--fundo);
+    outline: none;
+  }
+
+  .lateral__select option:checked {
+    background: var(--amarelo-forte);
+    color: var(--tinta-bloco);
+  }
+  .lateral__select option::checkmark { color: currentColor; }
+}
+
+/* sem chevron: o sublinhado no hover e o foco visível são a pista */
+.lateral__trilha:hover h1,
+.lateral__select:focus-visible ~ h1 { text-decoration: underline; }
+.lateral__select:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: 2px; }
+
+/* fecha a lateral — e, no celular, a gaveta */
+.lateral__fechar {
+  flex: none;
+  align-self: flex-start;
+  font: inherit;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: grid;
+  place-items: center;
+  background: var(--fundo);
+  color: var(--texto-suave);
+  border: 2px solid var(--borda-sutil);
+  cursor: pointer;
+}
+.lateral__fechar:hover { border-color: var(--linha); color: var(--texto); }
+.lateral__fechar:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: 2px; }
+
+/* ----------------------------- quina ----------------------------- */
+/* tema e zerar ficam juntos, fora da trilha e fora do mapa */
+.canto {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 40;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem var(--pad-painel);
-  border-top: 2px solid var(--linha);
+}
+.canto .botao {
+  background: var(--fundo-elevado);
+  box-shadow: var(--sombra-dura);
 }
 
 /* --------------------------- controles --------------------------- */
@@ -243,12 +438,7 @@ body {
 .botao:active { transform: translate(2px, 2px); box-shadow: none; }
 .botao:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: 2px; }
 
-.botao--icone { width: 2.25rem; padding: 0.35rem 0; text-align: center; }
-
-/* o botão de tema é desenhado, não escrito: os glifos de meia-lua não
-   existem nesta fonte, e um quadrado meio cheio diz a mesma coisa com
-   a geometria do resto da página */
-.botao--tema {
+.botao--icone {
   width: 2.25rem;
   padding: 0.35rem 0;
   display: inline-flex;
@@ -256,13 +446,26 @@ body {
   justify-content: center;
 }
 
-.botao--tema::before {
-  content: "";
-  width: 14px;
-  height: 14px;
-  border: 2px solid currentColor;
-  background: linear-gradient(90deg, currentColor 50%, transparent 50%);
+/* ícones em SVG na grade de 16, não em glifo: a Departure Mono não tem
+   sol, lua nem lixeira, e um ícone de biblioteca traria curvas que o
+   resto da página não tem. crispEdges trava o antialiasing, senão o
+   retângulo de 1px sai cinza em tela não-retina. */
+.botao svg {
+  display: block;
+  flex: none;
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+  shape-rendering: crispEdges;
 }
+
+/* o ícone mostra o tema que o clique entrega, não o tema atual: no
+   claro aparece a lua, no escuro o sol. Os seletores repetem `.botao`
+   de propósito — `.icone-sol` sozinho perde para `.botao svg` acima,
+   e os dois ícones apareceriam juntos. */
+.botao .icone-sol { display: none; }
+:root[data-tema="escuro"] .botao .icone-sol { display: block; }
+:root[data-tema="escuro"] .botao .icone-lua { display: none; }
 
 .busca {
   font: inherit;
@@ -278,100 +481,6 @@ body {
 
 .busca::placeholder { color: var(--texto-suave); }
 .busca:focus { outline: 2px solid var(--roxo-forte); outline-offset: 1px; }
-
-/* seletor de trilha — mesma caixa dos botões, com seta própria: a
-   seta nativa é desenhada pelo sistema e destoa da borda dura. */
-.seletor {
-  font: inherit;
-  font-size: var(--t-base);
-  width: 12rem;
-  padding: 0.35rem 1.7rem 0.35rem 0.6rem;   /* folga à direita p/ a seta */
-  background-color: var(--fundo);
-  color: var(--texto);
-  border: 2px solid var(--linha);
-  border-radius: var(--raio);
-  box-shadow: var(--sombra-dura-sm);
-  cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
-  text-overflow: ellipsis;
-  transition: transform 0.08s, box-shadow 0.08s;
-
-  /* chevron em dois triângulos de gradiente. Usa currentColor, então
-     acompanha o tema sem precisar de um ícone por tema. */
-  background-image:
-    linear-gradient(45deg, transparent 50%, currentColor 50%),
-    linear-gradient(135deg, currentColor 50%, transparent 50%);
-  background-size: 5px 5px;
-  background-position:
-    calc(100% - 1.05rem) calc(50% - 1px),
-    calc(100% - 0.7rem)  calc(50% - 1px);
-  background-repeat: no-repeat;
-}
-
-/* mesma micro-interação dos botões: afunda na direção da sombra */
-.seletor:hover  { transform: translate(2px, 2px); box-shadow: none; }
-.seletor:active { transform: translate(2px, 2px); box-shadow: none; }
-.seletor:focus { outline: 2px solid var(--roxo-forte); outline-offset: 1px; }
-
-.seletor option { background: var(--fundo-elevado); color: var(--texto); }
-
-/* Chrome/Edge 134+: o popup do seletor passa a ser desenhado na própria
-   página, então aceita o mesmo visual do resto. Onde não houver suporte,
-   tudo acima continua valendo — o popup fica a cargo do color-scheme. */
-@supports (appearance: base-select) {
-  .seletor,
-  .seletor::picker(select) { appearance: base-select; }
-
-  .seletor {
-    background-image: none;   /* o chevron passa a ser ::picker-icon */
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    padding: 0.35rem 0.6rem;  /* sem a folga do chevron de gradiente */
-
-    /* base-select torna o campo um flex container, e o rótulo longo
-       passaria a quebrar em duas linhas em vez de cortar com reticências */
-    white-space: nowrap;
-    overflow: hidden;
-  }
-
-  .seletor::picker-icon {
-    flex: none;
-    color: var(--texto-suave);
-    transition: transform 0.15s ease;
-  }
-  .seletor:open::picker-icon { transform: rotate(180deg); }
-
-  .seletor::picker(select) {
-    background: var(--fundo-elevado);
-    border: 2px solid var(--linha);
-    border-radius: var(--raio);
-    box-shadow: var(--sombra-dura);
-    padding: 0;
-    margin-top: 0.35rem;
-  }
-
-  .seletor option {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.4rem 0.6rem;
-    font-size: var(--t-base);
-    cursor: pointer;
-  }
-
-  .seletor option:hover,
-  .seletor option:focus {
-    background: var(--texto);
-    color: var(--fundo);
-    outline: none;
-  }
-
-  .seletor option:checked { background: var(--amarelo-forte); color: var(--tinta-bloco); }
-  .seletor option::checkmark { color: currentColor; }
-}
 
 /* --------------------------- progresso --------------------------- */
 .progresso {
@@ -399,23 +508,37 @@ body {
   transition: width 0.25s ease;
 }
 
-.progresso__texto {
-  margin: 0.4rem 0 0;
-  font-size: var(--t-micro);
-  color: var(--texto-suave);
+/* ------------------------ barra do conteúdo ------------------------ */
+/* busca e legenda falam do mapa, então moram com o mapa. A folga à
+   direita é para os botões da quina, que flutuam sobre esse canto. */
+.conteudo__barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.25rem;
+  margin-bottom: 1.5rem;
+  padding-right: 6.5rem;
 }
 
+.conteudo__barra .busca { width: min(18rem, 100%); }
+
+.busca__contagem {
+  margin: 0;
+  font-size: var(--t-micro);
+  color: var(--texto-suave);
+  font-variant-numeric: tabular-nums;
+}
+.busca__contagem:empty { display: none; }
+
 /* ---------------------------- legenda ---------------------------- */
-/* última linha do painel: funciona como barra de status */
+/* a legenda decodifica a barra de prioridade do tópico, que só existe
+   no mapa. Saiu do rodapé do cabeçalho e virou grupo inline aqui. */
 .legenda {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem 1.5rem;
+  gap: 0.5rem 1.25rem;
   flex-wrap: wrap;
-  padding: 0.6rem var(--pad-painel);
-  border-top: 2px solid var(--linha);
-  background: var(--fundo);
+  margin-left: auto;
 }
 
 .legenda__grupo { display: flex; gap: 1rem; flex-wrap: wrap; }
@@ -448,30 +571,201 @@ body {
 .legenda__dica { margin: 0; font-size: var(--t-micro); color: var(--texto-suave); }
 .legenda__dica strong { font-weight: 400; color: var(--texto); }
 
+/* ---------------------------- índice ---------------------------- */
+/* a única parte rolável da lateral: identidade e progresso são moldura
+   fixa, o índice é o conteúdo. O min-height: 0 é o que permite ao
+   filho flex encolher abaixo do conteúdo — sem ele quem rola é a
+   página inteira, não o índice. */
+.indice {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-top: 2px solid var(--linha);
+  background: var(--fundo);
+}
+
+.indice__etapa { border-bottom: 2px solid var(--borda-sutil); }
+
+.indice__cabeca {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 0.55rem;
+  padding: 0.55rem var(--pad-painel);
+  background: none;
+  color: inherit;
+  border: 0;
+  cursor: pointer;
+}
+.indice__cabeca:hover { background: var(--cinza); }
+.indice__cabeca:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: -2px; }
+
+.indice__selo {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: grid;
+  place-items: center;
+  font-size: var(--t-micro);
+  background: var(--texto);
+  color: var(--fundo);
+}
+.indice__etapa[data-aberta="sim"] .indice__selo {
+  background: var(--roxo-forte);
+  color: var(--tinta-roxo);
+}
+
+.indice__nome {
+  min-width: 0;
+  font-size: var(--t-leitura);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.indice__lista {
+  margin: 0;
+  padding: 0 0 0.4rem;
+  list-style: none;
+  background: var(--fundo-elevado);
+}
+
+.indice__grupo {
+  padding: 0.5rem var(--pad-painel) 0.15rem calc(var(--pad-painel) + 0.25rem);
+  font-size: var(--t-base);
+  letter-spacing: var(--tracking-rotulo);
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+/* linha do tópico: a marca é um alvo próprio (cicla o estado), o
+   título é outro (rola até ele no mapa). Dois cliques diferentes numa
+   linha só — e os mesmos glifos do mapa, não um checkbox à parte: o
+   tópico tem quatro estados, não dois. */
+.indice__item { display: flex; align-items: flex-start; }
+
+.indice__marca {
+  flex: none;
+  font: inherit;
+  font-size: var(--t-leitura);
+  width: 2rem;
+  padding: 0.3rem 0;
+  line-height: 1.3;
+  text-align: center;
+  background: none;
+  border: 0;
+  border-left: 3px solid transparent;
+  color: var(--texto-suave);
+  cursor: pointer;
+}
+.indice__marca:hover { background: var(--cinza); }
+.indice__marca[data-prioridade="fundamental"] { border-left-color: var(--amarelo-forte); }
+.indice__marca[data-prioridade="importante"]  { border-left-color: var(--roxo-forte); }
+
+.indice__item[data-estado="feito"] .indice__marca { color: var(--verde-forte); }
+.indice__item[data-estado="estudando"] .indice__marca { color: var(--roxo-forte); }
+
+.indice__rotulo {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: inherit;
+  font-size: var(--t-leitura);
+  text-align: left;
+  padding: 0.3rem 0.6rem 0.3rem 0;
+  line-height: 1.3;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.indice__rotulo:hover { text-decoration: underline; }
+
+.indice__marca:focus-visible,
+.indice__rotulo:focus-visible {
+  outline: 2px solid var(--roxo-forte);
+  outline-offset: -2px;
+}
+
+.indice__item[data-estado="feito"] .indice__rotulo {
+  color: var(--texto-suave);
+  text-decoration: line-through;
+}
+.indice__item[data-estado="pulado"] .indice__rotulo {
+  color: var(--texto-suave);
+  opacity: 0.65;
+}
+.indice__item[data-atual="sim"] { background: var(--amarelo); }
+.indice__item[data-atual="sim"] .indice__rotulo,
+.indice__item[data-atual="sim"] .indice__marca { color: var(--tinta-bloco); }
+
+/* -------------------------- confirmação -------------------------- */
+/* zerar é o único gesto irreversível da página. A caixa do sistema não
+   tem a moldura dura daqui e apareceria como corpo estranho. */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: var(--pad-lateral);
+}
+.modal__veu { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5); }
+
+.modal__caixa {
+  position: relative;
+  width: min(26rem, 100%);
+  padding: var(--pad-painel);
+  background: var(--fundo-elevado);
+  border: 2px solid var(--linha);
+  box-shadow: var(--sombra-dura);
+}
+.modal__titulo {
+  margin: 0;
+  font-size: var(--t-etapa);
+  font-weight: 400;
+  line-height: 1.1;
+}
+.modal__texto { margin: 0.6rem 0 0; color: var(--texto-suave); }
+.modal__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
 /* ----------------------------- mapa ----------------------------- */
-.mapa { margin-top: 3rem; }
+.mapa { margin-top: 0; }
 
 /* ------------------------- faixa da etapa ------------------------- */
-.etapa { margin-bottom: 4rem; }
+/* fechada, a etapa é só a faixa: 4rem de respiro entre faixas vazias
+   transformaria o mapa numa escada de ar. A margem anima junto com a
+   sanfona, senão salta no primeiro quadro. */
+.etapa { margin-bottom: 4rem; transition: margin-bottom 0.25s ease; }
+.etapa[data-aberta="nao"] { margin-bottom: 1rem; }
 
-/* a barra da etapa é um <button>: abre a introdução. Gruda no topo
-   enquanto a etapa rola, então a referência de onde se está nunca
-   sai da tela — é o que o nó central fazia, sem o nó central. */
+/* a faixa deixou de ser um botão só — botão dentro de botão é HTML
+   inválido. Agora é uma régua com dois blocos sólidos nas pontas: o
+   selo numerado à esquerda e a seta à direita. Gruda no topo enquanto
+   a etapa rola, então a referência de onde se está nunca sai da tela. */
 .etapa__nucleo {
   position: sticky;
   top: 0;
   z-index: 3;
   width: 100%;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   grid-template-areas:
-    "selo titulo meta"
-    "selo barra  barra";
+    "selo titulo meta  expandir"
+    "selo barra  barra expandir";
   align-items: center;
   column-gap: 1rem;
   row-gap: 0.5rem;
   margin-bottom: 1.75rem;
-  padding: 0;
   font: inherit;
   text-align: left;
   color: var(--texto);
@@ -479,13 +773,62 @@ body {
   border: 2px solid var(--linha);
   border-radius: var(--raio);
   box-shadow: var(--sombra-dura);
-  cursor: pointer;
-  transition: transform 0.08s, box-shadow 0.08s;
 }
 
-.etapa__nucleo:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--linha); }
-.etapa__nucleo:active { transform: translate(4px, 4px); box-shadow: none; }
-.etapa__nucleo:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: 3px; }
+/* o título continua abrindo a introdução da etapa, agora como botão
+   próprio em vez da faixa inteira */
+.etapa__titulo-btn {
+  grid-area: titulo;
+  align-self: end;
+  font: inherit;
+  text-align: left;
+  padding: 0;
+  background: none;
+  color: inherit;
+  border: 0;
+  cursor: pointer;
+}
+.etapa__titulo-btn:hover .etapa__titulo { text-decoration: underline; }
+.etapa__titulo-btn:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: 2px; }
+
+.etapa__expandir {
+  grid-area: expandir;
+  align-self: stretch;
+  min-width: 3.25rem;
+  display: grid;
+  place-items: center;
+  font: inherit;
+  background: var(--fundo-elevado);
+  color: var(--texto-suave);
+  border: 0;
+  border-left: 2px solid var(--linha);
+  cursor: pointer;
+}
+.etapa__expandir:hover { background: var(--cinza); color: var(--texto); }
+.etapa__expandir:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: -4px; }
+.etapa[data-aberta="sim"] .etapa__expandir { background: var(--cinza); color: var(--texto); }
+
+/* a seta aponta para baixo fechada e gira para cima ao abrir. O giro
+   dura o mesmo que a sanfona, então ícone e conteúdo chegam juntos. */
+.etapa__expandir svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  shape-rendering: crispEdges;
+  transition: transform 0.25s ease;
+}
+.etapa[data-aberta="sim"] .etapa__expandir svg { transform: rotate(180deg); }
+
+/* sanfona: `hidden` não tem meio-termo para animar, e max-height exige
+   chutar uma altura. Uma linha de grid indo de 0fr a 1fr interpola a
+   altura real do conteúdo, qualquer que seja ela. */
+.etapa__sanfona {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease;
+}
+.etapa[data-aberta="sim"] .etapa__sanfona { grid-template-rows: 1fr; }
 
 /* o selo: bloco sólido colado na quina, com o algarismo em tinta
    escura. É daqui que a etapa tira presença — não de negrito. */
@@ -504,9 +847,10 @@ body {
   border-right: 2px solid var(--linha);
 }
 
+/* o grid-area passou para o botão que embrulha este span: quem ocupa
+   a célula agora é o alvo de clique, não o texto */
 .etapa__titulo {
-  grid-area: titulo;
-  align-self: end;
+  display: block;
   padding-top: 0.7rem;
   font-size: var(--t-etapa);
   line-height: 1.1;
@@ -552,6 +896,20 @@ body {
   columns: 3 17rem;
   column-gap: 2.5rem;
   column-rule: 2px solid var(--borda-sutil);
+
+  /* o filho precisa aceitar encolher a zero — sem min-height: 0 ele
+     mantém a altura do conteúdo e a linha da sanfona nunca fecha */
+  min-height: 0;
+  overflow: hidden;
+
+  /* fechado, o conteúdo sai do Tab — mas só depois do trajeto, senão
+     ele some no primeiro quadro e a animação roda no vazio */
+  visibility: hidden;
+  transition: visibility 0s linear 0.25s;
+}
+.etapa[data-aberta="sim"] .etapa__grupos {
+  visibility: visible;
+  transition-delay: 0s;
 }
 
 /* o grupo flui entre colunas em vez de ser indivisível: com dois
@@ -592,13 +950,13 @@ body {
 
 .topico {
   font: inherit;
-  font-size: var(--t-base);
+  font-size: var(--t-leitura);
   display: flex;
   align-items: flex-start;
   gap: 0.55rem;
   width: 100%;
   text-align: left;
-  padding: 0.3rem 0.5rem;
+  padding: 0.35rem 0.55rem;
   background: transparent;
   color: var(--texto);
   border: 0;
@@ -965,7 +1323,7 @@ body:has(.drawer--ajustando) .sobreposicao {
 
 @media (prefers-reduced-motion: reduce) {
   .drawer { animation: none; }
-  .topo__logo,
+  .lateral__logo,
   .logo__olho { animation: none; }
   * { transition-duration: 0.01ms !important; }
 }
@@ -1309,21 +1667,85 @@ body:has(.drawer--ajustando) .sobreposicao {
    ocupa a tela toda e um scroll invisivel por baixo desorienta */
 body:has(.drawer:not([hidden])) { overflow: hidden; }
 
+/* --------------------- lateral vira gaveta --------------------- */
+/* abaixo de 900px não há largura para duas colunas: a lateral sai do
+   fluxo, vira gaveta sobre o mapa, e a maçaneta é quem a chama. */
+.macaneta { display: none; }
+
+.veu {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+@media (max-width: 900px) {
+  .aplicacao,
+  .aplicacao[data-lateral="fechada"] { grid-template-columns: minmax(0, 1fr); }
+  .aplicacao[data-lateral="fechada"] .abrir-lateral { display: none; }
+  .aplicacao[data-lateral="fechada"] .conteudo { padding-left: var(--pad-lateral); }
+  .aplicacao[data-lateral="fechada"] .lateral { visibility: visible; }
+
+  .macaneta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    position: fixed;
+    left: 1rem;
+    bottom: 1rem;
+    z-index: 30;
+    font: inherit;
+    font-size: var(--t-base);
+    padding: 0.6rem 0.9rem;
+    color: var(--tinta-bloco);
+    background: var(--amarelo-forte);
+    border: 2px solid var(--linha);
+    box-shadow: var(--sombra-dura);
+    cursor: pointer;
+  }
+  .macaneta:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: 2px; }
+
+  .veu { display: block; }
+
+  .lateral {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 25;
+    width: min(21rem, 90vw);
+    height: 100dvh;
+    box-shadow: none;
+  }
+
+  /* a regra de "fechada" do desktop é mais específica que esta, então
+     o seletor precisa alcançar os dois casos — senão a gaveta aberta
+     depois de a lateral ter sido fechada no desktop não aparece */
+  .aplicacao .lateral,
+  .aplicacao[data-lateral="fechada"] .lateral { transform: translateX(-102%); }
+  .aplicacao .lateral[data-aberta="sim"],
+  .aplicacao[data-lateral="fechada"] .lateral[data-aberta="sim"] { transform: none; }
+
+  /* a quina desce para não cobrir a primeira linha do conteúdo */
+  .conteudo__barra { padding-right: 6.5rem; }
+}
+
 /* ---------------------- responsivo: tablet ---------------------- */
 @media (max-width: 760px) {
   /* o selo sai da coluna e vira a primeira linha, junto do título:
      em tela estreita ele comia metade da largura da barra */
   .etapa__nucleo {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
     grid-template-areas:
-      "selo titulo"
-      "meta meta"
-      "barra barra";
+      "selo titulo expandir"
+      "meta meta   expandir"
+      "barra barra expandir";
     column-gap: 0.75rem;
     row-gap: 0.4rem;
   }
 
-  .etapa__titulo { padding-top: 0.6rem; padding-right: 0.75rem; }
+  .etapa__titulo-btn { padding-right: 0.75rem; }
+  .etapa__titulo { padding-top: 0.6rem; }
 
   .etapa__meta {
     padding: 0 0.75rem;
@@ -1331,42 +1753,26 @@ body:has(.drawer:not([hidden])) { overflow: hidden; }
   }
 
   .etapa__anel { margin: 0 0.75rem 0.75rem; }
+  .etapa__expandir { min-width: 2.75rem; }
 
-  /* a barra de ações quebra em duas linhas e a busca ocupa a sobra,
-     em vez de empurrar a página para fora da tela */
-  .busca { flex: 1 1 8rem; width: auto; min-width: 0; }
-  .seletor { flex: 1 1 10rem; min-width: 0; }
+  /* a legenda cai para a linha de baixo em vez de espremer a busca */
+  .conteudo__barra .busca { width: 100%; }
+  .legenda { margin-left: 0; }
 }
 
 /* ---------------------- responsivo: celular ---------------------- */
 @media (max-width: 600px) {
   :root { --pad-lateral: 1rem; --pad-painel: 1rem; }
 
-  .topo { margin-top: 1rem; }
-
-  /* o logo divide a linha com o título: encolhe para o h1 não cair
-     em três linhas de uma palavra cada */
-  .topo__identidade { gap: 0.75rem; }
-  .topo__logo svg   { width: 3.5rem; }
-
-  /* três linhas: trilha, busca + tema, zerar. Numa única linha com
-     "Zerar progresso" ao lado, a busca sobrava com 4 caracteres. */
-  .topo__acoes {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-  .seletor  { grid-column: 1 / -1; width: 100%; }
-  .busca    { width: 100%; min-width: 0; }
-  #btn-reset { grid-column: 1 / -1; }
+  .busca { width: 100%; min-width: 0; }
 
   /* 16px evita o zoom automático do Safari iOS ao focar o campo */
-  .busca,
-  .seletor { font-size: 16.5px; padding-block: 0.5rem; }
+  .busca { font-size: 16.5px; padding-block: 0.5rem; }
 
   /* alvos de toque: ~40px de altura no lugar dos ~28px do desktop */
   .botao        { font-size: var(--t-leitura); padding: 0.5rem 0.85rem; }
   .botao--icone { width: 2.75rem; padding: 0.5rem 0; }
-  .topico       { font-size: var(--t-leitura); padding: 0.55rem 0.6rem; }
+  .topico       { padding: 0.55rem 0.6rem; }   /* já está em --t-leitura */
   .estado-btn   { font-size: var(--t-leitura); padding: 0.5rem 0.9rem; }
 
   /* uma coluna só: 17rem não cabem duas vezes em 360px de qualquer forma,

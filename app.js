@@ -400,7 +400,6 @@
     document.title = "Roadmap de " + ROADMAP.titulo;
     montarSeletorTrilha();
     document.getElementById("titulo").textContent = ROADMAP.titulo;
-    document.getElementById("subtitulo").textContent = ROADMAP.subtitulo;
 
     montarLegenda();
     montarDica();
@@ -411,6 +410,7 @@
       mapa.appendChild(criarEtapa(etapa));
     });
 
+    montarIndice();
     montarBotoesEstado();
     atualizarProgresso();
   }
@@ -422,7 +422,7 @@
      e mexer nele conserta os três de uma vez.
      ------------------------------------------------------------ */
   function montarMascotes() {
-    var original = document.querySelector(".topo__logo svg");
+    var original = document.querySelector(".lateral__logo svg");
     if (!original) return;
 
     ["vazio-mascote", "completa-selo"].forEach(function (id) {
@@ -472,10 +472,143 @@
     });
   }
 
+  /* ------------------------------------------------------------
+     índice da trilha — a mesma árvore do mapa, reduzida à lateral.
+     Cada tópico tem dois alvos: a marca cicla o estado, o rótulo rola
+     até ele no mapa. A marca usa os mesmos glifos do mapa em vez de um
+     checkbox: o tópico tem quatro estados, não dois.
+     ------------------------------------------------------------ */
+  function montarIndice() {
+    var alvo = document.getElementById("indice");
+    if (!alvo) return;
+
+    ROADMAP.etapas.forEach(function (etapa) {
+      var bloco = document.createElement("div");
+      bloco.className = "indice__etapa";
+      bloco.setAttribute("data-aberta", "nao");
+
+      var cabeca = document.createElement("button");
+      cabeca.type = "button";
+      cabeca.className = "indice__cabeca";
+      cabeca.setAttribute("aria-expanded", "false");
+
+      var selo = document.createElement("span");
+      selo.className = "indice__selo";
+      selo.setAttribute("aria-hidden", "true");
+      selo.textContent = etapa.numero;
+
+      var nome = document.createElement("span");
+      nome.className = "indice__nome";
+      nome.textContent = etapa.titulo;
+
+      cabeca.appendChild(selo);
+      cabeca.appendChild(nome);
+      bloco.appendChild(cabeca);
+
+      var lista = document.createElement("ul");
+      lista.className = "indice__lista";
+      lista.hidden = true;
+
+      etapa.grupos.forEach(function (grupo) {
+        if (grupo.titulo) {
+          var cab = document.createElement("li");
+          cab.className = "indice__grupo";
+          cab.textContent = grupo.titulo;
+          lista.appendChild(cab);
+        }
+        grupo.topicos.forEach(function (topico) {
+          lista.appendChild(criarLinhaIndice(topico));
+        });
+      });
+
+      bloco.appendChild(lista);
+
+      cabeca.addEventListener("click", function () {
+        abrirNoIndice(etapa, lista.hidden);
+      });
+
+      alvo.appendChild(bloco);
+      etapa._indiceLista = lista;
+      etapa._indiceBloco = bloco;
+      etapa._indiceCabeca = cabeca;
+    });
+
+    /* as linhas nascem sem marca: pintar depois de estarem no DOM */
+    Object.keys(INDICE).forEach(pintarLinhaIndice);
+  }
+
+  function abrirNoIndice(etapa, abrir) {
+    if (!etapa._indiceLista) return;
+    etapa._indiceLista.hidden = !abrir;
+    etapa._indiceBloco.setAttribute("data-aberta", abrir ? "sim" : "nao");
+    etapa._indiceCabeca.setAttribute("aria-expanded", String(abrir));
+  }
+
+  function criarLinhaIndice(topico) {
+    var li = document.createElement("li");
+    li.className = "indice__item";
+    li.id = "indice-" + topico.id;
+
+    var marca = document.createElement("button");
+    marca.type = "button";
+    marca.className = "indice__marca";
+    marca.setAttribute("data-prioridade", topico.prioridade);
+    marca.setAttribute("aria-label", "Alternar o estado de " + topico.titulo);
+    marca.addEventListener("click", function () { ciclar(topico.id); });
+
+    var rotulo = document.createElement("button");
+    rotulo.type = "button";
+    rotulo.className = "indice__rotulo";
+    rotulo.textContent = topico.titulo;
+    rotulo.title = "Ir para " + topico.titulo + " no mapa";
+    rotulo.addEventListener("click", function () { irParaTopico(topico.id); });
+
+    li.appendChild(marca);
+    li.appendChild(rotulo);
+    return li;
+  }
+
+  function pintarLinhaIndice(id) {
+    var li = document.getElementById("indice-" + id);
+    if (!li) return;
+    var estado = estadoDe(id);
+    li.setAttribute("data-estado", estado);
+    li.querySelector(".indice__marca").textContent = MARCAS[estado];
+  }
+
+  /* o tópico pode estar numa etapa fechada: abrir primeiro, senão a
+     rolagem para numa faixa e o tópico não está em lugar nenhum da
+     tela. E só rolar depois da sanfona — mirar numa posição que ainda
+     está crescendo deixa o alvo fora de quadro no fim. */
+  function irParaTopico(id) {
+    var ref = INDICE[id];
+    if (!ref) return;
+
+    var precisavaAbrir = !etapaAberta(ref.etapa.id);
+    abrirEtapaNoMapa(ref.etapa.id, true, ref.etapa.titulo);
+
+    Object.keys(INDICE).forEach(function (outro) {
+      var li = document.getElementById("indice-" + outro);
+      if (li) li.removeAttribute("data-atual");
+    });
+    var atual = document.getElementById("indice-" + id);
+    if (atual) atual.setAttribute("data-atual", "sim");
+
+    window.setTimeout(function () {
+      var botao = document.getElementById("topico-" + id);
+      if (botao) botao.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, precisavaAbrir ? 260 : 0);
+
+    /* no celular a gaveta cobre a tela: mantê-la aberta esconderia
+       justamente o tópico que a pessoa pediu para ver */
+    if (window.innerWidth <= 900) fecharGaveta();
+  }
+
   function criarEtapa(etapa) {
     var secao = document.createElement("section");
     secao.className = "etapa";
     secao.setAttribute("data-etapa", etapa.id);
+    secao.setAttribute("data-aberta", "nao");
 
     secao.appendChild(criarNucleo(etapa));
 
@@ -484,21 +617,47 @@
        contagem de colunas acompanha a largura da tela sozinha. */
     var corpo = document.createElement("div");
     corpo.className = "etapa__grupos";
+    corpo.id = "grupos-" + etapa.id;
 
     etapa.grupos.forEach(function (grupo) {
       corpo.appendChild(criarGrupo(grupo, etapa));
     });
 
-    secao.appendChild(corpo);
+    /* invólucro da sanfona: é a linha de grid dele que anima de 0fr a
+       1fr. Sem o invólucro não há o que interpolar. */
+    var sanfona = document.createElement("div");
+    sanfona.className = "etapa__sanfona";
+    sanfona.appendChild(corpo);
+
+    secao.appendChild(sanfona);
     return secao;
   }
 
+  /* o estado mora no atributo da seção: o CSS lê de lá para a sanfona,
+     para o giro da seta e para a margem — uma fonte só */
+  function etapaAberta(etapaId) {
+    var secao = document.querySelector('.etapa[data-etapa="' + etapaId + '"]');
+    return !!secao && secao.getAttribute("data-aberta") === "sim";
+  }
+
+  function abrirEtapaNoMapa(etapaId, abrir, titulo) {
+    var secao = document.querySelector('.etapa[data-etapa="' + etapaId + '"]');
+    if (!secao) return;
+
+    secao.setAttribute("data-aberta", abrir ? "sim" : "nao");
+
+    var botao = secao.querySelector(".etapa__expandir");
+    if (!botao) return;
+    botao.setAttribute("aria-expanded", String(abrir));
+    botao.setAttribute("aria-label",
+      (abrir ? "Esconder" : "Mostrar") + " os tópicos de " +
+      (titulo || secao.querySelector(".etapa__titulo").textContent));
+  }
+
   function criarNucleo(etapa) {
-    var nucleo = document.createElement("button");
-    nucleo.type = "button";
+    var nucleo = document.createElement("div");
     nucleo.className = "etapa__nucleo";
     nucleo.setAttribute("data-etapa-id", etapa.id);
-    nucleo.title = etapa.objetivo + " (clique para ler a introdução)";
 
     var numero = document.createElement("span");
     numero.className = "etapa__numero";
@@ -511,9 +670,22 @@
     numero.appendChild(palavra);
     numero.appendChild(document.createTextNode(etapa.numero));
 
+    /* o título é quem abre a introdução agora; a faixa inteira deixou
+       de ser botão porque a seta de expandir mora dentro dela, e botão
+       dentro de botão é HTML inválido */
+    var tituloBtn = document.createElement("button");
+    tituloBtn.type = "button";
+    tituloBtn.className = "etapa__titulo-btn";
+    tituloBtn.title = etapa.objetivo + " (clique para ler a introdução)";
+
     var titulo = document.createElement("span");
     titulo.className = "etapa__titulo";
     titulo.textContent = etapa.titulo;
+    tituloBtn.appendChild(titulo);
+
+    tituloBtn.addEventListener("click", function () {
+      abrirEtapa(etapa.id);
+    });
 
     var meta = document.createElement("span");
     meta.className = "etapa__meta";
@@ -525,14 +697,32 @@
     anel.className = "etapa__anel";
     anel.appendChild(document.createElement("span"));
 
+    /* triângulo em degraus, na mesma grade de 16 dos outros ícones */
+    var expandir = document.createElement("button");
+    expandir.type = "button";
+    expandir.className = "etapa__expandir";
+    expandir.setAttribute("aria-expanded", "false");
+    expandir.setAttribute("aria-controls", "grupos-" + etapa.id);
+    expandir.setAttribute("aria-label", "Mostrar os tópicos de " + etapa.titulo);
+    expandir.innerHTML =
+      '<svg viewBox="0 0 16 16" aria-hidden="true">' +
+        '<rect x="2" y="5" width="12" height="1"/>' +
+        '<rect x="3" y="6" width="10" height="1"/>' +
+        '<rect x="4" y="7" width="8" height="1"/>' +
+        '<rect x="5" y="8" width="6" height="1"/>' +
+        '<rect x="6" y="9" width="4" height="1"/>' +
+        '<rect x="7" y="10" width="2" height="1"/>' +
+      '</svg>';
+
+    expandir.addEventListener("click", function () {
+      abrirEtapaNoMapa(etapa.id, !etapaAberta(etapa.id), etapa.titulo);
+    });
+
     nucleo.appendChild(numero);
-    nucleo.appendChild(titulo);
+    nucleo.appendChild(tituloBtn);
     nucleo.appendChild(meta);
     nucleo.appendChild(anel);
-
-    nucleo.addEventListener("click", function () {
-      abrirEtapa(etapa.id);
-    });
+    nucleo.appendChild(expandir);
 
     return nucleo;
   }
@@ -626,6 +816,7 @@
   function pintarTopico(id) {
     var botao = document.getElementById("topico-" + id);
     if (botao) aplicarEstado(botao, estadoDe(id), INDICE[id].topico.titulo);
+    pintarLinhaIndice(id);   /* mapa e índice mostram o mesmo estado */
   }
 
   function aplicarEstado(botao, estado, titulo) {
@@ -670,17 +861,19 @@
       if (anel) anel.style.width = (t ? (f / t) * 100 : 0) + "%";
     });
 
+    /* nada de contador visível: a barra mostra a proporção, e um placar
+       de 9/156 cansa antes de a pessoa começar. A frase exata continua
+       indo para o leitor de tela, que precisa de um valor. */
     var pct = total ? Math.round((feitos / total) * 100) : 0;
+    var barra = document.querySelector(".progresso__barra");
 
     document.getElementById("progresso-preenchido").style.width = pct + "%";
-    document
-      .querySelector(".progresso__barra")
-      .setAttribute("aria-valuenow", String(pct));
+    barra.setAttribute("aria-valuenow", String(pct));
 
-    var texto = feitos + " de " + total + " tópicos concluídos (" + pct + "%)";
-    if (estudando) texto += " · " + estudando + " em estudo";
-    if (pulados) texto += " · " + pulados + " pulados";
-    document.getElementById("progresso-texto").textContent = texto;
+    var frase = feitos + " de " + total + " tópicos concluídos (" + pct + "%)";
+    if (estudando) frase += ", " + estudando + " em estudo";
+    if (pulados) frase += ", " + pulados + " pulados";
+    barra.setAttribute("aria-valuetext", frase);
 
     /* 100% é literal: "pulado" não conta como feito, então chegar aqui
        exige ter marcado todos. É o que torna o momento raro o bastante
@@ -1039,6 +1232,11 @@
         var botao = document.getElementById("topico-" + id);
         if (botao) botao.removeAttribute("data-oculto");
       });
+      /* limpar o campo devolve tudo ao fechado, que é o padrão */
+      ROADMAP.etapas.forEach(function (etapa) {
+        abrirEtapaNoMapa(etapa.id, false, etapa.titulo);
+        abrirNoIndice(etapa, false);
+      });
       mostrarVazio(false, "");
       atualizarContagemBusca(null);   /* devolve o fim da trilha, se houver */
       return;
@@ -1068,6 +1266,19 @@
       }
     });
 
+    /* buscar desdobra o que casou, nos dois lados: esconder o resultado
+       atrás de uma seta seria pedir a mesma busca duas vezes */
+    ROADMAP.etapas.forEach(function (etapa) {
+      var casou = etapa.grupos.some(function (grupo) {
+        return grupo.topicos.some(function (t) {
+          var botao = document.getElementById("topico-" + t.id);
+          return botao && !botao.hasAttribute("data-oculto");
+        });
+      });
+      abrirEtapaNoMapa(etapa.id, casou, etapa.titulo);
+      abrirNoIndice(etapa, casou);
+    });
+
     mostrarVazio(achados === 0, termo.trim());
     atualizarContagemBusca(achados);
   }
@@ -1082,10 +1293,14 @@
     }
   }
 
+  /* a contagem agora fica ao lado do campo, não na barra de progresso:
+     é resultado de busca, não avanço na trilha — misturar os dois fazia
+     a barra dizer uma coisa e o texto dela, outra */
   function atualizarContagemBusca(achados) {
-    var el = document.getElementById("progresso-texto");
+    var el = document.getElementById("busca-contagem");
     if (achados === null) {
-      atualizarProgresso();
+      el.textContent = "";
+      atualizarProgresso();   /* devolve a faixa de fim de trilha */
       return;
     }
     el.textContent =
@@ -1119,9 +1334,13 @@
   document.getElementById("drawer-fechar").addEventListener("click", fecharDrawer);
   sobreposicao.addEventListener("click", fecharDrawer);
 
+  /* Esc fecha a camada mais de cima primeiro: confirmação, painel,
+     gaveta, e só então limpa a busca */
   document.addEventListener("keydown", function (ev) {
     if (ev.key === "Escape") {
+      if (!modal.hidden) { fecharModalReset(); return; }
       if (!drawer.hidden) { fecharDrawer(); return; }
+      if (lateral.getAttribute("data-aberta") === "sim") { fecharGaveta(); return; }
       var busca = document.getElementById("busca");
       if (document.activeElement === busca && busca.value) {
         busca.value = "";
@@ -1139,11 +1358,12 @@
     campo.focus();
   });
 
-  /* o seletor é o controle de verdade; o botão só leva até ele */
+  /* o seletor é o controle de verdade; o botão só leva até ele — e
+     ele mora na lateral, que pode estar fechada ou em gaveta */
   document.getElementById("completa-trilha").addEventListener("click", function () {
-    var seletor = document.getElementById("trilha");
-    seletor.scrollIntoView({ block: "center" });
-    seletor.focus();
+    aplicacao.removeAttribute("data-lateral");
+    if (emGaveta() && lateral.getAttribute("data-aberta") !== "sim") abrirGaveta();
+    document.getElementById("trilha").focus();
   });
 
   document.getElementById("busca").addEventListener("input", function (ev) {
@@ -1155,15 +1375,93 @@
     aplicarTema(atual === "escuro" ? "claro" : "escuro");
   });
 
-  document.getElementById("btn-reset").addEventListener("click", function () {
-    if (!window.confirm("Zerar todo o progresso deste roadmap?")) return;
+  /* ------------------------------------------------------------
+     zerar, com confirmação própria
+
+     A caixa do navegador não tem a moldura dura da página e entraria
+     como corpo estranho. E ela diz quantos tópicos somem em vez de
+     "tem certeza?": o número é o que faz pesar o clique.
+     ------------------------------------------------------------ */
+  var btnReset = document.getElementById("btn-reset");
+  var modal = document.getElementById("modal-reset");
+
+  function abrirModalReset() {
+    var marcados = Object.keys(progresso).length;
+    if (!marcados) {
+      anunciar("Nada marcado para zerar.");
+      return;
+    }
+    document.getElementById("modal-texto").textContent = marcados === 1
+      ? "1 tópico volta para pendente. Não dá para desfazer."
+      : marcados + " tópicos voltam para pendente. Não dá para desfazer.";
+    modal.hidden = false;
+    document.getElementById("modal-cancelar").focus();
+  }
+
+  function fecharModalReset() {
+    modal.hidden = true;
+    btnReset.focus();
+  }
+
+  btnReset.addEventListener("click", abrirModalReset);
+  document.getElementById("modal-cancelar").addEventListener("click", fecharModalReset);
+  document.getElementById("modal-veu").addEventListener("click", fecharModalReset);
+
+  document.getElementById("modal-confirmar").addEventListener("click", function () {
     progresso = {};
     subMarcados = {};            /* senão os subassuntos remarcariam tudo */
     salvarProgresso();
     salvarSub();
     Object.keys(INDICE).forEach(pintarTopico);
     atualizarProgresso();
+    fecharModalReset();
     if (aberto) fecharDrawer();  /* o painel aberto ficaria desatualizado */
+  });
+
+  /* ------------------------------------------------------------
+     abrir e fechar a lateral
+
+     Um botão só serve aos dois modos: abaixo de 900px ele recolhe a
+     gaveta, acima dele colapsa a coluna.
+     ------------------------------------------------------------ */
+  var aplicacao = document.getElementById("aplicacao");
+  var lateral = document.getElementById("lateral");
+  var btnGaveta = document.getElementById("btn-gaveta");
+  var btnAbrirLateral = document.getElementById("btn-abrir-lateral");
+  var btnFecharLateral = document.getElementById("btn-fechar-lateral");
+  var veu = null;
+
+  function emGaveta() { return window.innerWidth <= 900; }
+
+  function abrirGaveta() {
+    lateral.setAttribute("data-aberta", "sim");
+    btnGaveta.setAttribute("aria-expanded", "true");
+    veu = document.createElement("div");
+    veu.className = "veu";
+    veu.addEventListener("click", fecharGaveta);
+    document.body.appendChild(veu);
+  }
+
+  function fecharGaveta() {
+    lateral.removeAttribute("data-aberta");
+    btnGaveta.setAttribute("aria-expanded", "false");
+    if (veu) { veu.remove(); veu = null; }
+  }
+
+  btnGaveta.addEventListener("click", function () {
+    if (lateral.getAttribute("data-aberta") === "sim") fecharGaveta();
+    else abrirGaveta();
+  });
+
+  btnFecharLateral.addEventListener("click", function () {
+    if (emGaveta()) { fecharGaveta(); return; }
+    aplicacao.setAttribute("data-lateral", "fechada");
+    btnAbrirLateral.focus();
+  });
+
+  btnAbrirLateral.addEventListener("click", function () {
+    aplicacao.removeAttribute("data-lateral");
+    btnFecharLateral.focus();
   });
 
   aplicarTema(temaInicial());

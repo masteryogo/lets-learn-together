@@ -11,116 +11,217 @@
 </head>
 <body>
 
-  <!-- ============================ cabeçalho ============================ -->
-  <header class="topo">
-    <div class="topo__faixa">
-      <div class="topo__identidade">
-        <a class="topo__logo" href="index.html"
+  <!-- ============================ quina ============================ -->
+  <!-- tema e zerar não falam nem da trilha nem do mapa: ficam fora dos
+       dois, onde não disputam leitura com nada. Só ícone — o texto vive
+       no title e no aria-label. -->
+  <div class="canto">
+    <button id="btn-tema" class="botao botao--icone" type="button"
+            title="Alternar entre tema claro e escuro"
+            aria-label="Alternar entre tema claro e escuro">
+      <!-- lua: disco em degraus com a mordida de um segundo disco -->
+      <svg class="icone-lua" viewBox="0 0 16 16" aria-hidden="true">
+        <rect x="6" y="2" width="4" height="1"/>
+        <rect x="5" y="3" width="4" height="1"/>
+        <rect x="4" y="4" width="4" height="1"/>
+        <rect x="3" y="5" width="4" height="1"/>
+        <rect x="2" y="6" width="4" height="4"/>
+        <rect x="3" y="10" width="4" height="1"/>
+        <rect x="4" y="11" width="4" height="1"/>
+        <rect x="5" y="12" width="4" height="1"/>
+        <rect x="6" y="13" width="4" height="1"/>
+      </svg>
+      <!-- sol: núcleo quadrado e oito raios soltos -->
+      <svg class="icone-sol" viewBox="0 0 16 16" aria-hidden="true">
+        <rect x="5" y="5" width="6" height="6"/>
+        <rect x="7" y="0" width="2" height="2"/>
+        <rect x="7" y="14" width="2" height="2"/>
+        <rect x="0" y="7" width="2" height="2"/>
+        <rect x="14" y="7" width="2" height="2"/>
+        <rect x="2" y="2" width="2" height="2"/>
+        <rect x="12" y="2" width="2" height="2"/>
+        <rect x="2" y="12" width="2" height="2"/>
+        <rect x="12" y="12" width="2" height="2"/>
+      </svg>
+    </button>
+
+    <button id="btn-reset" class="botao botao--icone" type="button"
+            title="Zerar progresso" aria-label="Zerar progresso">
+      <!-- lixeira: alça, tampa, duas paredes, fundo e uma ranhura -->
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <rect x="6" y="1" width="4" height="2"/>
+        <rect x="1" y="3" width="14" height="2"/>
+        <rect x="3" y="6" width="2" height="9"/>
+        <rect x="11" y="6" width="2" height="9"/>
+        <rect x="3" y="13" width="10" height="2"/>
+        <rect x="7" y="7" width="2" height="5"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- no celular a lateral vira gaveta; este botão é a maçaneta dela -->
+  <button id="btn-gaveta" class="macaneta" type="button"
+          aria-controls="lateral" aria-expanded="false">☰ Índice</button>
+
+  <div class="aplicacao" id="aplicacao">
+
+    <!-- aba de reabrir: existe só com a lateral fechada -->
+    <button class="abrir-lateral" id="btn-abrir-lateral" type="button"
+            aria-controls="lateral" title="Abrir o painel da trilha"
+            aria-label="Abrir o painel da trilha">»</button>
+
+    <!-- =========================== lateral =========================== -->
+    <!-- cola na quina e vai de ponta a ponta. Moldura fixa: identidade e
+         progresso. Só o índice rola. -->
+    <aside class="lateral" id="lateral" aria-label="Painel da trilha">
+
+      <div class="lateral__identidade">
+        <a class="lateral__logo" href="index.html"
            aria-label="Voltar para a escolha de trilha"
            title="Voltar para a escolha de trilha">
+          <!-- --logo-* e não --roxo-forte/--amarelo-forte: no tema escuro
+               o mascote é mais saturado que a interface à volta dele -->
           <svg viewBox="103 23 406 310" width="112" height="86">
-            <g class="logo__corpo" fill="var(--roxo-forte)">
+            <g class="logo__corpo" fill="var(--logo-roxo)">
               <rect x="113" y="152" width="69" height="88" rx="34"/>
               <rect x="430" y="152" width="69" height="88" rx="34"/>
               <ellipse cx="306" cy="178" rx="165" ry="145"/>
             </g>
-            <rect x="173" y="136" width="267" height="109" rx="54" fill="var(--amarelo-forte)"/>
-            <g fill="var(--roxo-forte)">
+            <rect x="173" y="136" width="267" height="109" rx="54" fill="var(--logo-amarelo)"/>
+            <g fill="var(--logo-roxo)">
               <ellipse class="logo__olho" cx="247" cy="186" rx="13" ry="16"/>
               <ellipse class="logo__olho" cx="364" cy="186" rx="13" ry="16"/>
               <path d="M292 201a14 14 0 0 0 28 0z"/>
             </g>
           </svg>
         </a>
-        <div>
-          <h1 id="titulo"></h1>
-          <p id="subtitulo" class="topo__sub"></p>
+
+        <!-- o título É o trocador de trilha: um select transparente cobre
+             a área inteira, então o clique abre a lista nativa e o h1
+             continua sendo o h1 para o leitor de tela. -->
+        <div class="lateral__nome">
+          <div class="lateral__trilha">
+            <select id="trilha" class="lateral__select"
+                    aria-label="Trocar de trilha"></select>
+            <h1 id="titulo"></h1>
+          </div>
+        </div>
+
+        <button class="lateral__fechar" id="btn-fechar-lateral" type="button"
+                aria-controls="lateral" title="Fechar o painel da trilha"
+                aria-label="Fechar o painel da trilha">«</button>
+      </div>
+
+      <!-- só a barra: a razão exata vira um placar, e placar de 9/156
+           cansa antes de a pessoa começar. O número continua existindo
+           em aria-valuetext, para o leitor de tela. -->
+      <div class="progresso">
+        <div class="progresso__barra" role="progressbar"
+             aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+             aria-label="Progresso total do roadmap">
+          <span id="progresso-preenchido" class="progresso__preenchido"></span>
         </div>
       </div>
 
-      <div class="topo__acoes">
-        <select id="trilha" class="seletor" aria-label="Trilha"></select>
+      <!-- etapas sanfonadas, preenchidas pelo app.js -->
+      <nav class="indice" id="indice" aria-label="Índice da trilha"></nav>
+    </aside>
+
+    <!-- ========================== conteúdo ========================== -->
+    <div class="conteudo">
+
+      <!-- busca e legenda falam do mapa, então moram com o mapa -->
+      <div class="conteudo__barra">
         <input id="busca" class="busca" type="search"
                placeholder="Buscar tópico…" aria-label="Buscar tópico"
                autocomplete="off">
-        <button id="btn-tema" class="botao botao--tema" type="button"
-                title="Alternar tema" aria-label="Alternar tema"></button>
-        <button id="btn-reset" class="botao" type="button">Zerar progresso</button>
+        <p id="busca-contagem" class="busca__contagem" role="status"
+           aria-live="polite"></p>
+
+        <div class="legenda">
+          <div class="legenda__grupo" id="legenda-prioridade"></div>
+          <p class="legenda__dica" id="legenda-dica"></p>
+        </div>
       </div>
+
+      <!-- ============================ roadmap ============================ -->
+      <main class="mapa" id="mapa" aria-label="Roadmap de estudos">
+        <!-- as etapas entram aqui, depois deste bloco, pelo app.js -->
+
+        <!-- busca sem resultado: o mapa inteiro some, e sem isto sobrava
+             uma página em branco. O mascote é clonado da lateral pelo
+             app.js, para existir um desenho só no projeto. -->
+        <div class="vazio" id="vazio" hidden>
+          <span class="vazio__mascote" id="vazio-mascote" aria-hidden="true"></span>
+          <p class="vazio__titulo" id="vazio-titulo"></p>
+          <p class="vazio__dica">
+            A busca olha título, descrição e explicação de todos os tópicos
+            desta trilha. Tente outra palavra, ou confira a digitação.
+          </p>
+          <button class="botao botao--destaque" id="vazio-limpar" type="button">
+            Limpar a busca
+          </button>
+        </div>
+      </main>
+
+      <!-- 100% da trilha: entra depois da última etapa. "Pulado" não conta
+           como feito, então chegar aqui exige ter marcado todos. -->
+      <section class="completa" id="completa" aria-labelledby="completa-titulo" hidden>
+        <div class="completa__faixa">
+          <span class="completa__selo" id="completa-selo" aria-hidden="true"></span>
+          <h2 class="completa__titulo" id="completa-titulo">Fim do mapa</h2>
+          <p class="completa__meta" id="completa-meta"></p>
+          <span class="completa__barra"></span>
+        </div>
+
+        <div class="completa__saida">
+          <p class="completa__nota">
+            Você marcou todos os tópicos desta trilha. O mapa acabou — o que
+            vem depois dele não cabe em checklist nenhum, vem de projeto.
+          </p>
+          <div class="completa__acoes">
+            <button class="botao botao--destaque" id="completa-trilha" type="button">
+              Escolher outra trilha
+            </button>
+            <a class="botao" href="https://github.com/masteryogo/lets-learn-together/fork"
+               target="_blank" rel="noopener noreferrer">Contribuir com um tópico</a>
+          </div>
+        </div>
+      </section>
+
+      <footer class="rodape">
+        <div class="rodape__linha">
+          <p class="rodape__credito">
+            <span class="rodape__label">Feito por</span>
+            <a class="rodape__chip" href="https://github.com/masteryogo"
+               target="_blank" rel="noopener noreferrer">@masteryogo</a>
+          </p>
+          <a class="botao botao--destaque" id="contribuir"
+             href="https://github.com/masteryogo/lets-learn-together/fork"
+             target="_blank" rel="noopener noreferrer">Contribuir</a>
+        </div>
+      </footer>
     </div>
+  </div>
 
-    <div class="progresso">
-      <div class="progresso__barra" role="progressbar"
-           aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
-           aria-label="Progresso total do roadmap">
-        <span id="progresso-preenchido" class="progresso__preenchido"></span>
-      </div>
-      <p id="progresso-texto" class="progresso__texto">0 de 0 tópicos concluídos</p>
-    </div>
-
-    <div class="legenda">
-      <div class="legenda__grupo" id="legenda-prioridade"></div>
-      <p class="legenda__dica" id="legenda-dica"></p>
-    </div>
-  </header>
-
-  <!-- ============================ roadmap ============================ -->
-  <main class="mapa" id="mapa" aria-label="Roadmap de estudos">
-    <!-- as etapas entram aqui, depois deste bloco, pelo app.js -->
-
-    <!-- busca sem resultado: o mapa inteiro some, e sem isto sobrava
-         uma página em branco. O mascote é clonado do cabeçalho pelo
-         app.js, para existir um desenho só no projeto. -->
-    <div class="vazio" id="vazio" hidden>
-      <span class="vazio__mascote" id="vazio-mascote" aria-hidden="true"></span>
-      <p class="vazio__titulo" id="vazio-titulo"></p>
-      <p class="vazio__dica">
-        A busca olha título, descrição e explicação de todos os tópicos
-        desta trilha. Tente outra palavra, ou confira a digitação.
-      </p>
-      <button class="botao botao--destaque" id="vazio-limpar" type="button">
-        Limpar a busca
-      </button>
-    </div>
-  </main>
-
-  <!-- 100% da trilha: entra depois da última etapa. "Pulado" não conta
-       como feito, então chegar aqui exige ter marcado todos. -->
-  <section class="completa" id="completa" aria-labelledby="completa-titulo" hidden>
-    <div class="completa__faixa">
-      <span class="completa__selo" id="completa-selo" aria-hidden="true"></span>
-      <h2 class="completa__titulo" id="completa-titulo">Fim do mapa</h2>
-      <p class="completa__meta" id="completa-meta"></p>
-      <span class="completa__barra"></span>
-    </div>
-
-    <div class="completa__saida">
-      <p class="completa__nota">
-        Você marcou todos os tópicos desta trilha. O mapa acabou — o que
-        vem depois dele não cabe em checklist nenhum, vem de projeto.
-      </p>
-      <div class="completa__acoes">
-        <button class="botao botao--destaque" id="completa-trilha" type="button">
-          Escolher outra trilha
+  <!-- ====================== confirmar o zerar ====================== -->
+  <!-- zerar é o único gesto irreversível da página, e a caixa diz
+       quantos tópicos somem — "tem certeza?" todo mundo responde no
+       automático; um número faz pesar o clique. -->
+  <div class="modal" id="modal-reset" hidden>
+    <div class="modal__veu" id="modal-veu"></div>
+    <div class="modal__caixa" role="dialog" aria-modal="true"
+         aria-labelledby="modal-titulo" aria-describedby="modal-texto">
+      <h2 class="modal__titulo" id="modal-titulo">Zerar progresso?</h2>
+      <p class="modal__texto" id="modal-texto"></p>
+      <div class="modal__acoes">
+        <button class="botao" id="modal-cancelar" type="button">Cancelar</button>
+        <button class="botao botao--destaque" id="modal-confirmar" type="button">
+          Zerar tudo
         </button>
-        <a class="botao" href="https://github.com/masteryogo/lets-learn-together/fork"
-           target="_blank" rel="noopener noreferrer">Contribuir com um tópico</a>
       </div>
     </div>
-  </section>
-
-  <footer class="rodape">
-    <div class="rodape__linha">
-      <p class="rodape__credito">
-        <span class="rodape__label">Feito por</span>
-        <a class="rodape__chip" href="https://github.com/masteryogo"
-           target="_blank" rel="noopener noreferrer">@masteryogo</a>
-      </p>
-      <a class="botao botao--destaque" id="contribuir"
-         href="https://github.com/masteryogo/lets-learn-together/fork"
-         target="_blank" rel="noopener noreferrer">Contribuir</a>
-    </div>
-  </footer>
+  </div>
 
   <!-- ============================ drawer ============================ -->
   <!-- região viva: o leitor de tela não percebe a troca do ícone de
