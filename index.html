@@ -17,11 +17,6 @@
       <div class="topo__identidade">
         <span class="topo__logo" aria-hidden="true">
           <svg viewBox="103 23 406 310" width="112" height="86">
-            <defs>
-              <clipPath id="visor-clip">
-                <rect x="173" y="136" width="267" height="109" rx="54"/>
-              </clipPath>
-            </defs>
             <g class="logo__corpo" fill="var(--roxo-forte)">
               <rect x="113" y="152" width="69" height="88" rx="34"/>
               <rect x="430" y="152" width="69" height="88" rx="34"/>
@@ -32,10 +27,6 @@
               <ellipse class="logo__olho" cx="247" cy="186" rx="13" ry="16"/>
               <ellipse class="logo__olho" cx="364" cy="186" rx="13" ry="16"/>
               <path d="M292 201a14 14 0 0 0 28 0z"/>
-            </g>
-            <g clip-path="url(#visor-clip)">
-              <rect class="logo__brilho" x="-140" y="120" width="70" height="140"
-                    fill="#fff" opacity="0.5" transform="skewX(-18)"/>
             </g>
           </svg>
         </span>
@@ -50,8 +41,8 @@
         <input id="busca" class="busca" type="search"
                placeholder="Buscar tópico…" aria-label="Buscar tópico"
                autocomplete="off">
-        <button id="btn-tema" class="botao botao--icone" type="button"
-                title="Alternar tema" aria-label="Alternar tema">◐</button>
+        <button id="btn-tema" class="botao botao--tema" type="button"
+                title="Alternar tema" aria-label="Alternar tema"></button>
         <button id="btn-reset" class="botao" type="button">Zerar progresso</button>
       </div>
     </div>
@@ -93,45 +84,69 @@
   </footer>
 
   <!-- ============================ drawer ============================ -->
+  <!-- região viva: o leitor de tela não percebe a troca do ícone de
+       copiar, então o resultado é narrado por aqui -->
+  <p id="aviso" class="oculto-visual" role="status" aria-live="polite"></p>
+
   <div id="sobreposicao" class="sobreposicao" hidden></div>
 
   <aside id="drawer" class="drawer" role="dialog" aria-modal="true"
          aria-labelledby="drawer-titulo" hidden>
-    <div class="drawer__topo">
-      <span id="drawer-etiqueta" class="etiqueta"></span>
+    <!-- barra fixa. O selo é o mesmo bloco numerado que marca a etapa
+         no mapa, então o painel lê como o zoom daquele lugar do mapa
+         em vez de uma tela à parte. Fica no topo enquanto o texto rola. -->
+    <div class="drawer__barra">
+      <span id="drawer-selo" class="drawer__selo" aria-hidden="true"></span>
+      <p id="drawer-trilha" class="drawer__trilha"></p>
       <button id="drawer-fechar" class="botao botao--icone" type="button"
-              aria-label="Fechar painel">✕</button>
+              aria-label="Fechar painel">×</button>
     </div>
 
-    <h2 id="drawer-titulo"></h2>
-    <p id="drawer-trilha" class="drawer__trilha"></p>
-    <p id="drawer-desc" class="drawer__desc"></p>
-    <div id="drawer-detalhe" class="drawer__detalhe"></div>
+    <div class="drawer__corpo">
+      <div class="drawer__identidade">
+        <span id="drawer-etiqueta" class="etiqueta"></span>
+        <span id="drawer-estado" class="drawer__estado" hidden></span>
+      </div>
 
-    <section class="drawer__secao" id="drawer-secao-grupo" hidden>
-      <h3 id="drawer-grupo-titulo"></h3>
-      <p id="drawer-grupo-desc" class="drawer__nota"></p>
-    </section>
+      <h2 id="drawer-titulo"></h2>
+      <p id="drawer-desc" class="drawer__desc"></p>
 
-    <section class="drawer__secao" id="drawer-secao-estados">
-      <h3>Marcar como</h3>
-      <div id="drawer-estados" class="drawer__estados"></div>
-    </section>
+      <!-- quando o desc é uma lista de subassuntos, ele vira estes
+           botões e o parágrafo acima some: é a mesma frase. -->
+      <section class="drawer__secao" id="drawer-secao-sub" hidden>
+        <h3>Subassuntos
+          <span id="drawer-sub-contagem" class="drawer__contagem"></span>
+        </h3>
+        <div id="drawer-sub" class="subassuntos"></div>
+      </section>
 
-    <section class="drawer__secao" id="drawer-secao-criterios" hidden>
-      <h3>Marque como feito quando</h3>
-      <ul id="drawer-criterios" class="lista"></ul>
-    </section>
+      <div id="drawer-detalhe" class="drawer__detalhe"></div>
 
-    <section class="drawer__secao" id="drawer-secao-recursos" hidden>
-      <h3>Recursos da etapa</h3>
-      <ul id="drawer-recursos" class="lista"></ul>
-    </section>
+      <section class="drawer__secao" id="drawer-secao-grupo" hidden>
+        <h3 id="drawer-grupo-titulo"></h3>
+        <p id="drawer-grupo-desc" class="drawer__nota"></p>
+      </section>
 
-    <section class="drawer__secao" id="drawer-secao-projetos" hidden>
-      <h3>Projetos sugeridos</h3>
-      <ul id="drawer-projetos" class="lista"></ul>
-    </section>
+      <section class="drawer__secao" id="drawer-secao-estados">
+        <h3>Marcar como</h3>
+        <div id="drawer-estados" class="drawer__estados"></div>
+      </section>
+
+      <section class="drawer__secao drawer__secao--regua" id="drawer-secao-criterios" hidden>
+        <h3>Marque como feito quando</h3>
+        <ul id="drawer-criterios" class="lista"></ul>
+      </section>
+
+      <section class="drawer__secao" id="drawer-secao-recursos" hidden>
+        <h3>Recursos da etapa</h3>
+        <ul id="drawer-recursos" class="lista"></ul>
+      </section>
+
+      <section class="drawer__secao" id="drawer-secao-projetos" hidden>
+        <h3>Projetos sugeridos</h3>
+        <ul id="drawer-projetos" class="lista"></ul>
+      </section>
+    </div>
   </aside>
 
   <!-- trilhas.js lê ?trilha= da URL, injeta os dados daquela trilha

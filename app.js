@@ -11,9 +11,12 @@
   var CHAVE_PROGRESSO = "roadmap:" + TRILHA + ":progresso:v1";
   var CHAVE_TEMA = "roadmap:tema:v1";           /* tema é comum às trilhas */
   var CHAVE_LEGADA = "roadmap-ml:progresso:v1"; /* de antes das trilhas */
+  var CHAVE_SUB = "roadmap:" + TRILHA + ":sub:v1";
 
   var CICLO = ["pendente", "estudando", "feito", "pulado"];
-  var MARCAS = { pendente: "", estudando: "◔", feito: "✓", pulado: "–" };
+  /* glifos que a Departure Mono tem — ◔ e ✓ não estão nela. "pendente"
+     deixa de ser vazio: o estado passa a ter forma, e não só cor. */
+  var MARCAS = { pendente: "□", estudando: "►", feito: "■", pulado: "×" };
 
   /* arraste para fechar o painel */
   var INICIO_ARRASTO = 8;     /* px antes de decidir o eixo do gesto */
@@ -23,13 +26,14 @@
   /* o gesto de ler o detalhe muda com o aparelho; resolvido uma vez só */
   var DICA_LER = (window.matchMedia &&
                   window.matchMedia("(pointer: coarse)").matches)
-    ? "toque no ⓘ para ler"
+    ? "toque no [i] para ler"
     : "shift + clique para ler";
 
   /* índice id -> { topico, etapa, grupo } para o drawer e o progresso */
   var INDICE = {};
 
   var progresso = carregarProgresso();
+  var subMarcados = carregarSub();
   var aberto = null; /* { tipo: "topico" | "etapa", id } */
 
   /* ------------------------------------------------------------
@@ -57,6 +61,26 @@
     }
   }
 
+  /* os subassuntos marcados moram numa chave própria: são granularidade
+     dentro do tópico, e misturá-los no mesmo objeto do progresso faria
+     a contagem de tópicos concluídos somar coisa que não é tópico. */
+  function carregarSub() {
+    try {
+      var bruto = window.localStorage.getItem(CHAVE_SUB);
+      return bruto ? JSON.parse(bruto) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function salvarSub() {
+    try {
+      window.localStorage.setItem(CHAVE_SUB, JSON.stringify(subMarcados));
+    } catch (e) {
+      /* sem persistência: a sessão ainda funciona */
+    }
+  }
+
   function estadoDe(id) {
     return progresso[id] || "pendente";
   }
@@ -69,7 +93,266 @@
     atualizarProgresso();
     if (aberto && aberto.tipo === "topico" && aberto.id === id) {
       marcarBotoesEstado(id);
+      marcarEstadoNoPainel(id);
     }
+  }
+
+  /* ------------------------------------------------------------
+     subassuntos
+
+     A maioria dos `desc` já é uma lista de subassuntos escrita como
+     frase ("Criação, acesso seguro, iteração."). Um tópico que traga
+     `subtopicos` manda; sem ele, tentamos partir a frase — com
+     guardas, porque nem toda vírgula separa item de lista.
+     ------------------------------------------------------------ */
+  function subassuntosDe(topico) {
+    if (topico.subtopicos && topico.subtopicos.length) return topico.subtopicos;
+    return partirDesc(topico.desc);
+  }
+
+  function aparar(s) { return s.trim(); }
+
+  function partirDesc(desc) {
+    if (!desc) return null;
+
+    /* dois-pontos marca oração ("Padrão: zero abaixo, identidade
+       acima") e crase marca trecho de código, que não se pica */
+    if (desc.indexOf(":") >= 0 || desc.indexOf("`") >= 0) return null;
+
+    var t = aparar(desc);
+    if (t.charAt(t.length - 1) === ".") t = t.slice(0, -1);
+
+    var partes = t.split(",").map(aparar).filter(Boolean);
+
+    /* o último trecho costuma fechar a lista com "a e b" */
+    if (partes.length) {
+      var cauda = partes[partes.length - 1].split(/\s+e\s+/);
+      if (cauda.length === 2) {
+        partes = partes.slice(0, -1).concat(cauda.map(aparar));
+      }
+    }
+
+    /* menos de três partes é frase; parte longa é oração, não item */
+    if (partes.length < 3) return null;
+    for (var i = 0; i < partes.length; i++) {
+      if (partes[i].length < 3) return null;
+      if (partes[i].split(/\s+/).length > 5) return null;
+    }
+    return partes;
+  }
+
+  /* a chave vem do texto, não do índice: se uma contribuição reescrever
+     um subassunto, a marca daquele item se perde — melhor que herdar a
+     marca de um item que virou outra coisa */
+  function chaveSub(topicoId, texto) {
+    return topicoId + "|" + texto;
+  }
+
+  function contarSub(topicoId, subs) {
+    var n = 0;
+    subs.forEach(function (texto) {
+      if (subMarcados[chaveSub(topicoId, texto)]) n++;
+    });
+    return n;
+  }
+
+  function montarSubassuntos(topicoId, subs) {
+    var secao = document.getElementById("drawer-secao-sub");
+    var alvo = document.getElementById("drawer-sub");
+    alvo.textContent = "";
+
+    if (!subs) {
+      secao.hidden = true;
+      return;
+    }
+    secao.hidden = false;
+
+    var titulo = INDICE[topicoId] ? INDICE[topicoId].topico.titulo : "";
+    subs.forEach(function (texto) {
+      alvo.appendChild(criarSubassunto(topicoId, titulo, texto, subs));
+    });
+    atualizarContagemSub(topicoId, subs);
+  }
+
+  /* o par alternar + copiar: botão dentro de botão é HTML inválido, então
+     os dois são irmãos num invólucro — é o invólucro que desenha a caixa,
+     e os dois viram segmentos dela. Mesma solução do ⓘ no mapa. */
+  function criarSubassunto(topicoId, tituloTopico, texto, subs) {
+    var par = document.createElement("div");
+    par.className = "subassunto-par";
+
+    var botao = document.createElement("button");
+    botao.type = "button";
+    botao.className = "subassunto";
+
+    var marca = document.createElement("span");
+    marca.className = "subassunto__marca";
+
+    botao.appendChild(marca);
+    botao.appendChild(document.createTextNode(texto));
+    pintarSub(botao, marca, !!subMarcados[chaveSub(topicoId, texto)]);
+
+    botao.addEventListener("click", function () {
+      var chave = chaveSub(topicoId, texto);
+      if (subMarcados[chave]) delete subMarcados[chave];
+      else subMarcados[chave] = 1;
+      salvarSub();
+
+      pintarSub(botao, marca, !!subMarcados[chave]);
+      atualizarContagemSub(topicoId, subs);
+      propagarEstado(topicoId, subs);
+    });
+
+    par.appendChild(botao);
+    par.appendChild(criarCopiar(tituloTopico + " - " + texto));
+    return par;
+  }
+
+  function criarCopiar(rotulo) {
+    var copiar = document.createElement("button");
+    copiar.type = "button";
+    copiar.className = "subassunto__copiar";
+    copiar.title = "Copiar “" + rotulo + "”";
+    copiar.setAttribute("aria-label", copiar.title);
+    copiar.appendChild(iconeCopiar());
+
+    copiar.addEventListener("click", function () {
+      copiarTexto(rotulo).then(
+        function () { confirmarCopia(copiar, "sim", rotulo + " copiado"); },
+        function () { confirmarCopia(copiar, "nao", "Não foi possível copiar"); }
+      );
+    });
+
+    return copiar;
+  }
+
+  /* o ícone troca para o certo por ~1,4s. Guarda o relógio no próprio
+     elemento: clicar de novo antes do tempo reinicia em vez de o
+     primeiro relógio apagar a confirmação do segundo. */
+  function confirmarCopia(botao, resultado, aviso) {
+    botao.setAttribute("data-copiado", resultado);
+    anunciar(aviso);
+
+    window.clearTimeout(botao._relogio);
+    botao._relogio = window.setTimeout(function () {
+      botao.removeAttribute("data-copiado");
+    }, 1400);
+  }
+
+  /* o leitor de tela não vê a troca de ícone; a região viva narra */
+  function anunciar(texto) {
+    var el = document.getElementById("aviso");
+    if (el) el.textContent = texto;
+  }
+
+  /* navigator.clipboard só existe em contexto seguro, e o README manda
+     abrir o index.html direto — em file:// não há API nenhuma.
+
+     Mas não basta checar o contexto: a API também *rejeita* em tempo de
+     execução, por documento sem foco ou permissão negada. Por isso o
+     campo fora da tela é o fim de qualquer caminho, e não só o plano
+     para file://. */
+  function copiarTexto(texto) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(texto).catch(function () {
+        return copiarPorCampo(texto);
+      });
+    }
+    return copiarPorCampo(texto);
+  }
+
+  function copiarPorCampo(texto) {
+    return new Promise(function (resolver, rejeitar) {
+      var campo = document.createElement("textarea");
+      campo.value = texto;
+      campo.setAttribute("readonly", "");
+      campo.style.position = "fixed";
+      campo.style.top = "-1000px";
+      document.body.appendChild(campo);
+      campo.focus();
+      campo.select();
+
+      var ok = false;
+      try {
+        ok = document.execCommand("copy");
+      } catch (e) {
+        ok = false;
+      }
+      document.body.removeChild(campo);
+
+      if (ok) resolver();
+      else rejeitar();
+    });
+  }
+
+  var SVG_NS = "http://www.w3.org/2000/svg";
+
+  function svg(tag, atributos) {
+    var el = document.createElementNS(SVG_NS, tag);
+    Object.keys(atributos).forEach(function (chave) {
+      el.setAttribute(chave, atributos[chave]);
+    });
+    return el;
+  }
+
+  /* duas folhas, em cantos duros como o resto da página. O "certo" mora
+     no mesmo <svg> e quem troca os dois é o CSS, pelo data-copiado. */
+  function iconeCopiar() {
+    var raiz = svg("svg", {
+      viewBox: "0 0 14 14",
+      width: "13",
+      height: "13",
+      fill: "none",
+      stroke: "currentColor",
+      "stroke-width": "1.6",
+      "shape-rendering": "crispEdges",
+      "aria-hidden": "true",
+      focusable: "false",
+    });
+
+    var folhas = svg("g", { class: "icone--copiar" });
+    folhas.appendChild(svg("rect", { x: "1", y: "4", width: "8", height: "9" }));
+    folhas.appendChild(svg("path", { d: "M4 4V1h9v9h-3" }));
+
+    var certo = svg("g", { class: "icone--ok" });
+    certo.appendChild(svg("path", { d: "M2 7l4 4 6-8" }));
+
+    raiz.appendChild(folhas);
+    raiz.appendChild(certo);
+    return raiz;
+  }
+
+  function pintarSub(botao, marca, marcado) {
+    botao.setAttribute("aria-pressed", marcado ? "true" : "false");
+    marca.textContent = marcado ? MARCAS.feito : MARCAS.pendente;
+  }
+
+  function atualizarContagemSub(topicoId, subs) {
+    document.getElementById("drawer-sub-contagem").textContent =
+      contarSub(topicoId, subs) + "/" + subs.length;
+  }
+
+  /* o estado do tópico segue os subassuntos: o primeiro marcado põe em
+     estudo, todos marcados concluem, desmarcar volta. "Pulado" é uma
+     decisão explícita e fica imune — senão espiar um subassunto
+     desfaria o que a pessoa decidiu pular. */
+  function propagarEstado(topicoId, subs) {
+    if (estadoDe(topicoId) === "pulado") return;
+
+    var n = contarSub(topicoId, subs);
+    var alvo = n === 0 ? "pendente"
+             : n === subs.length ? "feito"
+             : "estudando";
+
+    if (estadoDe(topicoId) !== alvo) definirEstado(topicoId, alvo);
+  }
+
+  function marcarEstadoNoPainel(id) {
+    var el = document.getElementById("drawer-estado");
+    var estado = estadoDe(id);
+    el.hidden = false;
+    el.setAttribute("data-estado", estado);
+    el.textContent = MARCAS[estado] + " " + rotuloEstado(estado).toLowerCase();
   }
 
   /* ------------------------------------------------------------
@@ -145,7 +428,7 @@
     alvo.textContent = "";
 
     (toque
-      ? [["Toque", " cicla o estado · "], ["ⓘ", " abre o detalhe"]]
+      ? [["Toque", " cicla o estado · "], ["[i]", " abre o detalhe"]]
       : [["Clique", " cicla o estado · "], ["Shift + clique", " abre o detalhe"]]
     ).forEach(function (par) {
       var forte = document.createElement("strong");
@@ -162,17 +445,17 @@
 
     secao.appendChild(criarNucleo(etapa));
 
-    var esq = document.createElement("div");
-    esq.className = "ramo ramo--esq";
-    var dir = document.createElement("div");
-    dir.className = "ramo ramo--dir";
+    /* fluxo único, na ordem em que os grupos foram escritos. Quem
+       distribui em colunas é o CSS multicoluna, não o JS — assim a
+       contagem de colunas acompanha a largura da tela sozinha. */
+    var corpo = document.createElement("div");
+    corpo.className = "etapa__grupos";
 
-    distribuirGrupos(etapa).forEach(function (par) {
-      (par.lado === "esq" ? esq : dir).appendChild(criarGrupo(par.grupo, etapa));
+    etapa.grupos.forEach(function (grupo) {
+      corpo.appendChild(criarGrupo(grupo, etapa));
     });
 
-    secao.appendChild(esq);
-    secao.appendChild(dir);
+    secao.appendChild(corpo);
     return secao;
   }
 
@@ -185,7 +468,14 @@
 
     var numero = document.createElement("span");
     numero.className = "etapa__numero";
-    numero.textContent = "Etapa " + etapa.numero;
+
+    /* o selo mostra só o algarismo; a palavra fica para quem lê por
+       leitor de tela, onde "4" sozinho não diz nada */
+    var palavra = document.createElement("span");
+    palavra.className = "oculto-visual";
+    palavra.textContent = "Etapa ";
+    numero.appendChild(palavra);
+    numero.appendChild(document.createTextNode(etapa.numero));
 
     var titulo = document.createElement("span");
     titulo.className = "etapa__titulo";
@@ -211,51 +501,6 @@
     });
 
     return nucleo;
-  }
-
-  /* Um grupo sem título (etapas Python e PyTorch) vira dois meio-grupos,
-     um de cada lado, para a etapa não ficar torta. Grupos com título
-     alternam lados na ordem em que aparecem. */
-  function distribuirGrupos(etapa) {
-    var pares = [];
-
-    /* um grupo sozinho na etapa deixa a etapa torta se ficar todo
-       de um lado, então o limite para dividi-lo é menor — e vale
-       mesmo que ele tenha título. */
-    var sozinho = etapa.grupos.length === 1;
-    var limite = sozinho ? 4 : 6;
-
-    etapa.grupos.forEach(function (grupo) {
-      if ((grupo.titulo === null || sozinho) && grupo.topicos.length > limite) {
-        var meio = Math.ceil(grupo.topicos.length / 2);
-        pares.push({
-          lado: "esq",
-          grupo: clonarGrupo(grupo, grupo.topicos.slice(0, meio), "-a"),
-        });
-        /* o título aparece só na metade da esquerda, para não repetir */
-        pares.push({
-          lado: "dir",
-          grupo: clonarGrupo(grupo, grupo.topicos.slice(meio), "-b", null),
-        });
-      } else {
-        pares.push({ lado: pares.length % 2 === 0 ? "esq" : "dir", grupo: grupo });
-      }
-    });
-
-    return pares;
-  }
-
-  function clonarGrupo(grupo, topicos, sufixo, titulo) {
-    return {
-      id: grupo.id + sufixo,
-      titulo: titulo === undefined ? grupo.titulo : titulo,
-      duracao: grupo.duracao,
-      descricao: grupo.descricao,
-      topicos: topicos,
-      /* o clone aponta para o grupo real, para o drawer mostrar o
-         título e a descrição originais mesmo em um meio-grupo */
-      origem: grupo,
-    };
   }
 
   function criarGrupo(grupo, etapa) {
@@ -327,7 +572,7 @@
     var info = document.createElement("button");
     info.type = "button";
     info.className = "topico__info";
-    info.textContent = "ⓘ";
+    info.textContent = "[i]";
     info.title = "Ler o detalhe de " + topico.titulo;
     info.setAttribute("aria-label", "Detalhe de " + topico.titulo);
     info.addEventListener("click", function () { abrirTopico(topico.id); });
@@ -416,13 +661,23 @@
     aberto = { tipo: "topico", id: id };
 
     etiqueta(ref.topico.prioridade, ref.topico.prioridade);
+    selo(ref.etapa.numero);
+    marcarEstadoNoPainel(id);
     document.getElementById("drawer-titulo").textContent = ref.topico.titulo;
 
-    var trilha = "Etapa " + ref.etapa.numero + " · " + ref.etapa.titulo;
-    if (ref.grupo.titulo) trilha += " · " + ref.grupo.titulo;
+    /* o número da etapa está no selo, então aqui sobra só o caminho —
+       e "›" diz que o grupo está dentro da etapa, que o "·" não dizia */
+    var trilha = ref.etapa.titulo;
+    if (ref.grupo.titulo) trilha += " › " + ref.grupo.titulo;
     document.getElementById("drawer-trilha").textContent = trilha;
 
-    escreverComCodigo(document.getElementById("drawer-desc"), ref.topico.desc);
+    var subs = subassuntosDe(ref.topico);
+    montarSubassuntos(id, subs);
+
+    var desc = document.getElementById("drawer-desc");
+    desc.hidden = !!subs;
+    if (!subs) escreverComCodigo(desc, ref.topico.desc);
+
     escreverParagrafos("drawer-detalhe", ref.topico.detalhe);
 
     /* contexto do grupo, para o tópico não ficar solto */
@@ -450,7 +705,10 @@
     if (!etapa) return;
     aberto = { tipo: "etapa", id: etapaId };
 
-    etiqueta("Etapa " + etapa.numero, null);
+    /* o selo já carrega "Etapa N": a etiqueta repetiria a mesma coisa */
+    etiqueta(null, null);
+    selo(etapa.numero);
+    document.getElementById("drawer-estado").hidden = true;
     document.getElementById("drawer-titulo").textContent = etapa.titulo;
 
     var meta = "Pré-requisitos: " + etapa.preRequisitos;
@@ -458,7 +716,11 @@
     meta += " · " + contarTopicos(etapa) + " tópicos";
     document.getElementById("drawer-trilha").textContent = meta;
 
-    escreverComCodigo(document.getElementById("drawer-desc"), etapa.objetivo);
+    montarSubassuntos(null, null);
+
+    var descEtapa = document.getElementById("drawer-desc");
+    descEtapa.hidden = false;
+    escreverComCodigo(descEtapa, etapa.objetivo);
     escreverParagrafos("drawer-detalhe", etapa.descricao);
 
     document.getElementById("drawer-secao-grupo").hidden = true;
@@ -567,9 +829,14 @@
 
   function etiqueta(texto, prioridade) {
     var el = document.getElementById("drawer-etiqueta");
-    el.textContent = texto;
+    el.hidden = !texto;
+    el.textContent = texto || "";
     if (prioridade) el.setAttribute("data-prioridade", prioridade);
     else el.removeAttribute("data-prioridade");
+  }
+
+  function selo(numero) {
+    document.getElementById("drawer-selo").textContent = numero;
   }
 
   function contarTopicos(etapa) {
@@ -816,9 +1083,12 @@
   document.getElementById("btn-reset").addEventListener("click", function () {
     if (!window.confirm("Zerar todo o progresso deste roadmap?")) return;
     progresso = {};
+    subMarcados = {};            /* senão os subassuntos remarcariam tudo */
     salvarProgresso();
+    salvarSub();
     Object.keys(INDICE).forEach(pintarTopico);
     atualizarProgresso();
+    if (aberto) fecharDrawer();  /* o painel aberto ficaria desatualizado */
   });
 
   aplicarTema(temaInicial());

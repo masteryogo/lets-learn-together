@@ -1,8 +1,23 @@
 /* ============================================================
-   Roadmap de Machine Learning — estilos
-   Visual inspirado em roadmap.sh: espinha vertical central,
-   nós com borda dura e sombra deslocada, ramos laterais.
+   Roadmap de estudos — estilos
+
+   Console de estudo: faixas horizontais por etapa, grupos
+   empacotados em multicoluna como o índice de um livro, e
+   hierarquia por tamanho, cor e inversão — nunca por peso,
+   porque a Departure Mono tem um peso só.
    ============================================================ */
+
+/* Subset (Latin-1, pontuação, setas, caixas, blocos) da Departure
+   Mono Nerd Font Propo — SIL OFL 1.1, licença em fonts/. 9,5 KB.
+   swap: o texto aparece na fonte do sistema e troca ao carregar,
+   em vez de a página nascer em branco. */
+@font-face {
+  font-family: "Departure Mono";
+  src: url("fonts/departure-mono-propo.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 
 /* ----------------------------- tokens ----------------------------- */
 :root {
@@ -22,15 +37,39 @@
   --verde:            #b7e4c7;
   --verde-forte:      #2d8a4e;
 
-  --raio:             6px;
-  --mono:             "SF Mono", "Cascadia Code", Consolas, "Liberation Mono", monospace;
-  --sombra-dura:      3px 3px 0 var(--linha);
+  /* tinta sobre bloco sólido. O amarelo é claro nos dois temas e pede
+     tinta escura sempre; o roxo não — ele é escuro no tema claro e
+     claro no escuro, então a tinta dele vira junto com o tema. */
+  --tinta-bloco:      #15141a;
+  --tinta-roxo:       #ffffff;
+
+  --raio:             0;          /* pixel não tem curva */
+  --mono:             "Departure Mono", ui-monospace, "Cascadia Mono",
+                      Consolas, monospace;
+  --sombra-dura:      4px 4px 0 var(--linha);
   --sombra-dura-sm:   2px 2px 0 var(--linha);
 
+  /* escala em múltiplos de 5,5px: a fonte é desenhada numa grade de
+     11px e só cai nítida em cima dela */
+  --t-micro:          11px;       /* metadados, legenda, rodapé */
+  --t-base:           13.75px;    /* tópicos, botões, interface */
+  --t-leitura:        16.5px;     /* prosa longa do painel */
+  --t-etapa:          clamp(22px, 4vw, 33px);
+  --t-pagina:         clamp(27.5px, 6vw, 44px);
+
+  /* tracking: pixel mono aceita espaçamento generoso sem embolar, e
+     é ele que faz o papel do negrito nos rótulos */
+  --tracking-rotulo:  0.14em;
+
   --largura-max:      1180px;
-  --col-centro:       260px;
   --pad-lateral:      1.5rem;   /* encolhe no celular, via media query */
-  --recuo-ramo:       2.5rem;   /* recuo da etapa = comprimento do galho */
+  --pad-painel:       1.25rem;  /* respiro interno dos blocos moldurados */
+  --medida:           58ch;     /* medida de leitura do painel */
+
+  /* célula da barra de progresso: 9px de bloco, 2px de vão. É o que
+     transforma a barra contínua em ███▒▒▒ sem precisar de JS. */
+  --celula:           repeating-linear-gradient(
+                        90deg, #000 0 9px, transparent 9px 11px);
 }
 
 :root[data-tema="escuro"] {
@@ -49,6 +88,8 @@
   --cinza:            #2c2a34;
   --verde:            #1f4a33;
   --verde-forte:      #5ddb94;
+
+  --tinta-roxo:       #15141a;   /* o roxo clareou: a tinta escurece */
 }
 
 * { box-sizing: border-box; }
@@ -58,32 +99,61 @@ body {
   padding: 0 0 4rem;
   background: var(--fundo);
   color: var(--texto);
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
-               Roboto, "Helvetica Neue", Arial, sans-serif;
-  font-size: 15px;
-  line-height: 1.5;
+  font-family: var(--mono);
+  font-size: var(--t-base);
+  line-height: 1.6;              /* pixel pede entrelinha mais solta */
   -webkit-font-smoothing: antialiased;
+
+  /* o navegador falsificaria o negrito engrossando o contorno, e o
+     desenho de pixel borra. Desligado, a hierarquia tem que vir de
+     tamanho, cor e inversão. */
+  font-synthesis: none;
+}
+
+/* as três faixas da página. min() em vez de max-width + padding: os
+   blocos têm moldura, e a borda não pode colar na beira da tela. */
+.topo,
+.mapa,
+.rodape {
+  width: min(var(--largura-max), 100% - var(--pad-lateral) * 2);
+  margin-inline: auto;
+}
+
+/* texto só para leitor de tela — o selo da etapa mostra o algarismo,
+   mas "4" sozinho não significa nada sem a palavra */
+.oculto-visual {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ----------------------------- topo ----------------------------- */
+/* o cabeçalho é um painel único, dividido por réguas duras: nome,
+   controles, progresso e legenda. Lê-se como a moldura de um
+   terminal, não como um cabeçalho de site solto na página. */
 .topo {
-  max-width: var(--largura-max);
-  margin: 0 auto;
-  padding: 2.5rem var(--pad-lateral) 1.5rem;
+  margin-top: 2rem;
+  background: var(--fundo-elevado);
+  border: 2px solid var(--linha);
+  box-shadow: var(--sombra-dura);
 }
 
-.topo__faixa {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
+/* display: contents dissolve o invólucro para que identidade e ações
+   virem linhas irmãs do painel, cada uma com a sua régua */
+.topo__faixa { display: contents; }
 
 .topo__identidade {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 1rem;
+  padding: var(--pad-painel);
+  min-width: 0;
 }
 
 .topo__logo {
@@ -94,20 +164,18 @@ body {
 
 .topo__logo svg {
   display: block;
-  width: clamp(7rem, 13vw, 11rem);
+  width: clamp(4.5rem, 9vw, 7rem);
   height: auto;
 }
 
-/* piscada: pausa longa, dois fechamentos rapidos em sequencia */
+/* piscada: pausa longa, dois fechamentos rapidos em sequencia. É o
+   único movimento não pedido da página — o mascote é a coisa viva
+   aqui, e nada mais precisa disputar atenção com ele. */
 .logo__olho {
   transform-box: fill-box;
   transform-origin: center;
   animation: piscar 5.2s ease-in-out infinite;
 }
-
-/* brilho so aparece no hover, recortado pela forma do visor */
-.logo__brilho { opacity: 0; }
-.topo__logo:hover .logo__brilho { animation: varrer 0.75s ease-out; }
 
 @keyframes flutuar {
   0%, 100% { transform: translateY(0); }
@@ -122,38 +190,41 @@ body {
   99%           { transform: scaleY(1); }
 }
 
-@keyframes varrer {
-  from { opacity: 0.5; transform: skewX(-18deg) translateX(0); }
-  to   { opacity: 0.5; transform: skewX(-18deg) translateX(620px); }
-}
-
 .topo h1 {
   margin: 0;
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
-  letter-spacing: -0.02em;
+  font-size: var(--t-pagina);
+  font-weight: 400;              /* peso não é ferramenta: ver body */
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  overflow-wrap: break-word;
 }
 
 .topo__sub {
-  margin: 0.25rem 0 0;
+  margin: 0.45rem 0 0;
+  font-size: var(--t-base);
   color: var(--texto-suave);
 }
 
 .topo__acoes {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  align-items: center;
   gap: 0.5rem;
+  padding: 0.75rem var(--pad-painel);
+  border-top: 2px solid var(--linha);
 }
 
+/* --------------------------- controles --------------------------- */
 .botao {
   font: inherit;
-  font-size: 0.8125rem;
+  font-size: var(--t-base);
   display: inline-block;
   text-decoration: none;
-  padding: 0.4rem 0.75rem;
-  background: var(--fundo-elevado);
+  padding: 0.35rem 0.75rem;
+  background: var(--fundo);
   color: var(--texto);
-  border: 1.5px solid var(--linha);
+  border: 2px solid var(--linha);
   border-radius: var(--raio);
   box-shadow: var(--sombra-dura-sm);
   cursor: pointer;
@@ -162,19 +233,39 @@ body {
   transition: transform 0.08s, box-shadow 0.08s;
 }
 
-.botao:hover { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--linha); }
+.botao:hover { transform: translate(2px, 2px); box-shadow: none; }
 .botao:active { transform: translate(2px, 2px); box-shadow: none; }
+.botao:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: 2px; }
 
-.botao--icone { width: 2rem; padding: 0.4rem 0; text-align: center; }
+.botao--icone { width: 2.25rem; padding: 0.35rem 0; text-align: center; }
+
+/* o botão de tema é desenhado, não escrito: os glifos de meia-lua não
+   existem nesta fonte, e um quadrado meio cheio diz a mesma coisa com
+   a geometria do resto da página */
+.botao--tema {
+  width: 2.25rem;
+  padding: 0.35rem 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.botao--tema::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  background: linear-gradient(90deg, currentColor 50%, transparent 50%);
+}
 
 .busca {
   font: inherit;
-  font-size: 0.8125rem;
+  font-size: var(--t-base);
   width: 12rem;
-  padding: 0.4rem 0.6rem;
-  background: var(--fundo-elevado);
+  padding: 0.35rem 0.6rem;
+  background: var(--fundo);
   color: var(--texto);
-  border: 1.5px solid var(--linha);
+  border: 2px solid var(--linha);
   border-radius: var(--raio);
   box-shadow: var(--sombra-dura-sm);
 }
@@ -186,12 +277,12 @@ body {
    seta nativa é desenhada pelo sistema e destoa da borda dura. */
 .seletor {
   font: inherit;
-  font-size: 0.8125rem;
-  width: 11rem;
-  padding: 0.4rem 1.7rem 0.4rem 0.6rem;   /* folga à direita p/ a seta */
-  background-color: var(--fundo-elevado);
+  font-size: var(--t-base);
+  width: 12rem;
+  padding: 0.35rem 1.7rem 0.35rem 0.6rem;   /* folga à direita p/ a seta */
+  background-color: var(--fundo);
   color: var(--texto);
-  border: 1.5px solid var(--linha);
+  border: 2px solid var(--linha);
   border-radius: var(--raio);
   box-shadow: var(--sombra-dura-sm);
   cursor: pointer;
@@ -213,7 +304,7 @@ body {
 }
 
 /* mesma micro-interação dos botões: afunda na direção da sombra */
-.seletor:hover  { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--linha); }
+.seletor:hover  { transform: translate(2px, 2px); box-shadow: none; }
 .seletor:active { transform: translate(2px, 2px); box-shadow: none; }
 .seletor:focus { outline: 2px solid var(--roxo-forte); outline-offset: 1px; }
 
@@ -232,7 +323,7 @@ body {
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
-    padding: 0.4rem 0.6rem;   /* sem a folga do chevron de gradiente */
+    padding: 0.35rem 0.6rem;  /* sem a folga do chevron de gradiente */
 
     /* base-select torna o campo um flex container, e o rótulo longo
        passaria a quebrar em duas linhas em vez de cortar com reticências */
@@ -249,10 +340,10 @@ body {
 
   .seletor::picker(select) {
     background: var(--fundo-elevado);
-    border: 1.5px solid var(--linha);
+    border: 2px solid var(--linha);
     border-radius: var(--raio);
-    box-shadow: var(--sombra-dura);   /* a sombra 3px dos nós do mapa */
-    padding: 0.25rem;
+    box-shadow: var(--sombra-dura);
+    padding: 0;
     margin-top: 0.35rem;
   }
 
@@ -260,70 +351,65 @@ body {
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.35rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.8125rem;
+    padding: 0.4rem 0.6rem;
+    font-size: var(--t-base);
     cursor: pointer;
   }
 
   .seletor option:hover,
-  .seletor option:focus { background: var(--cinza); outline: none; }
+  .seletor option:focus {
+    background: var(--texto);
+    color: var(--fundo);
+    outline: none;
+  }
 
-  .seletor option:checked { background: var(--amarelo); font-weight: 600; }
-  .seletor option::checkmark { color: var(--texto-suave); }
-}
-
-/* trechos de código no painel — vem de `crase` nos dados */
-.drawer code {
-  font-family: var(--mono);
-  font-size: 0.85em;           /* em, não rem: acompanha o tamanho do pai */
-  padding: 0.08em 0.22em;      /* lateral curto: o vizinho costuma ser pontuação */
-  background: var(--cinza);
-  color: var(--texto);
-  border: 1px solid var(--borda-sutil);
-  border-radius: 4px;
-
-  /* quebra só quando o trecho não cabe: identificadores curtos, que
-     são a maioria, continuam inteiros. box-decoration-break faz a
-     borda e o padding fecharem nos dois pedaços do que quebrou. */
-  overflow-wrap: break-word;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
+  .seletor option:checked { background: var(--amarelo-forte); color: var(--tinta-bloco); }
+  .seletor option::checkmark { color: currentColor; }
 }
 
 /* --------------------------- progresso --------------------------- */
-.progresso { margin-top: 1.5rem; }
+.progresso {
+  padding: 0.85rem var(--pad-painel);
+  border-top: 2px solid var(--linha);
+}
 
 .progresso__barra {
-  height: 10px;
+  height: 15px;
   background: var(--cinza);
-  border: 1.5px solid var(--linha);
-  border-radius: 999px;
+  border: 2px solid var(--linha);
+  border-radius: var(--raio);
   overflow: hidden;
 }
 
+/* a máscara cai sobre o preenchimento, não sobre a trilha: os vãos
+   deixam a trilha aparecer e a barra lê como ███▒▒▒ */
 .progresso__preenchido {
   display: block;
   height: 100%;
   width: 0;
   background: var(--verde-forte);
+  -webkit-mask-image: var(--celula);
+  mask-image: var(--celula);
   transition: width 0.25s ease;
 }
 
 .progresso__texto {
   margin: 0.4rem 0 0;
-  font-size: 0.8125rem;
+  font-size: var(--t-micro);
   color: var(--texto-suave);
 }
 
 /* ---------------------------- legenda ---------------------------- */
+/* última linha do painel: funciona como barra de status */
 .legenda {
-  margin-top: 1.25rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 1rem 1.5rem;
   flex-wrap: wrap;
+  padding: 0.6rem var(--pad-painel);
+  border-top: 2px solid var(--linha);
+  background: var(--fundo);
 }
 
 .legenda__grupo { display: flex; gap: 1rem; flex-wrap: wrap; }
@@ -332,107 +418,113 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  font-size: 0.8125rem;
+  font-size: var(--t-micro);
   color: var(--texto-suave);
 }
 
+/* a amostra repete a barra de prioridade do tópico, não um retângulo
+   decorativo: é literalmente o mesmo sinal que se vê na lista */
 .legenda__amostra {
-  width: 1.5rem;
-  height: 0.9rem;
-  border-radius: 3px;
-  border: 1.5px solid var(--linha);
+  width: 0.4rem;
+  height: 1rem;
+  border: 0;
 }
 
-.legenda__amostra[data-prioridade="fundamental"] { background: var(--amarelo); }
-.legenda__amostra[data-prioridade="importante"]   { background: var(--roxo); }
-.legenda__amostra[data-prioridade="opcional"]     { background: var(--cinza); border-style: dashed; }
+.legenda__amostra[data-prioridade="fundamental"] { background: var(--amarelo-forte); }
+.legenda__amostra[data-prioridade="importante"]  { background: var(--roxo-forte); }
+.legenda__amostra[data-prioridade="opcional"] {
+  /* hachura diagonal em vez de borda tracejada: mesma ideia de "menos
+     firme", desenhada em pixel */
+  background: repeating-linear-gradient(
+    45deg, var(--texto) 0 2px, transparent 2px 4px);
+}
 
-.legenda__dica { margin: 0; font-size: 0.8125rem; color: var(--texto-suave); }
+.legenda__dica { margin: 0; font-size: var(--t-micro); color: var(--texto-suave); }
+.legenda__dica strong { font-weight: 400; color: var(--texto); }
 
 /* ----------------------------- mapa ----------------------------- */
-.mapa {
-  position: relative;
-  max-width: var(--largura-max);
-  margin: 2.5rem auto 0;
-  padding: 0 var(--pad-lateral);
-}
+.mapa { margin-top: 3rem; }
 
-/* espinha vertical central */
-.mapa::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 3rem;
-  left: 50%;
-  width: 0;
-  border-left: 2.5px dashed var(--linha);
-  opacity: 0.45;
-  z-index: 0;
-}
+/* ------------------------- faixa da etapa ------------------------- */
+.etapa { margin-bottom: 4rem; }
 
-/* ----------------------------- etapa ----------------------------- */
-.etapa {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: 1fr var(--col-centro) 1fr;
-  align-items: start;
-  column-gap: 2.5rem;
-  margin-bottom: 3.5rem;
-}
-
-/* nó central da etapa — é um <button>, abre a introdução da etapa */
+/* a barra da etapa é um <button>: abre a introdução. Gruda no topo
+   enquanto a etapa rola, então a referência de onde se está nunca
+   sai da tela — é o que o nó central fazia, sem o nó central. */
 .etapa__nucleo {
-  grid-column: 2;
-  grid-row: 1;
   position: sticky;
-  top: 1rem;
+  top: 0;
+  z-index: 3;
   width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "selo titulo meta"
+    "selo barra  barra";
+  align-items: center;
+  column-gap: 1rem;
+  row-gap: 0.5rem;
+  margin-bottom: 1.75rem;
+  padding: 0;
   font: inherit;
+  text-align: left;
   color: var(--texto);
-  background: var(--amarelo);
+  background: var(--fundo);
   border: 2px solid var(--linha);
   border-radius: var(--raio);
   box-shadow: var(--sombra-dura);
-  padding: 0.85rem 1rem;
-  text-align: center;
   cursor: pointer;
   transition: transform 0.08s, box-shadow 0.08s;
 }
 
-.etapa__nucleo:hover { transform: translate(1px, 1px); box-shadow: 2px 2px 0 var(--linha); }
-.etapa__nucleo:active { transform: translate(3px, 3px); box-shadow: none; }
+.etapa__nucleo:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--linha); }
+.etapa__nucleo:active { transform: translate(4px, 4px); box-shadow: none; }
 .etapa__nucleo:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: 3px; }
 
+/* o selo: bloco sólido colado na quina, com o algarismo em tinta
+   escura. É daqui que a etapa tira presença — não de negrito. */
 .etapa__numero {
-  display: block;
-  font-size: 0.6875rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--texto-suave);
+  grid-area: selo;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.75rem;
+  padding: 0.5rem;
+  font-size: var(--t-etapa);
+  line-height: 1;
+  color: var(--tinta-bloco);
+  background: var(--amarelo-forte);
+  border-right: 2px solid var(--linha);
 }
 
 .etapa__titulo {
-  display: block;
-  margin-top: 0.15rem;
-  font-size: 1.125rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  grid-area: titulo;
+  align-self: end;
+  padding-top: 0.7rem;
+  font-size: var(--t-etapa);
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  overflow-wrap: break-word;
 }
 
 .etapa__meta {
-  display: block;
-  margin-top: 0.4rem;
-  font-size: 0.75rem;
+  grid-area: meta;
+  align-self: end;
+  padding: 0.7rem 1rem 0 0;
+  font-size: var(--t-micro);
+  text-align: right;
   color: var(--texto-suave);
 }
 
 .etapa__anel {
+  grid-area: barra;
   display: block;
-  margin-top: 0.6rem;
-  height: 5px;
-  background: rgba(0, 0, 0, 0.12);
-  border-radius: 999px;
+  height: 11px;
+  margin: 0 1rem 0.85rem 0;
+  background: var(--cinza);
+  border: 2px solid var(--linha);
   overflow: hidden;
 }
 
@@ -441,70 +533,74 @@ body {
   height: 100%;
   width: 0;
   background: var(--verde-forte);
+  -webkit-mask-image: var(--celula);
+  mask-image: var(--celula);
   transition: width 0.25s ease;
 }
 
-/* ----------------------------- ramos ----------------------------- */
-.ramo { grid-row: 1; display: flex; flex-direction: column; gap: 1.5rem; }
-.ramo--esq { grid-column: 1; align-items: flex-end; text-align: right; }
-.ramo--dir { grid-column: 3; align-items: flex-start; }
+/* ---------------------------- grupos ---------------------------- */
+/* multicoluna, não grid: o navegador empacota os grupos na ordem em
+   que foram escritos e decide sozinho quantas colunas cabem — e um
+   grupo grande demais para a coluna se espalha em vez de esticar. */
+.etapa__grupos {
+  columns: 3 17rem;
+  column-gap: 2.5rem;
+  column-rule: 2px solid var(--borda-sutil);
+}
 
-.grupo { position: relative; max-width: 24rem; width: 100%; }
+/* o grupo flui entre colunas em vez de ser indivisível: com dois
+   grupos e três colunas, blocos inteiros deixariam a última vazia */
+.grupo {
+  break-inside: auto;
+  margin: 0 0 1.75rem;
+}
 
 .grupo__titulo {
-  margin: 0 0 0.6rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--texto-suave);
+  /* controle de órfã: o título nunca fecha uma coluna sozinho */
+  break-after: avoid;
+  margin: 0 0 0.5rem;
+  font-size: var(--t-base);
+  font-weight: 400;
+  letter-spacing: var(--tracking-rotulo);
+  color: var(--texto);
+  border-bottom: 2px solid var(--linha);
+  padding-bottom: 0.3rem;
 }
 
 .grupo__duracao {
-  font-weight: 400;
-  text-transform: none;
   letter-spacing: 0;
-  opacity: 0.8;
+  color: var(--texto-suave);
 }
 
-/* flex-start explicito: `normal` equivale a stretch, e o item do flex
-   agora e um <div>, que obedece ao stretch - ao contrario do <button>,
-   que o navegador dimensiona por fit-content e que mascarava a falta */
-.grupo__topicos {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.4rem;
-}
-.ramo--esq .grupo__topicos { align-items: flex-end; }
-
-/* conector tracejado do grupo até a espinha */
-.grupo::after {
-  content: "";
-  position: absolute;
-  top: 0.55rem;
-  width: 2.5rem;
-  border-top: 2px dashed var(--linha);
-  opacity: 0.45;
-}
-.ramo--esq .grupo::after { right: -2.5rem; }
-.ramo--dir .grupo::after { left: -2.5rem; }
+.grupo__topicos { display: block; }
 
 /* ---------------------------- tópico ---------------------------- */
+/* linha de lista, não etiqueta solta: o site promete um checklist, e
+   agora parece um. A marca de estado ocupa 1ch — em monoespaçada as
+   marcas de todos os tópicos caem numa coluna perfeita. */
+.topico-par {
+  position: relative;     /* ancora o [i] dentro da caixa do tópico */
+  display: block;
+  break-inside: avoid;    /* a linha é a menor unidade que não parte */
+}
+
 .topico {
   font: inherit;
-  font-size: 0.8125rem;
-  text-align: inherit;
-  display: inline-block;
-  max-width: 100%;
-  padding: 0.42rem 0.7rem;
-  border: 1.5px solid var(--linha);
-  border-radius: var(--raio);
-  box-shadow: var(--sombra-dura-sm);
-  background: var(--cinza);
+  font-size: var(--t-base);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.3rem 0.5rem;
+  background: transparent;
   color: var(--texto);
+  border: 0;
+  border-left: 5px solid var(--borda-sutil);
+  border-bottom: 1px solid var(--borda-sutil);
+  border-radius: var(--raio);
   cursor: pointer;
-  overflow-wrap: break-word;               /* titulo longo nao estoura a tela */
+  overflow-wrap: anywhere;                 /* titulo longo nao estoura a coluna */
   /* o toque longo e um gesto nosso: sem isto o iOS abre o balao de
      selecao por cima dele e o Android pinta a selecao de texto */
   user-select: none;
@@ -512,72 +608,70 @@ body {
   -webkit-touch-callout: none;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.08s, box-shadow 0.08s, background 0.15s, opacity 0.15s;
+  transition: background 0.1s, color 0.1s;
 }
 
-.topico:hover { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--linha); }
-.topico:active { transform: translate(2px, 2px); box-shadow: none; }
-.topico:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: 2px; }
+/* inversão no lugar do empurrão com sombra: numa lista densa, deslocar
+   cada linha no hover faria a coluna inteira tremer */
+.topico:hover { background: var(--texto); color: var(--fundo); }
+.topico:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: -2px; }
 
-/* prioridade define a cor de repouso */
-.topico[data-prioridade="fundamental"] { background: var(--amarelo); }
-.topico[data-prioridade="importante"]   { background: var(--roxo); }
-.topico[data-prioridade="opcional"]     { background: var(--cinza); border-style: dashed; }
-
-/* estado sobrescreve */
-.topico[data-estado="feito"] {
-  background: var(--verde);
-  text-decoration: line-through;
-  text-decoration-thickness: 1.5px;
-}
-
-.topico[data-estado="estudando"] {
-  background: var(--fundo-elevado);
-  border-color: var(--roxo-forte);
-  border-width: 2px;
-  box-shadow: 2px 2px 0 var(--roxo-forte);
-}
-
-.topico[data-estado="pulado"] {
-  opacity: 0.4;
-  text-decoration: line-through;
-  box-shadow: none;
-}
+/* prioridade vira barra lateral — a cor sai do fundo do texto, onde
+   competia com o estado, e vai para a margem, onde é só sinalização */
+.topico[data-prioridade="fundamental"] { border-left-color: var(--amarelo-forte); }
+.topico[data-prioridade="importante"]  { border-left-color: var(--roxo-forte); }
+.topico[data-prioridade="opcional"]    { border-left-color: var(--borda-sutil); }
 
 .topico__marca {
-  display: inline-block;
-  width: 1rem;
-  font-weight: 700;
-  color: var(--verde-forte);
+  flex: none;
+  width: 1ch;
+  color: var(--texto-suave);
 }
 
-/* topico e botao de detalhe andam juntos como uma unidade da lista */
-.topico-par {
-  position: relative;     /* ancora o info dentro da caixa do topico */
-  display: inline-block;
-  max-width: 100%;
+/* estado sobrescreve o fundo; a barra de prioridade continua visível */
+.topico[data-estado="feito"] {
+  color: var(--texto-suave);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+.topico[data-estado="feito"] .topico__marca { color: var(--verde-forte); }
+
+/* a linha em estudo é a única preenchida: funciona como o cursor da
+   lista, dizendo "você parou aqui" */
+/* --roxo é lavanda no tema claro e roxo escuro no escuro, então a
+   tinta tem que ser --texto, que vira junto */
+.topico[data-estado="estudando"] {
+  background: var(--roxo);
+  color: var(--texto);
+}
+.topico[data-estado="estudando"] .topico__marca { color: var(--roxo-forte); }
+
+.topico[data-estado="pulado"] {
+  opacity: 0.5;
+  text-decoration: line-through;
 }
 
-/* a busca marca o topico; o par inteiro e quem sai do fluxo, senao o
-   info ficaria sozinho ocupando a linha de um topico escondido */
-.topico-par:has(.topico[data-oculto]) { display: none; }
+/* o inverso vale para a linha invertida: a marca tem que acompanhar */
+.topico:hover .topico__marca { color: inherit; }
 
+/* [i] — atalho de toque para o painel. No desktop existem o
+   Shift + clique e o botão direito, então ele não aparece. */
 .topico__info {
-  display: none;             /* desktop ja tem Shift + clique e botao direito */
+  display: none;
   position: absolute;
   right: 0.15rem;
   top: 0;
   bottom: 0;
-  margin: auto 0;            /* centraliza na vertical sem gastar o transform */
-  width: 2rem;               /* area de toque; o visivel e so o glifo */
+  margin: auto 0;
+  width: 3ch;
   height: 2rem;
   padding: 0;
   font: inherit;
-  font-size: 0.9375rem;
+  font-size: var(--t-base);
   line-height: 1;
   color: var(--texto);
-  opacity: 0.5;              /* discreto: o protagonista e o titulo */
-  background: transparent;   /* sem caixa propria: ele ja esta dentro de uma */
+  opacity: 0.55;
+  background: transparent;
   border: none;
   cursor: pointer;
   touch-action: manipulation;
@@ -588,38 +682,34 @@ body {
 .topico__info:active { opacity: 1; }
 .topico__info:focus-visible {
   outline: 2px solid var(--roxo-forte);
-  outline-offset: -2px;      /* para dentro: a borda do topico esta colada */
+  outline-offset: -2px;
   opacity: 1;
-  border-radius: 999px;
 }
 
-/* o info e irmao do topico, entao nao herda o esmaecer do estado pulado */
-.topico-par:has(.topico[data-estado="pulado"]) .topico__info { opacity: 0.22; }
+.topico-par:has(.topico[data-estado="pulado"]) .topico__info { opacity: 0.25; }
 
 /* aparece onde o ponteiro e o dedo, e o topico abre espaco para ele */
 @media (pointer: coarse) {
   .topico__info { display: block; }
-  .topico-par .topico { padding-right: 2.3rem; }
+  .topico-par .topico { padding-right: 3.5ch; }
 }
 
 /* busca: o que não bate some do fluxo, mantendo o mapa compacto */
 .topico[data-oculto] { display: none; }
 
+/* a busca marca o topico; o par inteiro e quem sai do fluxo, senao o
+   [i] ficaria sozinho ocupando a linha de um topico escondido */
+.topico-par:has(.topico[data-oculto]) { display: none; }
+
 /* durante a busca, grupos sem nenhum resultado colapsam o título */
 .mapa[data-filtrando] .grupo:not(:has(.topico:not([data-oculto]))) { display: none; }
-.mapa[data-filtrando] .grupo::after,
-.mapa[data-filtrando] .grupo::before { display: none; }
-
-.topico[data-estado="estudando"] .topico__marca { color: var(--roxo-forte); }
-.topico[data-estado="pulado"] .topico__marca    { color: var(--texto-suave); }
 
 /* ---------------------------- rodapé ---------------------------- */
 .rodape {
-  max-width: var(--largura-max);
-  margin: 3rem auto 0;
-  padding: 1.5rem var(--pad-lateral);
-  border-top: 1.5px solid var(--borda-sutil);
-  font-size: 0.8125rem;
+  margin-top: 3rem;
+  padding: var(--pad-painel);
+  border: 2px solid var(--borda-sutil);
+  font-size: var(--t-micro);
   color: var(--texto-suave);
   text-align: center;
 }
@@ -640,8 +730,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  font-family: var(--mono);
-  font-size: 0.8125rem;
+  font-size: var(--t-micro);
 }
 
 .rodape__label { color: var(--texto-suave); }
@@ -649,25 +738,23 @@ body {
 .rodape__chip {
   padding: 0.2rem 0.6rem;
   background: var(--roxo-forte);
-  color: #15141a;
-  border: 1.5px solid var(--linha);
-  border-radius: 999px;
+  color: var(--tinta-roxo);
+  border: 2px solid var(--linha);
+  border-radius: var(--raio);
   box-shadow: var(--sombra-dura-sm);
   text-decoration: none;
-  font-weight: 600;
 }
 
-.rodape__chip:hover { transform: translate(1px, 1px); box-shadow: none; }
+.rodape__chip:hover { transform: translate(2px, 2px); box-shadow: none; }
 
 .botao--destaque {
-  font-weight: 700;
-  padding: 0.5rem 1.1rem;
-  background: var(--roxo-forte);
-  color: #15141a;
+  padding: 0.45rem 1.1rem;
+  background: var(--amarelo-forte);
+  color: var(--tinta-bloco);
   box-shadow: var(--sombra-dura);
 }
 
-.botao--destaque:hover { box-shadow: var(--sombra-dura-sm); }
+.botao--destaque:hover { transform: translate(4px, 4px); box-shadow: none; }
 
 /* ---------------------------- drawer ---------------------------- */
 .sobreposicao {
@@ -682,12 +769,14 @@ body {
   top: 0;
   right: 0;
   z-index: 50;
-  width: min(26rem, 100vw);
+  width: min(34rem, 100vw);
   height: 100vh;
   height: 100dvh;                 /* dvh desconta a barra de endereco do celular */
   overflow-y: auto;
   overscroll-behavior: contain;   /* o scroll do painel nao "vaza" para a pagina */
-  padding: 1.25rem 1.5rem 3rem;
+  overflow-x: hidden;             /* nada aqui rola na horizontal */
+  padding: 0;                     /* o respiro passou para .drawer__corpo:
+                                     a barra do topo precisa colar nas bordas */
   /* a rolagem vertical continua sendo do navegador; o eixo horizontal
      fica para o arraste de fechar, e por isso nao gera pointercancel */
   touch-action: pan-y;
@@ -713,236 +802,429 @@ body:has(.drawer--ajustando) .sobreposicao {
   * { transition-duration: 0.01ms !important; }
 }
 
-.drawer__topo {
+/* barra fixa do painel: selo da etapa, caminho e fechar. Gruda no topo
+   enquanto o texto rola, do mesmo jeito que a faixa da etapa no mapa. */
+.drawer__barra {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: stretch;
+  gap: 0.9rem;
+  background: var(--fundo);
+  border-bottom: 2px solid var(--linha);
+}
+
+/* o mesmo bloco numerado da etapa no mapa — é o que amarra o painel
+   ao lugar de onde ele veio */
+.drawer__selo {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
+  justify-content: center;
+  flex: none;
+  min-width: 3.4rem;
+  padding: 0.5rem;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--tinta-bloco);
+  background: var(--amarelo-forte);
+  border-right: 2px solid var(--linha);
 }
-
-.etiqueta {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 0.2rem 0.5rem;
-  border: 1.5px solid var(--linha);
-  border-radius: 999px;
-}
-
-.etiqueta[data-prioridade="fundamental"] { background: var(--amarelo); }
-.etiqueta[data-prioridade="importante"]   { background: var(--roxo); }
-.etiqueta[data-prioridade="opcional"]     { background: var(--cinza); }
-
-.drawer h2 { margin: 0; font-size: 1.375rem; letter-spacing: -0.01em; }
 
 .drawer__trilha {
-  margin: 0.3rem 0 0;
-  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0.75rem 0;
+  font-size: var(--t-micro);
+  line-height: 1.45;
   color: var(--texto-suave);
+  overflow-wrap: anywhere;
+}
+
+.drawer__barra .botao--icone {
+  align-self: center;
+  flex: none;
+  margin-right: 0.9rem;
+  font-size: var(--t-leitura);
+}
+
+.drawer__corpo { padding: 1.25rem 1.5rem 3rem; }
+
+/* prioridade e estado atual lado a lado: quem abre o painel abre para
+   decidir, e precisa saber em que pé o tópico está sem rolar */
+.drawer__identidade {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.drawer__estado {
+  font-size: var(--t-micro);
+  letter-spacing: 0.08em;
+  color: var(--texto-suave);
+}
+
+/* só "feito" ganha cor: --verde-forte passa em contraste nos dois temas,
+   e --roxo-forte não passaria a 11px no tema claro. A marca (► ■ □) já
+   distingue os estados sem depender de cor. */
+.drawer__estado[data-estado="feito"] { color: var(--verde-forte); }
+.drawer__estado[data-estado="estudando"] { color: var(--texto); }
+
+/* etiqueta de prioridade: bloco sólido, como o selo da etapa. A base
+   é neutra porque ela também carrega "Etapa N", que não tem cor —
+   e tinta fixa sobre --cinza somia no tema escuro. */
+.etiqueta {
+  font-size: var(--t-micro);
+  letter-spacing: var(--tracking-rotulo);
+  text-transform: uppercase;
+  padding: 0.25rem 0.6rem;
+  color: var(--texto);
+  background: var(--fundo);
+  border: 2px solid var(--linha);
+  border-radius: var(--raio);
+}
+
+/* só os tokens -forte são vivos nos dois temas; é sobre eles que a
+   tinta fixa pode cair */
+.etiqueta[data-prioridade="fundamental"] {
+  background: var(--amarelo-forte);
+  color: var(--tinta-bloco);
+}
+.etiqueta[data-prioridade="importante"] {
+  background: var(--roxo-forte);
+  color: var(--tinta-roxo);
+}
+
+.drawer h2 {
+  margin: 0.9rem 0 0;
+  max-width: var(--medida);
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.15;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  overflow-wrap: anywhere;
 }
 
 /* linha curta do checklist — o "o quê", para revisão rápida */
 .drawer__desc {
-  margin: 0.9rem 0 0;
-  font-weight: 600;
-  line-height: 1.45;
+  margin: 1.1rem 0 0;
+  max-width: var(--medida);
+  font-size: var(--t-leitura);
+  line-height: 1.6;
+  padding-left: 0.75rem;
+  /* régua neutra: no mapa uma barra colorida à esquerda significa
+     prioridade, e aqui significaria "fundamental" por engano */
+  border-left: 5px solid var(--linha);
 }
 
-/* explicação longa — o "por quê" */
+/* explicação longa — o "por quê". Pixel mono em texto corrido só
+   funciona com corpo maior, entrelinha solta e medida curta. */
 .drawer__detalhe {
-  margin-top: 0.9rem;
-  padding-top: 0.9rem;
-  border-top: 1.5px solid var(--borda-sutil);
-  font-size: 0.9375rem;
-  line-height: 1.65;
+  margin-top: 1.1rem;
+  padding-top: 1.1rem;
+  border-top: 2px solid var(--borda-sutil);
+  max-width: var(--medida);
+  font-size: var(--t-leitura);
+  line-height: 1.75;
   color: var(--texto);
 }
 
-.drawer__detalhe p { margin: 0 0 0.85rem; }
+.drawer__detalhe p { margin: 0 0 1rem; }
 .drawer__detalhe p:last-child { margin-bottom: 0; }
 
 .drawer__nota {
   margin: 0;
-  font-size: 0.875rem;
-  line-height: 1.6;
+  max-width: var(--medida);
+  font-size: var(--t-base);
+  line-height: 1.7;
   color: var(--texto-suave);
 }
 
-.drawer__secao { margin-top: 1.75rem; }
+/* aba pendurada na régua: a régua é a borda da própria seção e o h3,
+   preenchido e encostado nela, vira a aba. É o device de <legend> em
+   <fieldset>, e não custa nenhum elemento a mais. */
+.drawer__secao {
+  margin-top: 1.75rem;
+  border-top: 2px solid var(--texto);
+}
 
 .drawer__secao h3 {
-  margin: 0 0 0.6rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  display: inline-block;
+  margin: 0 0 0.9rem;
+  padding: 0.3rem 0.6rem;
+  font-size: var(--t-micro);
+  font-weight: 400;
+  letter-spacing: var(--tracking-rotulo);
   text-transform: uppercase;
+  color: var(--fundo);
+  background: var(--texto);
+}
+
+/* a régua de conclusão é a única aba amarela do painel: no resto da
+   página o amarelo é a etapa, aqui é "este é o critério" */
+.drawer__secao--regua { border-top-color: var(--amarelo-forte); }
+
+.drawer__secao--regua h3 {
+  color: var(--tinta-bloco);
+  background: var(--amarelo-forte);
+}
+
+.drawer__contagem { opacity: 0.65; }
+
+/* --------------------------- subassuntos --------------------------- */
+.subassuntos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+/* o par é quem desenha a caixa; os dois botões são segmentos dela */
+.subassunto-par {
+  display: inline-flex;
+  align-items: stretch;
+  max-width: 100%;
+  background: var(--fundo);
+  border: 2px solid var(--linha);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-dura-sm);
+}
+
+.subassunto {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+  font: inherit;
+  font-size: var(--t-base);
+  padding: 0.4rem 0.65rem;
+  text-align: left;
   color: var(--texto-suave);
+  background: transparent;
+  border: 0;
+  border-radius: var(--raio);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.1s, color 0.1s;
+}
+
+.subassunto:hover { background: var(--texto); color: var(--fundo); }
+.subassunto:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: -2px; }
+
+.subassunto[aria-pressed="true"] {
+  color: var(--texto);
+  background: var(--verde);
+}
+
+.subassunto[aria-pressed="true"]:hover { background: var(--texto); color: var(--fundo); }
+
+/* 1ch numa monoespaçada alinha as marcas numa coluna exata */
+.subassunto__marca { flex: none; width: 1ch; }
+
+/* segmento de copiar: discreto por padrão, porque o protagonista do
+   par é o rótulo — mas com alvo de toque próprio */
+.subassunto__copiar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 2.1rem;
+  padding: 0;
+  color: var(--texto-suave);
+  background: transparent;
+  border: 0;
+  border-left: 2px solid var(--borda-sutil);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.1s, color 0.1s;
+}
+
+.subassunto__copiar:hover { background: var(--texto); color: var(--fundo); }
+.subassunto__copiar:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: -2px; }
+
+/* confirmação: o ícone troca e o segmento acende por ~1,4s */
+.subassunto__copiar[data-copiado] { color: var(--texto); }
+.subassunto__copiar[data-copiado="sim"] { background: var(--verde); }
+.subassunto__copiar[data-copiado="nao"] { background: var(--amarelo); }
+
+.icone--ok { display: none; }
+.subassunto__copiar[data-copiado] .icone--copiar { display: none; }
+.subassunto__copiar[data-copiado="sim"] .icone--ok { display: inline; }
+
+/* a aba de subassuntos já separa o que vem depois: duas réguas
+   seguidas viram ruído */
+#drawer-secao-sub:not([hidden]) + .drawer__detalhe {
+  margin-top: 1.5rem;
+  padding-top: 0;
+  border-top: 0;
 }
 
 .drawer__estados { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 
 .estado-btn {
   font: inherit;
-  font-size: 0.8125rem;
+  font-size: var(--t-base);
   padding: 0.35rem 0.7rem;
   background: var(--fundo);
   color: var(--texto);
-  border: 1.5px solid var(--linha);
+  border: 2px solid var(--linha);
   border-radius: var(--raio);
   cursor: pointer;
 }
 
+.estado-btn:hover { background: var(--texto); color: var(--fundo); }
+
+/* o estado ativo é invertido, igual à linha em estudo do mapa */
 .estado-btn[aria-pressed="true"] {
-  background: var(--verde);
+  background: var(--roxo-forte);
+  color: var(--tinta-roxo);
   box-shadow: var(--sombra-dura-sm);
-  font-weight: 600;
 }
 
-.lista { margin: 0; padding-left: 1.1rem; }
-.lista li { margin-bottom: 0.5rem; line-height: 1.55; }
+.estado-btn[aria-pressed="true"]:hover {
+  background: var(--roxo-forte);
+  color: var(--tinta-roxo);
+}
+
+/* a lista usa o marcador da fonte, alinhado na mesma coluna dos
+   tópicos do mapa */
+.lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-width: var(--medida);
+}
+
+.lista li {
+  position: relative;
+  margin-bottom: 0.6rem;
+  padding-left: 2ch;
+  line-height: 1.7;
+}
+
+.lista li::before {
+  content: "›";
+  position: absolute;
+  left: 0;
+  color: var(--texto-suave);
+}
+
 .lista a { color: var(--roxo-forte); }
 .lista__nota { color: var(--texto-suave); }
 
-/* o drawer fica mais largo porque agora carrega texto de leitura */
-.drawer { width: min(32rem, 100vw); }
+/* trechos de código no painel — vem de `crase` nos dados. Como a
+   página inteira já é monoespaçada, quem marca o código é a caixa. */
+.drawer code {
+  font-family: inherit;
+  padding: 0.08em 0.3em;
+  background: var(--cinza);
+  color: var(--texto);
+  border: 1px solid var(--borda-sutil);
+  border-radius: var(--raio);
+
+  /* quebra só quando o trecho não cabe: identificadores curtos, que
+     são a maioria, continuam inteiros. box-decoration-break faz a
+     borda e o padding fecharem nos dois pedaços do que quebrou. */
+  overflow-wrap: break-word;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
 
 /* com o painel aberto o fundo nao rola atras dele - no celular o drawer
    ocupa a tela toda e um scroll invisivel por baixo desorienta */
 body:has(.drawer:not([hidden])) { overflow: hidden; }
 
-/* ---------------------------- responsivo ---------------------------- */
-@media (max-width: 900px) {
-  .mapa::before { left: var(--pad-lateral); }   /* espinha na borda do conteudo */
-
-  .etapa {
-    grid-template-columns: 1fr;
-    row-gap: 1.5rem;                 /* mesmo ritmo do gap entre grupos */
-    padding-left: var(--recuo-ramo);
+/* ---------------------- responsivo: tablet ---------------------- */
+@media (max-width: 760px) {
+  /* o selo sai da coluna e vira a primeira linha, junto do título:
+     em tela estreita ele comia metade da largura da barra */
+  .etapa__nucleo {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "selo titulo"
+      "meta meta"
+      "barra barra";
+    column-gap: 0.75rem;
+    row-gap: 0.4rem;
   }
 
-  .etapa__nucleo,
-  .ramo--esq,
-  .ramo--dir { grid-column: 1; grid-row: auto; }
+  .etapa__titulo { padding-top: 0.6rem; padding-right: 0.75rem; }
 
-  /* relative, nao static: o nucleo passa a ancorar o proprio galho e no */
-  .etapa__nucleo { position: relative; text-align: left; }
-
-  /* galho da etapa ate a espinha */
-  .etapa__nucleo::before {
-    content: "";
-    position: absolute;
-    top: 1.5rem;
-    left: calc(var(--recuo-ramo) * -1);
-    width: var(--recuo-ramo);
-    border-top: 2.5px dashed var(--linha);
-    opacity: 0.45;
+  .etapa__meta {
+    padding: 0 0.75rem;
+    text-align: left;
   }
 
-  /* no da etapa: quadrado cheio, do mesmo amarelo do nucleo */
-  .etapa__nucleo::after {
-    content: "";
-    position: absolute;
-    top: calc(1.5rem - 6px);
-    left: calc(var(--recuo-ramo) * -1 - 5px);
-    width: 12px;
-    height: 12px;
-    background: var(--amarelo);
-    border: 2px solid var(--linha);
-    border-radius: 3px;
-  }
-
-  .ramo--esq { align-items: flex-start; text-align: left; }
-  .ramo--esq .grupo__topicos { align-items: flex-start; }
-
-  .grupo { max-width: none; }
-
-  /* o galho do grupo deixa de apontar para o centro e passa a apontar
-     para a espinha a esquerda, dos dois ramos. `.ramo .grupo` empata em
-     especificidade com `.ramo--esq .grupo` e vence por vir depois. */
-  .ramo .grupo::after {
-    top: 0.55rem;
-    right: auto;
-    left: calc(var(--recuo-ramo) * -1);
-    width: var(--recuo-ramo);
-  }
-
-  /* no do grupo: menor e vazado, para a etapa seguir sendo o no forte */
-  .grupo::before {
-    content: "";
-    position: absolute;
-    top: calc(0.55rem - 4px);
-    left: calc(var(--recuo-ramo) * -1 - 3px);
-    width: 8px;
-    height: 8px;
-    background: var(--fundo);
-    border: 2px solid var(--linha);
-    border-radius: 999px;
-  }
-
-  /* grupo sem titulo (os meio-grupos divididos) comeca direto nos
-     topicos: o galho desce para o meio do primeiro botao em vez de
-     rasar o topo dele */
-  .ramo .grupo:not(:has(.grupo__titulo))::after  { top: 1.25rem; }
-  .grupo:not(:has(.grupo__titulo))::before { top: calc(1.25rem - 4px); }
+  .etapa__anel { margin: 0 0.75rem 0.75rem; }
 
   /* a barra de ações quebra em duas linhas e a busca ocupa a sobra,
      em vez de empurrar a página para fora da tela */
-  .topo__acoes { justify-content: flex-start; width: 100%; }
   .busca { flex: 1 1 8rem; width: auto; min-width: 0; }
   .seletor { flex: 1 1 10rem; min-width: 0; }
 }
 
 /* ---------------------- responsivo: celular ---------------------- */
 @media (max-width: 600px) {
-  :root { --pad-lateral: 1rem; --recuo-ramo: 1.75rem; }
+  :root { --pad-lateral: 1rem; --pad-painel: 1rem; }
 
-  .topo { padding-top: 1.5rem; }
+  .topo { margin-top: 1rem; }
 
   /* o logo divide a linha com o título: encolhe para o h1 não cair
      em três linhas de uma palavra cada */
-  .topo__identidade { gap: 0.6rem; min-width: 0; }
-  .topo__logo svg   { width: 4.5rem; }
-  .topo h1          { font-size: 1.5rem; overflow-wrap: break-word; }
-  .topo__sub        { font-size: 0.8125rem; }
+  .topo__identidade { gap: 0.75rem; }
+  .topo__logo svg   { width: 3.5rem; }
 
-  /* linha 1: a trilha inteira. linha 2: busca ocupa a sobra, tema e
-     reset ficam à direita no tamanho de que precisam */
+  /* três linhas: trilha, busca + tema, zerar. Numa única linha com
+     "Zerar progresso" ao lado, a busca sobrava com 4 caracteres. */
   .topo__acoes {
     display: grid;
-    grid-template-columns: 1fr auto auto;
-    width: 100%;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
-  .seletor { grid-column: 1 / -1; width: 100%; }
-  .busca   { width: 100%; }
+  .seletor  { grid-column: 1 / -1; width: 100%; }
+  .busca    { width: 100%; min-width: 0; }
+  #btn-reset { grid-column: 1 / -1; }
 
-  /* 16px (1rem) evita o zoom automático do Safari iOS ao focar o campo */
+  /* 16px evita o zoom automático do Safari iOS ao focar o campo */
   .busca,
-  .seletor { font-size: 1rem; padding-block: 0.5rem; }
+  .seletor { font-size: 16.5px; padding-block: 0.5rem; }
 
   /* alvos de toque: ~40px de altura no lugar dos ~28px do desktop */
-  .botao        { font-size: 0.875rem; padding: 0.55rem 0.85rem; }
-  .botao--icone { width: 2.75rem; padding: 0.55rem 0; }
-  .topico       { font-size: 0.875rem; padding: 0.6rem 0.85rem; }
-  .estado-btn   { font-size: 0.875rem; padding: 0.55rem 0.9rem; }
-  .grupo__topicos { gap: 0.5rem; }
+  .botao        { font-size: var(--t-leitura); padding: 0.5rem 0.85rem; }
+  .botao--icone { width: 2.75rem; padding: 0.5rem 0; }
+  .topico       { font-size: var(--t-leitura); padding: 0.55rem 0.6rem; }
+  .estado-btn   { font-size: var(--t-leitura); padding: 0.5rem 0.9rem; }
 
-  .mapa          { margin-top: 1.75rem; }
-  .etapa         { margin-bottom: 2.5rem; }
-  .etapa__titulo { font-size: 1.0625rem; }
+  /* uma coluna só: 17rem não cabem duas vezes em 360px de qualquer forma,
+     mas a régua entre colunas some junto */
+  .etapa__grupos { columns: 1; column-rule: none; }
 
-  .legenda        { margin-top: 1rem; gap: 0.6rem; }
-  .legenda__grupo { gap: 0.75rem 1rem; }
+  .mapa  { margin-top: 2rem; }
+  .etapa { margin-bottom: 3rem; }
 
   /* painel de tela cheia: em 360px não sobra espaço para um drawer
      lateral, e a faixa descoberta só servia para fechar sem querer */
   .drawer {
     width: 100vw;
     border-left: none;
+    padding: 0;                 /* a barra do topo precisa colar nas bordas */
+  }
+
+  .drawer__corpo {
     padding: 1rem var(--pad-lateral) calc(3rem + env(safe-area-inset-bottom));
   }
-  .drawer h2 { font-size: 1.25rem; }
+
+  .drawer h2 { font-size: 22px; }
+
+  /* alvo de toque: os chips são o controle mais usado do painel */
+  .subassunto { font-size: var(--t-leitura); padding: 0.55rem 0.8rem; }
+  .subassunto__copiar { width: 2.9rem; }
 
   .rodape { margin-top: 2rem; }
 }

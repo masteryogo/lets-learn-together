@@ -44,13 +44,24 @@ Troque de trilha pelo seletor no topo ou pela URL: `?trilha=ml` (padrão),
 
 - **Clique** (ou toque) em um tópico cicla o estado dele:
   Pendente → Estudando → Feito → Pulado → Pendente.
+- A marca à esquerda do tópico mostra o estado sem depender da cor:
+  `□` pendente, `►` estudando, `■` feito, `×` pulado. A barra colorida na
+  margem é a prioridade.
 - Para abrir o painel lateral com a explicação completa, os critérios, os
   recursos e os projetos:
   - no **computador**, `Shift + clique` no tópico — ou clique com o botão
     direito;
-  - no **celular ou tablet**, toque no **ⓘ** dentro do tópico.
-- **Clique no cartão da etapa** abre a introdução dela.
-- No celular, o painel fecha pelo **✕** ou arrastando para a direita.
+  - no **celular ou tablet**, toque no **[i]** dentro do tópico.
+- Dentro do painel, quando a descrição do tópico é uma lista, ela vira
+  **subassuntos marcáveis**. Marcar o primeiro põe o tópico em estudo e
+  marcar todos o conclui — você não precisa marcar o tópico à mão. Um
+  tópico que você marcou como **pulado** fica imune a isso.
+- Cada subassunto tem um **botão de copiar** que leva `Tópico - subassunto`
+  para a área de transferência (ex.: `Notação - Funções`), pronto para
+  colar numa busca, num caderno de notas ou numa conversa com uma IA.
+- **Clique na barra da etapa** abre a introdução dela. Ela fica grudada no
+  topo enquanto você percorre a etapa.
+- No celular, o painel fecha pelo **×** ou arrastando para a direita.
 - A barra no topo acompanha o progresso da trilha inteira.
 - Há busca por tópico e alternância entre tema claro e escuro.
 
@@ -92,6 +103,11 @@ Um tópico tem esta cara, mexer nele é editar cinco campos:
   prioridade: "fundamental",     // fundamental | importante | opcional
   desc: "A linha do checklist - o quê.",
   detalhe: "O porquê, e quando isso morde na prática.",
+
+  // opcional. Quando o `desc` já é uma lista separada por vírgulas, o
+  // painel a transforma em subassuntos marcáveis sozinho. Escreva este
+  // campo só quando quiser controlar a separação na mão.
+  subtopicos: ["k-fold", "estratificado", "leave-one-out"],
 }
 ```
 
