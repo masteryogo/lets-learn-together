@@ -825,10 +825,14 @@ body {
    altura real do conteúdo, qualquer que seja ela. */
 .etapa__sanfona {
   display: grid;
-  grid-template-rows: 0fr;
+
+  /* minmax(0, Xfr) em vez do fr seco: há relato de a track 1fr colapsar
+     para o conteúdo no WebKit quando o grid tem altura automática, e o
+     minmax fixa o piso. Conferido no Chrome: abre, fecha e anima igual. */
+  grid-template-rows: minmax(0, 0fr);
   transition: grid-template-rows 0.25s ease;
 }
-.etapa[data-aberta="sim"] .etapa__sanfona { grid-template-rows: 1fr; }
+.etapa[data-aberta="sim"] .etapa__sanfona { grid-template-rows: minmax(0, 1fr); }
 
 /* o selo: bloco sólido colado na quina, com o algarismo em tinta
    escura. É daqui que a etapa tira presença — não de negrito. */
@@ -893,10 +897,6 @@ body {
    que foram escritos e decide sozinho quantas colunas cabem — e um
    grupo grande demais para a coluna se espalha em vez de esticar. */
 .etapa__grupos {
-  columns: 3 17rem;
-  column-gap: 2.5rem;
-  column-rule: 2px solid var(--borda-sutil);
-
   /* o filho precisa aceitar encolher a zero — sem min-height: 0 ele
      mantém a altura do conteúdo e a linha da sanfona nunca fecha */
   min-height: 0;
@@ -910,6 +910,17 @@ body {
 .etapa[data-aberta="sim"] .etapa__grupos {
   visibility: visible;
   transition-delay: 0s;
+}
+
+/* o multicoluna mora num invólucro, não no item do grid: fragmentar
+   colunas dentro de uma track `fr` indefinida é onde as engines
+   divergem, e é um dos suspeitos do relato de que no Safari a etapa
+   abria sem mostrar nada. Como bloco comum, a altura é medida antes
+   de a coluna ser quebrada. */
+.etapa__colunas {
+  columns: 3 17rem;
+  column-gap: 2.5rem;
+  column-rule: 2px solid var(--borda-sutil);
 }
 
 /* o grupo flui entre colunas em vez de ser indivisível: com dois
@@ -1777,7 +1788,7 @@ body:has(.drawer:not([hidden])) { overflow: hidden; }
 
   /* uma coluna só: 17rem não cabem duas vezes em 360px de qualquer forma,
      mas a régua entre colunas some junto */
-  .etapa__grupos { columns: 1; column-rule: none; }
+  .etapa__colunas { columns: 1; column-rule: none; }
 
   .mapa  { margin-top: 2rem; }
   .etapa { margin-bottom: 3rem; }

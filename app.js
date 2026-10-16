@@ -12,6 +12,7 @@
   var CHAVE_TEMA = "roadmap:tema:v1";           /* tema é comum às trilhas */
   var CHAVE_LEGADA = "roadmap-ml:progresso:v1"; /* de antes das trilhas */
   var CHAVE_SUB = "roadmap:" + TRILHA + ":sub:v1";
+  var CHAVE_ETAPAS = "roadmap:" + TRILHA + ":etapas:v1";
 
   var CICLO = ["pendente", "estudando", "feito", "pulado"];
   /* glifos que a Departure Mono tem — ◔ e ✓ não estão nela. "pendente"
@@ -34,6 +35,7 @@
 
   var progresso = carregarProgresso();
   var subMarcados = carregarSub();
+  var etapasFechadas = carregarEtapasFechadas();
   var aberto = null; /* { tipo: "topico" | "etapa", id } */
 
   /* ------------------------------------------------------------
@@ -76,6 +78,26 @@
   function salvarSub() {
     try {
       window.localStorage.setItem(CHAVE_SUB, JSON.stringify(subMarcados));
+    } catch (e) {
+      /* sem persistência: a sessão ainda funciona */
+    }
+  }
+
+  /* guarda o que foi FECHADO, não o que foi aberto: o padrão é a etapa
+     aberta, então a ausência da chave — primeira visita, localStorage
+     bloqueado — já cai no estado certo, sem valor inicial */
+  function carregarEtapasFechadas() {
+    try {
+      var bruto = window.localStorage.getItem(CHAVE_ETAPAS);
+      return bruto ? JSON.parse(bruto) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function salvarEtapasFechadas() {
+    try {
+      window.localStorage.setItem(CHAVE_ETAPAS, JSON.stringify(etapasFechadas));
     } catch (e) {
       /* sem persistência: a sessão ainda funciona */
     }
@@ -605,12 +627,16 @@
   }
 
   function criarEtapa(etapa) {
+    /* fechado é a exceção que a pessoa pediu, não o ponto de partida:
+       um mapa que abre vazio não mostra que existe mapa */
+    var aberta = !etapasFechadas[etapa.id];
+
     var secao = document.createElement("section");
     secao.className = "etapa";
     secao.setAttribute("data-etapa", etapa.id);
-    secao.setAttribute("data-aberta", "nao");
+    secao.setAttribute("data-aberta", aberta ? "sim" : "nao");
 
-    secao.appendChild(criarNucleo(etapa));
+    secao.appendChild(criarNucleo(etapa, aberta));
 
     /* fluxo único, na ordem em que os grupos foram escritos. Quem
        distribui em colunas é o CSS multicoluna, não o JS — assim a
@@ -619,9 +645,16 @@
     corpo.className = "etapa__grupos";
     corpo.id = "grupos-" + etapa.id;
 
+    /* as colunas ganham um invólucro próprio dentro do item do grid —
+       o porquê está no comentário de .etapa__colunas, no CSS */
+    var colunas = document.createElement("div");
+    colunas.className = "etapa__colunas";
+
     etapa.grupos.forEach(function (grupo) {
-      corpo.appendChild(criarGrupo(grupo, etapa));
+      colunas.appendChild(criarGrupo(grupo, etapa));
     });
+
+    corpo.appendChild(colunas);
 
     /* invólucro da sanfona: é a linha de grid dele que anima de 0fr a
        1fr. Sem o invólucro não há o que interpolar. */
@@ -654,7 +687,7 @@
       (titulo || secao.querySelector(".etapa__titulo").textContent));
   }
 
-  function criarNucleo(etapa) {
+  function criarNucleo(etapa, aberta) {
     var nucleo = document.createElement("div");
     nucleo.className = "etapa__nucleo";
     nucleo.setAttribute("data-etapa-id", etapa.id);
@@ -701,9 +734,10 @@
     var expandir = document.createElement("button");
     expandir.type = "button";
     expandir.className = "etapa__expandir";
-    expandir.setAttribute("aria-expanded", "false");
+    expandir.setAttribute("aria-expanded", String(aberta));
     expandir.setAttribute("aria-controls", "grupos-" + etapa.id);
-    expandir.setAttribute("aria-label", "Mostrar os tópicos de " + etapa.titulo);
+    expandir.setAttribute("aria-label",
+      (aberta ? "Esconder" : "Mostrar") + " os tópicos de " + etapa.titulo);
     expandir.innerHTML =
       '<svg viewBox="0 0 16 16" aria-hidden="true">' +
         '<rect x="2" y="5" width="12" height="1"/>' +
@@ -715,7 +749,13 @@
       '</svg>';
 
     expandir.addEventListener("click", function () {
-      abrirEtapaNoMapa(etapa.id, !etapaAberta(etapa.id), etapa.titulo);
+      var abrir = !etapaAberta(etapa.id);
+      abrirEtapaNoMapa(etapa.id, abrir, etapa.titulo);
+      /* só o gesto explícito vira preferência; abrir pela busca ou pelo
+         índice é navegação, e some quando a busca é limpa */
+      if (abrir) delete etapasFechadas[etapa.id];
+      else etapasFechadas[etapa.id] = 1;
+      salvarEtapasFechadas();
     });
 
     nucleo.appendChild(numero);
@@ -1232,10 +1272,12 @@
         var botao = document.getElementById("topico-" + id);
         if (botao) botao.removeAttribute("data-oculto");
       });
-      /* limpar o campo devolve tudo ao fechado, que é o padrão */
+      /* limpar o campo devolve cada etapa ao que a pessoa deixou — não
+         ao fechado, senão a busca vira um jeito de fechar o mapa todo */
       ROADMAP.etapas.forEach(function (etapa) {
-        abrirEtapaNoMapa(etapa.id, false, etapa.titulo);
-        abrirNoIndice(etapa, false);
+        var aberta = !etapasFechadas[etapa.id];
+        abrirEtapaNoMapa(etapa.id, aberta, etapa.titulo);
+        abrirNoIndice(etapa, aberta);
       });
       mostrarVazio(false, "");
       atualizarContagemBusca(null);   /* devolve o fim da trilha, se houver */
