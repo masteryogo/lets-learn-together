@@ -94,6 +94,11 @@
 
 * { box-sizing: border-box; }
 
+/* `hidden` é só uma regra do navegador e perde para qualquer seletor
+   de classe que declare display — e várias aqui declaram. Sem isto,
+   esconder .legenda ou .subassuntos não esconde nada. */
+[hidden] { display: none !important; }
+
 body {
   margin: 0;
   padding: 0 0 4rem;
@@ -114,6 +119,7 @@ body {
    blocos têm moldura, e a borda não pode colar na beira da tela. */
 .topo,
 .mapa,
+.completa,
 .rodape {
   width: min(var(--largura-max), 100% - var(--pad-lateral) * 2);
   margin-inline: auto;
@@ -704,6 +710,171 @@ body {
 /* durante a busca, grupos sem nenhum resultado colapsam o título */
 .mapa[data-filtrando] .grupo:not(:has(.topico:not([data-oculto]))) { display: none; }
 
+/* e a etapa inteira some junto: sem isto a faixa continua de pé sobre
+   um corpo vazio, e numa busca sem resultado nenhum sobravam cinco
+   barras desmentindo a mensagem de que nada foi encontrado */
+.mapa[data-filtrando] .etapa:not(:has(.topico:not([data-oculto]))) { display: none; }
+
+/* ------------------------- busca vazia ------------------------- */
+/* sem moldura de propósito: numa página onde tudo é retângulo de borda
+   dura, pôr o vazio dentro de mais um retângulo negaria o que ele diz.
+   A emenda é a mensagem. */
+.vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 3.5rem 0 5rem;
+  text-align: center;
+}
+
+.vazio__mascote svg {
+  display: block;
+  width: clamp(8rem, 16vw, 12rem);
+  height: auto;
+}
+
+.vazio__titulo {
+  margin: 0;
+  max-width: 46ch;
+  font-size: var(--t-etapa);
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;      /* termo colado e longo não estoura */
+}
+
+.vazio__dica {
+  margin: 0;
+  max-width: var(--medida);
+  font-size: var(--t-base);
+  line-height: 1.75;
+  color: var(--texto-suave);
+}
+
+/* ------------------------ fim da trilha ------------------------ */
+/* mesma gramática das faixas de etapa, com o mascote na casa do
+   algarismo: todo selo amarelo tem um número, este tem ele. É o que
+   diz "acabou" antes de qualquer palavra ser lida. */
+.completa { margin-top: 1rem; }
+
+.completa__faixa {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "selo titulo meta"
+    "selo barra  barra";
+  align-items: center;
+  column-gap: 1rem;
+  row-gap: 0.5rem;
+  background: var(--fundo);
+  border: 2px solid var(--linha);
+  box-shadow: var(--sombra-dura);
+}
+
+.completa__selo {
+  grid-area: selo;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem;
+  background: var(--amarelo-forte);
+  border-right: 2px solid var(--linha);
+}
+
+.completa__selo svg {
+  display: block;
+  width: 5.5rem;
+  height: auto;
+}
+
+/* o visor é amarelo-forte no cabeçalho e sumiria dentro do selo, que
+   é da mesma cor: aqui ele vai para o amarelo claro */
+.completa__selo rect[fill="var(--amarelo-forte)"] { fill: var(--amarelo); }
+
+.completa__titulo {
+  grid-area: titulo;
+  align-self: end;
+  margin: 0;
+  padding-top: 0.8rem;
+  font-size: var(--t-etapa);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.completa__meta {
+  grid-area: meta;
+  align-self: end;
+  margin: 0;
+  padding: 0.8rem 1rem 0 0;
+  font-size: var(--t-micro);
+  text-align: right;
+  color: var(--texto-suave);
+}
+
+.completa__barra {
+  grid-area: barra;
+  display: block;
+  height: 11px;
+  margin: 0 1rem 0.9rem 0;
+  background: var(--verde-forte);
+  border: 2px solid var(--linha);
+  -webkit-mask-image: var(--celula);
+  mask-image: var(--celula);
+}
+
+.completa__saida {
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+.completa__nota {
+  margin: 0;
+  max-width: 56ch;
+  font-size: var(--t-leitura);
+  line-height: 1.7;
+}
+
+.completa__acoes { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+/* ---------------------------- falha ---------------------------- */
+/* a trilha não carregou: o único estado do site sem conteúdo nenhum
+   para mostrar. Sem mascote — personagem sorrindo em cima de
+   aplicativo quebrado lê como deboche. */
+/* alinhado à esquerda: o corpo tem cinco linhas, e centralizar texto
+   corrido esfarrapa os dois lados e cobra do olho a cada quebra */
+.falha {
+  max-width: var(--medida);
+  margin: 4rem auto;
+  padding: 1.75rem;
+  background: var(--fundo-elevado);
+  border: 2px solid var(--linha);
+  box-shadow: var(--sombra-dura);
+}
+
+.falha__titulo {
+  margin: 0;
+  font-size: var(--t-etapa);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.falha__corpo {
+  margin: 1rem 0 1.5rem;
+  font-size: var(--t-base);
+  line-height: 1.75;
+  color: var(--texto-suave);
+  overflow-wrap: anywhere;      /* o caminho do arquivo não estoura a caixa */
+}
+
 /* ---------------------------- rodapé ---------------------------- */
 .rodape {
   margin-top: 3rem;
@@ -1207,6 +1378,21 @@ body:has(.drawer:not([hidden])) { overflow: hidden; }
 
   .mapa  { margin-top: 2rem; }
   .etapa { margin-bottom: 3rem; }
+
+  /* o selo com o mascote comeria metade da barra numa tela estreita */
+  .completa__faixa {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "selo titulo"
+      "meta meta"
+      "barra barra";
+    column-gap: 0.75rem;
+    row-gap: 0.4rem;
+  }
+  .completa__selo svg { width: 3.25rem; }
+  .completa__titulo   { padding: 0.6rem 0.75rem 0 0; }
+  .completa__meta     { padding: 0 0.75rem; text-align: left; }
+  .completa__barra    { margin: 0 0.75rem 0.75rem; }
 
   /* painel de tela cheia: em 360px não sobra espaço para um drawer
      lateral, e a faixa descoberta só servia para fechar sem querer */

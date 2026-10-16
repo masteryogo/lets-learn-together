@@ -380,6 +380,23 @@
   }
 
   function montar() {
+    /* algum arquivo da trilha não chegou e o trilhas.js já desenhou a
+       falha no lugar do mapa. Montar o que sobrou seria pior do que
+       não montar nada: a pessoa estudaria de um roadmap com etapas
+       faltando sem ter como saber que faltam. O seletor continua de pé
+       porque trocar de trilha é a saída de verdade — e ele não depende
+       do ROADMAP, que pode nem existir se foi o data.js que caiu. */
+    if (window.TRILHA_FALHOU) {
+      montarSeletorTrilha();
+      document.getElementById("titulo").textContent =
+        window.TRILHAS && window.TRILHAS[TRILHA]
+          ? window.TRILHAS[TRILHA].rotulo
+          : "Roadmap";
+      document.querySelector(".progresso").hidden = true;
+      document.querySelector(".legenda").hidden = true;
+      return;
+    }
+
     document.title = "Roadmap de " + ROADMAP.titulo;
     montarSeletorTrilha();
     document.getElementById("titulo").textContent = ROADMAP.titulo;
@@ -387,6 +404,7 @@
 
     montarLegenda();
     montarDica();
+    montarMascotes();
 
     var mapa = document.getElementById("mapa");
     ROADMAP.etapas.forEach(function (etapa) {
@@ -395,6 +413,22 @@
 
     montarBotoesEstado();
     atualizarProgresso();
+  }
+
+  /* ------------------------------------------------------------
+     o mascote aparece em três lugares: cabeçalho (marca), busca sem
+     resultado e fim da trilha. Os dois últimos clonam o SVG do
+     cabeçalho em vez de repetir o desenho — um desenho só no projeto,
+     e mexer nele conserta os três de uma vez.
+     ------------------------------------------------------------ */
+  function montarMascotes() {
+    var original = document.querySelector(".topo__logo svg");
+    if (!original) return;
+
+    ["vazio-mascote", "completa-selo"].forEach(function (id) {
+      var alvo = document.getElementById(id);
+      if (alvo) alvo.appendChild(original.cloneNode(true));
+    });
   }
 
   function montarLegenda() {
@@ -647,6 +681,16 @@
     if (estudando) texto += " · " + estudando + " em estudo";
     if (pulados) texto += " · " + pulados + " pulados";
     document.getElementById("progresso-texto").textContent = texto;
+
+    /* 100% é literal: "pulado" não conta como feito, então chegar aqui
+       exige ter marcado todos. É o que torna o momento raro o bastante
+       para merecer a faixa. */
+    var completa = document.getElementById("completa");
+    completa.hidden = !(total > 0 && feitos === total);
+    if (!completa.hidden) {
+      document.getElementById("completa-meta").textContent =
+        ROADMAP.titulo + " · " + feitos + " de " + total + " tópicos";
+    }
   }
 
   /* ------------------------------------------------------------
@@ -995,9 +1039,13 @@
         var botao = document.getElementById("topico-" + id);
         if (botao) botao.removeAttribute("data-oculto");
       });
-      atualizarContagemBusca(null);
+      mostrarVazio(false, "");
+      atualizarContagemBusca(null);   /* devolve o fim da trilha, se houver */
       return;
     }
+
+    /* a faixa de conclusão fala do mapa inteiro, não do filtro */
+    document.getElementById("completa").hidden = true;
 
     mapa.setAttribute("data-filtrando", "sim");
     var achados = 0;
@@ -1020,7 +1068,18 @@
       }
     });
 
+    mostrarVazio(achados === 0, termo.trim());
     atualizarContagemBusca(achados);
+  }
+
+  /* o termo é repetido de volta porque metade das buscas vazias é erro
+     de digitação, e ver o que foi procurado resolve na hora */
+  function mostrarVazio(vazio, termo) {
+    document.getElementById("vazio").hidden = !vazio;
+    if (vazio) {
+      document.getElementById("vazio-titulo").textContent =
+        "Nada encontrado para “" + termo + "”";
+    }
   }
 
   function atualizarContagemBusca(achados) {
@@ -1069,6 +1128,22 @@
         buscar("");
       }
     }
+  });
+
+  /* mesma saída que o Esc já dava: limpa, refaz a busca e devolve o
+     cursor ao campo, para a pessoa digitar de novo sem procurar o mouse */
+  document.getElementById("vazio-limpar").addEventListener("click", function () {
+    var campo = document.getElementById("busca");
+    campo.value = "";
+    buscar("");
+    campo.focus();
+  });
+
+  /* o seletor é o controle de verdade; o botão só leva até ele */
+  document.getElementById("completa-trilha").addEventListener("click", function () {
+    var seletor = document.getElementById("trilha");
+    seletor.scrollIntoView({ block: "center" });
+    seletor.focus();
   });
 
   document.getElementById("busca").addEventListener("input", function (ev) {

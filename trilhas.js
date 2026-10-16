@@ -70,10 +70,43 @@
     s.async = false;
     s.onerror = function () {
       var mapa = document.getElementById("mapa");
-      if (mapa) {
-        mapa.textContent =
-          "Falha ao carregar " + src + ". A trilha não pôde ser montada.";
-      }
+      if (!mapa || mapa.hasAttribute("data-falhou")) return;
+
+      /* trava na primeira falha: uma conexão que cai derruba vários
+         scripts em sequência, e sem isto a mensagem acabaria nomeando
+         o último arquivo em vez do que realmente faltou primeiro */
+      mapa.setAttribute("data-falhou", "sim");
+      mapa.textContent = "";
+
+      /* o app.js já está na fila e vai rodar mesmo assim: a bandeira é
+         como ele sabe que não deve montar meio mapa por cima disto */
+      window.TRILHA_FALHOU = true;
+
+      var titulo = document.createElement("h2");
+      titulo.className = "falha__titulo";
+      titulo.textContent = "A trilha não carregou";
+
+      var corpo = document.createElement("p");
+      corpo.className = "falha__corpo";
+      corpo.textContent =
+        "O arquivo " + src + " não chegou. Costuma ser conexão caindo no " +
+        "meio do caminho — recarregar resolve na maioria das vezes. O " +
+        "seletor no topo continua funcionando, se quiser outra trilha.";
+
+      var botao = document.createElement("button");
+      botao.type = "button";
+      botao.className = "botao botao--destaque";
+      botao.textContent = "Recarregar a página";
+      botao.addEventListener("click", function () {
+        window.location.reload();
+      });
+
+      var bloco = document.createElement("div");
+      bloco.className = "falha";
+      bloco.appendChild(titulo);
+      bloco.appendChild(corpo);
+      bloco.appendChild(botao);
+      mapa.appendChild(bloco);
     };
     document.head.appendChild(s);
   });

@@ -64,8 +64,48 @@
 
   <!-- ============================ roadmap ============================ -->
   <main class="mapa" id="mapa" aria-label="Roadmap de estudos">
-    <!-- preenchido por app.js -->
+    <!-- as etapas entram aqui, depois deste bloco, pelo app.js -->
+
+    <!-- busca sem resultado: o mapa inteiro some, e sem isto sobrava
+         uma página em branco. O mascote é clonado do cabeçalho pelo
+         app.js, para existir um desenho só no projeto. -->
+    <div class="vazio" id="vazio" hidden>
+      <span class="vazio__mascote" id="vazio-mascote" aria-hidden="true"></span>
+      <p class="vazio__titulo" id="vazio-titulo"></p>
+      <p class="vazio__dica">
+        A busca olha título, descrição e explicação de todos os tópicos
+        desta trilha. Tente outra palavra, ou confira a digitação.
+      </p>
+      <button class="botao botao--destaque" id="vazio-limpar" type="button">
+        Limpar a busca
+      </button>
+    </div>
   </main>
+
+  <!-- 100% da trilha: entra depois da última etapa. "Pulado" não conta
+       como feito, então chegar aqui exige ter marcado todos. -->
+  <section class="completa" id="completa" aria-labelledby="completa-titulo" hidden>
+    <div class="completa__faixa">
+      <span class="completa__selo" id="completa-selo" aria-hidden="true"></span>
+      <h2 class="completa__titulo" id="completa-titulo">Fim do mapa</h2>
+      <p class="completa__meta" id="completa-meta"></p>
+      <span class="completa__barra"></span>
+    </div>
+
+    <div class="completa__saida">
+      <p class="completa__nota">
+        Você marcou todos os tópicos desta trilha. O mapa acabou — o que
+        vem depois dele não cabe em checklist nenhum, vem de projeto.
+      </p>
+      <div class="completa__acoes">
+        <button class="botao botao--destaque" id="completa-trilha" type="button">
+          Escolher outra trilha
+        </button>
+        <a class="botao" href="https://github.com/masteryogo/lets-learn-together/fork"
+           target="_blank" rel="noopener noreferrer">Contribuir com um tópico</a>
+      </div>
+    </div>
+  </section>
 
   <footer class="rodape">
     <div class="rodape__linha">
