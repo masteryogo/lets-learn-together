@@ -109,11 +109,9 @@ toque que não saiu do lugar é cutucada, o resto é arrasto. Os dois gestos
 nunca disparam juntos.
 
 O Obi do roadmap não leva a lugar nenhum e fica fora da árvore de
-acessibilidade (`aria-hidden`). **Com isso o roadmap não tem mais rota de
-volta para a mesa de cartas**: o seletor do título troca de trilha, mas
-não abre o `index.html`. Foi decisão deliberada, não esquecimento — se um
-dia essa rota fizer falta, ela precisa de um lugar próprio, não de um
-clique escondido no mascote.
+acessibilidade (`aria-hidden`). A rota de volta para a mesa de cartas
+que ele carregava virou a casinha do `.canto`, ao lado do tema — uma
+saída merece um lugar próprio, e não um clique escondido no mascote.
 
 Fora do ninho ele sobrevoa a página, e o `obi.js` marca
 `data-obi-solto` na raiz: só o z-index dele não basta quando o que o
