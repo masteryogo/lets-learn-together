@@ -1,0 +1,262 @@
+/* ===================================================================
+   notas.css — o mural de post-its
+
+   Só esta página. Tokens, .botao, .canto e .filtro vêm do styles.css.
+
+   O post-it aqui é pixel, não papel: cor sólida da paleta, borda de
+   2px, canto reto e sombra dura. O único gesto emprestado do post-it
+   de verdade é a leve torção — e ela se desfaz assim que a nota é
+   lida de perto ou pegada, porque enfeite não atrapalha leitura.
+   =================================================================== */
+
+.notas-pagina {
+  padding-bottom: 4rem;
+
+  /* a cor da trilha vem do manifesto, posta em --trilha-cor na
+     própria aba pelo notas.js; aqui dentro do mural quem manda é a
+     cor que a pessoa escolheu para cada nota */
+
+  /* a superfície do mural: pontos, não cortiça. Mesma ideia da malha
+     milimetrada da carta na mesa — dá referência ao arrastar sem
+     fingir uma textura que o resto do site não tem. */
+  --poeira: var(--borda-sutil);
+}
+
+/* ---------------------------- cabeçalho ---------------------------- */
+.cabecalho-notas {
+  max-width: var(--largura-max);
+  margin: 0 auto;
+  padding: 2rem var(--pad-lateral) 0;
+}
+
+.cabecalho-notas__titulo {
+  margin: 0;
+  font-size: var(--t-pagina);
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+/* ------------------------------ ações ------------------------------ */
+.acoes-notas {
+  max-width: var(--largura-max);
+  margin: 1rem auto 0;
+  padding: 0 var(--pad-lateral);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  justify-content: space-between;
+}
+
+.acoes-notas__conta {
+  font-size: var(--t-micro);
+  color: var(--texto-suave);
+}
+
+/* ------------------------------ mural ------------------------------ */
+.mural {
+  position: relative;
+  max-width: var(--largura-max);
+  margin: 0.75rem auto 0;
+  min-height: 34rem;
+  padding: 1rem;
+  border: 2px solid var(--linha);
+  background-color: var(--fundo-elevado);
+  background-image: radial-gradient(var(--poeira) 1px, transparent 1px);
+  background-size: 22px 22px;
+  box-shadow: var(--sombra-dura);
+  overflow: hidden;
+}
+
+.mural__vazio {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--t-micro);
+  color: var(--texto-suave);
+  pointer-events: none;
+}
+
+/* ------------------------------- nota ------------------------------- */
+.nota {
+  position: absolute;
+  width: 13.5rem;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--linha);
+  box-shadow: var(--sombra-dura);
+  color: var(--tinta-bloco);
+  transform: rotate(var(--torcao, 0deg));
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.nota[data-cor="amarelo"] { background: var(--amarelo); }
+.nota[data-cor="roxo"]    { background: var(--roxo); }
+.nota[data-cor="verde"]   { background: var(--verde); }
+.nota[data-cor="cinza"]   { background: var(--cinza); }
+
+/* ler de perto endireita a nota */
+.nota:hover,
+.nota:focus-within { transform: rotate(0deg); }
+
+/* pegada: endireita, cresce um fio e ganha sombra mais longa, como
+   papel levantado da superfície */
+.nota[data-pegada] {
+  transform: rotate(0deg) scale(1.02);
+  box-shadow: 7px 7px 0 var(--linha);
+  cursor: grabbing;
+}
+
+/* ---- a alça ---- */
+/* arrastar pelo corpo brigaria com selecionar o texto, que é o que se
+   faz numa nota. touch-action: none porque o gesto é nosso: sem isso
+   o navegador rola a página em vez de mover a nota. */
+.nota__alca {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  padding: 0.25rem 0.4rem;
+  border-bottom: 1px solid var(--linha);
+  background: color-mix(in srgb, var(--linha) 12%, transparent);
+  cursor: grab;
+  touch-action: none;
+}
+
+.nota__ancora {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--tinta-bloco);
+}
+
+.nota__ancora--solta { opacity: 0.55; }
+
+.nota__acoes { display: flex; gap: 0.2rem; flex: 0 0 auto; }
+
+.nota__acao {
+  font: inherit;
+  font-size: 11px;
+  line-height: 1;
+  width: 1.1rem;
+  height: 1.1rem;
+  padding: 0;
+  background: transparent;
+  color: var(--tinta-bloco);
+  border: 1px solid transparent;
+  border-radius: var(--raio);
+  cursor: pointer;
+}
+
+.nota__acao:hover { border-color: var(--linha); }
+.nota__acao:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: 1px; }
+
+/* ---- o texto ---- */
+/* textarea sem moldura: a moldura é a própria nota. resize: none
+   porque o tamanho do post-it é do mural, não do campo. */
+.nota__texto {
+  font: inherit;
+  font-size: var(--t-micro);
+  line-height: 1.55;
+  min-height: 6.5rem;
+  padding: 0.5rem;
+  background: transparent;
+  color: inherit;
+  border: 0;
+  border-radius: var(--raio);
+  resize: none;
+}
+
+.nota__texto:focus {
+  outline: none;
+  /* escrever clareia o papel: o cursor precisa de contraste, e a
+     borda de foco brigaria com a borda da nota */
+  background: color-mix(in srgb, #ffffff 25%, transparent);
+}
+
+/* ---- o pé: só a paleta ---- */
+/* a trilha é a aba; repeti-la em cada nota de um mural que só tem
+   aquela trilha seria ruído */
+.nota__pe {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.4rem;
+  border-top: 1px solid var(--linha);
+}
+
+.cores { display: flex; gap: 0.2rem; }
+
+.cor {
+  width: 0.8rem;
+  height: 0.8rem;
+  padding: 0;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  cursor: pointer;
+}
+
+.cor[data-cor="amarelo"] { background: var(--amarelo-forte); }
+.cor[data-cor="roxo"]    { background: var(--roxo-forte); }
+.cor[data-cor="verde"]   { background: var(--verde-forte); }
+.cor[data-cor="cinza"]   { background: var(--texto-suave); }
+
+/* a cor em vigor ganha um miolo claro: forma além de cor, porque a
+   amostra já é a própria cor e não pode se explicar sozinha */
+.cor[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--fundo-elevado); }
+.cor:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: 1px; }
+
+/* ------------------------------ dica ------------------------------ */
+.dica-notas {
+  max-width: var(--largura-max);
+  margin: 0.75rem auto 0;
+  padding: 0 var(--pad-lateral);
+  font-size: var(--t-micro);
+  color: var(--texto-suave);
+}
+
+/* --------------------------- telas estreitas --------------------------- */
+/* o mural vira grade e as notas ficam na ordem em que foram escritas.
+   `position: static` faz o left/top em linha virar letra morta — a
+   posição guardada continua lá, só não manda aqui. */
+@media (max-width: 56rem) {
+  .mural {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+    gap: 0.75rem;
+    overflow: visible;
+  }
+
+  .nota {
+    position: static;
+    width: auto;
+    --torcao: 0deg;      /* papel empilhado não entorta */
+  }
+
+  .nota__alca { cursor: default; }
+
+  .mural__vazio {
+    position: static;
+    grid-column: 1 / -1;
+    padding: 2rem 0;
+  }
+}
+
+@media (max-width: 40rem) {
+  .cabecalho-notas,
+  .acoes-notas,
+  .dica-notas { padding-inline: 1rem; }
+
+  .mural { margin-inline: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nota { transition: none; }
+}

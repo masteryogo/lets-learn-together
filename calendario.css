@@ -1,0 +1,643 @@
+/* ===================================================================
+   calendario.css — a tela do calendário
+
+   Só esta página. Tokens, .botao, .canto e .legenda vêm do styles.css;
+   aqui mora o que é do mês: a grade, a ficha do dia e o diálogo do
+   modelo.
+
+   Hierarquia da tela, em uma frase: o mês é o maior objeto, a ficha é
+   coluna de apoio e o modelo é configuração — por isso ele está num
+   diálogo, e não numa faixa no topo roubando a leitura.
+   =================================================================== */
+
+.calendario-pagina {
+  padding-bottom: 4rem;
+}
+
+/* as cores de trilha ficam num só lugar: bloco do dia, faixa da régua,
+   barra da mistura e amostra da legenda leem todas daqui */
+.calendario-pagina {
+  --trilha-ml: var(--roxo);
+  --trilha-cv: var(--amarelo);
+  --trilha-pr: var(--cinza);
+  --trilha-ml-forte: var(--roxo-forte);
+  --trilha-cv-forte: var(--amarelo-forte);
+  --trilha-pr-forte: var(--texto-suave);
+}
+
+/* ---------------------------- cabeçalho ---------------------------- */
+.cabecalho-cal {
+  max-width: var(--largura-max);
+  margin: 0 auto;
+  padding: 2rem var(--pad-lateral) 0;
+}
+
+.cabecalho-cal__titulo {
+  margin: 0;
+  font-size: var(--t-pagina);
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+/* O .filtro mora no styles.css: as duas telas novas (calendário e
+   notas) usam as mesmas abas, e duas cópias divergiriam na primeira
+   vez que uma delas mudasse. Aqui ficam só as cores das trilhas,
+   que vêm dos tokens declarados no topo deste arquivo. */
+
+/* --------------------------- tira do modelo --------------------------- */
+/* resumo do que está valendo, em uma linha. A barra repete a proporção
+   da mistura, e os números dizem a mesma coisa em dias: cor para quem
+   já conhece, texto para quem não. */
+.modelo-tira {
+  max-width: var(--largura-max);
+  margin: 1rem auto 0;
+  padding: 0 var(--pad-lateral);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.9rem;
+  font-size: var(--t-micro);
+  color: var(--texto-suave);
+}
+
+.modelo-tira__rotulo {
+  letter-spacing: var(--tracking-rotulo);
+  text-transform: uppercase;
+  border-left: 4px solid var(--roxo-forte);
+  padding-left: 0.5rem;
+}
+
+.modelo-tira__janela,
+.modelo-tira__contas { color: var(--texto); }
+
+.modelo-tira__mistura {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.modelo-tira__barra {
+  display: flex;
+  width: 7rem;
+  height: 11px;                 /* a grade de 11px também vale para barra */
+  border: 1px solid var(--linha);
+  overflow: hidden;
+}
+
+.modelo-tira__parte { display: block; }
+.modelo-tira__parte[data-trilha="ml"] { background: var(--trilha-ml); }
+.modelo-tira__parte[data-trilha="cv"] { background: var(--trilha-cv); }
+.modelo-tira__parte[data-trilha="pr"] { background: var(--trilha-pr); }
+
+.modelo-tira__eco:empty { display: none; }
+
+/* ------------------------------ corpo ------------------------------ */
+.calendario {
+  max-width: var(--largura-max);
+  margin: 1rem auto 0;
+  padding: 0 var(--pad-lateral);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--lateral-w);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+/* ------------------------------- mês ------------------------------- */
+.mes {
+  border: 2px solid var(--linha);
+  background: var(--fundo-elevado);
+  box-shadow: var(--sombra-dura);
+  min-width: 0;
+}
+
+.mes__topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem var(--pad-painel);
+  border-bottom: 2px solid var(--linha);
+}
+
+.mes__ano {
+  display: block;
+  font-size: var(--t-micro);
+  letter-spacing: var(--tracking-rotulo);
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.mes__nome {
+  display: block;
+  font-size: var(--t-etapa);
+  line-height: 1.1;
+}
+
+.mes__nav { display: flex; gap: 0.4rem; }
+
+.mes__semana,
+.mes__dias {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.mes__semana { border-bottom: 1px solid var(--borda-sutil); }
+
+.mes__semana span {
+  padding: 0.4rem 0.5rem;
+  font-size: var(--t-micro);
+  letter-spacing: var(--tracking-rotulo);
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+/* ------------------------------- dia ------------------------------- */
+.dia {
+  font: inherit;
+  text-align: left;
+  color: var(--texto);
+  background: transparent;
+  border: 0;
+  border-right: 1px solid var(--borda-sutil);
+  border-bottom: 1px solid var(--borda-sutil);
+  border-radius: var(--raio);
+  min-height: 7.4rem;
+  min-width: 0;
+  padding: 0.4rem 0.45rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dia:nth-child(7n) { border-right: 0; }
+.dia:hover { background: var(--cinza); }
+.dia:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: -2px; }
+
+/* dia de outro mês: visível para a semana não quebrar, apagado para
+   não ser confundido com dia clicável */
+.dia--fora {
+  color: var(--texto-suave);
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* fora da janela do modelo: o fundo diz que nada vai cair ali, sem
+   impedir que se escreva à mão */
+.dia--off { background: color-mix(in srgb, var(--cinza) 50%, transparent); }
+
+.dia--hoje .dia__n {
+  background: var(--texto);
+  color: var(--fundo);
+  padding: 0 0.3rem;
+}
+
+/* o dia aberto na ficha: contorno por dentro, para não empurrar a
+   grade meio pixel ao mudar de dia */
+.dia[aria-pressed="true"] {
+  background: var(--cinza);
+  box-shadow: inset 0 0 0 2px var(--roxo-forte);
+}
+
+.dia__n {
+  align-self: flex-start;
+  font-size: var(--t-micro);
+}
+
+/* o bloco é a sessão vista de longe: hora e assunto, nessa ordem,
+   porque é a hora que diz se o dia cabe */
+.dia__bloco {
+  font-size: var(--t-micro);
+  line-height: 1.35;
+  padding: 0.2rem 0.3rem;
+  border: 1px solid var(--linha);
+  color: var(--tinta-bloco);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dia__bloco[data-trilha="ml"] { background: var(--trilha-ml); }
+.dia__bloco[data-trilha="cv"] { background: var(--trilha-cv); }
+.dia__bloco[data-trilha="pr"] { background: var(--trilha-pr); }
+.dia__bloco[data-estado="feito"] { background: var(--verde); }
+
+/* perdida: passou e ficou em branco. Traço em vez de cor — o estado
+   não pode depender só de cor, e "ausência" não tem cor própria. */
+.dia__bloco[data-estado="perdido"] {
+  background: transparent;
+  color: var(--texto-suave);
+  border-style: dashed;
+}
+
+/* ------------------------------ ficha ------------------------------ */
+.ficha-dia {
+  border: 2px solid var(--linha);
+  background: var(--fundo-elevado);
+  box-shadow: var(--sombra-dura);
+  padding: var(--pad-painel);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  position: sticky;
+  top: 1rem;
+}
+
+.ficha-dia__rotulo {
+  margin: 0;
+  font-size: var(--t-micro);
+  letter-spacing: var(--tracking-rotulo);
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.ficha-dia__titulo {
+  margin: 0.2rem 0 0;
+  font-size: var(--t-leitura);
+}
+
+.ficha-dia__carga {
+  margin: 0.1rem 0 0;
+  font-size: var(--t-micro);
+  color: var(--texto-suave);
+}
+
+.ficha-dia__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ------------------------------ régua ------------------------------ */
+/* 17h à 1h em cinco marcas de duas horas: a faixa é posicionada em
+   porcentagem sobre a pista, então a sobreposição de duas sessões
+   aparece como sobreposição mesmo. */
+.regua {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  gap: 0.35rem;
+}
+
+.regua__eixo {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 9px;
+  color: var(--texto-suave);
+}
+
+.regua__pista {
+  position: relative;
+  height: 8.5rem;
+  border: 1px solid var(--borda-sutil);
+  /* as linhas de hora desenhadas no fundo, sem elemento por hora */
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0 calc(100% / 4 - 1px),
+    var(--borda-sutil) calc(100% / 4 - 1px) calc(100% / 4));
+}
+
+.regua__faixa {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  padding: 1px 3px;
+  border: 1px solid var(--linha);
+  font-size: 9px;
+  line-height: 1.2;
+  color: var(--tinta-bloco);
+  overflow: hidden;
+}
+
+.regua__faixa[data-trilha="ml"] { background: var(--trilha-ml); }
+.regua__faixa[data-trilha="cv"] { background: var(--trilha-cv); }
+.regua__faixa[data-trilha="pr"] { background: var(--trilha-pr); }
+.regua__faixa[data-estado="feito"] { background: var(--verde); }
+
+/* ----------------------------- sessão ----------------------------- */
+.sessao {
+  border: 1px solid var(--linha);
+  border-left: 6px solid var(--texto-suave);
+  padding: 0.5rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.sessao[data-trilha="ml"] { border-left-color: var(--trilha-ml-forte); }
+.sessao[data-trilha="cv"] { border-left-color: var(--trilha-cv-forte); }
+.sessao[data-trilha="pr"] { border-left-color: var(--trilha-pr-forte); }
+.sessao[data-estado="feito"] { border-left-color: var(--verde-forte); }
+
+.sessao__topo {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: var(--t-micro);
+}
+
+.sessao__trilha {
+  letter-spacing: var(--tracking-rotulo);
+  text-transform: uppercase;
+}
+
+.sessao__nota { margin: 0; }
+
+.sessao__estado {
+  margin: 0;
+  font-size: var(--t-micro);
+  color: var(--texto-suave);
+}
+
+/* ---------------------------- escrever ---------------------------- */
+.escrever {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 1px solid var(--borda-sutil);
+  padding-top: 0.8rem;
+}
+
+.escrever__rotulo {
+  margin: 0;
+  font-size: var(--t-micro);
+  letter-spacing: var(--tracking-rotulo);
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.escrever__eco {
+  margin: 0;
+  font-size: var(--t-micro);
+  color: var(--texto-suave);
+}
+
+.escrever__eco:empty { display: none; }
+
+/* ------------------------------ campos ------------------------------ */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.campo__rotulo {
+  font-size: var(--t-micro);
+  letter-spacing: var(--tracking-rotulo);
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.campo__controle {
+  font: inherit;
+  font-size: var(--t-micro);
+  width: 100%;
+  min-width: 0;
+  padding: 0.4rem 0.5rem;
+  background: var(--fundo);
+  color: var(--texto);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+}
+
+.campo__controle:focus-visible {
+  outline: 2px solid var(--roxo-forte);
+  outline-offset: 2px;
+}
+
+.campo-par {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+/* ----------------------------- legenda ----------------------------- */
+/* a .legenda do styles.css nasceu dentro de uma linha flex e tem
+   margin-left: auto; aqui ela é bloco próprio e começa na margem */
+.legenda--cal {
+  max-width: var(--largura-max);
+  margin: 1.25rem auto 0;
+  padding: 0 var(--pad-lateral);
+}
+
+/* a amostra aqui decodifica trilha e estado, não prioridade: por isso
+   quadrada e com borda, igual ao bloco do dia que ela explica */
+.legenda__amostra[data-trilha],
+.legenda__amostra[data-estado] {
+  width: 0.8rem;
+  height: 0.8rem;
+  border: 1px solid var(--linha);
+}
+
+.legenda__amostra[data-trilha="ml"] { background: var(--trilha-ml); }
+.legenda__amostra[data-trilha="cv"] { background: var(--trilha-cv); }
+.legenda__amostra[data-trilha="pr"] { background: var(--trilha-pr); }
+.legenda__amostra[data-estado="feito"] { background: var(--verde); }
+.legenda__amostra[data-estado="perdido"] {
+  background: transparent;
+  border-style: dashed;
+}
+
+/* --------------------------- modelo do mês --------------------------- */
+.modelo {
+  width: min(58rem, calc(100vw - 2rem));
+  max-height: 90dvh;
+  padding: 0;
+  overflow: auto;
+  border: 2px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--fundo-elevado);
+  color: var(--texto);
+  box-shadow: var(--sombra-dura);
+}
+
+/* o diálogo nativo escurece a página por conta própria: nada de
+   z-index brigando com a ficha sticky nem com o Obi solto */
+.modelo::backdrop { background: color-mix(in srgb, #15141a 55%, transparent); }
+
+.modelo__topo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem var(--pad-painel);
+  border-bottom: 2px solid var(--linha);
+}
+
+.modelo__titulo {
+  margin: 0;
+  font-size: var(--t-leitura);
+  font-weight: 400;
+}
+
+.modelo__corpo {
+  padding: var(--pad-painel);
+  display: grid;
+  grid-template-columns: minmax(0, 14rem) minmax(0, 1fr) minmax(0, 12rem);
+  gap: 1.25rem;
+}
+
+.modelo__secao {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.modelo__secao + .modelo__secao {
+  border-left: 1px solid var(--borda-sutil);
+  padding-left: 1.25rem;
+}
+
+.modelo__rotulo {
+  margin: 0;
+  font-size: var(--t-micro);
+  letter-spacing: var(--tracking-rotulo);
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+/* ---- janela: os sete dias como teclas ---- */
+.semana-chaves {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.semana-chave {
+  font: inherit;
+  font-size: var(--t-micro);
+  width: 1.9rem;
+  height: 1.9rem;
+  background: transparent;
+  color: var(--texto-suave);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  cursor: pointer;
+}
+
+.semana-chave[aria-pressed="true"] {
+  background: var(--texto);
+  color: var(--fundo);
+}
+
+.semana-chave:focus-visible {
+  outline: 2px solid var(--roxo-forte);
+  outline-offset: 2px;
+}
+
+/* ---- mistura: porcentagem e a mesma coisa em dias ---- */
+.mistura {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.fatia {
+  display: grid;
+  grid-template-columns: 7.5rem 4rem minmax(0, 1fr) 4rem;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.fatia__nome {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  font-size: var(--t-micro);
+  letter-spacing: var(--tracking-rotulo);
+  text-transform: uppercase;
+}
+
+.fatia__n {
+  font: inherit;
+  font-size: var(--t-micro);
+  width: 100%;
+  min-width: 0;
+  padding: 0.3rem 0.4rem;
+  background: var(--fundo);
+  color: var(--texto);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+}
+
+.fatia__trilho {
+  display: block;
+  height: 13px;
+  border: 1px solid var(--linha);
+  background: var(--fundo);
+  overflow: hidden;
+}
+
+.fatia__barra { display: block; height: 100%; }
+.fatia__barra[data-trilha="ml"] { background: var(--trilha-ml); }
+.fatia__barra[data-trilha="cv"] { background: var(--trilha-cv); }
+.fatia__barra[data-trilha="pr"] { background: var(--trilha-pr); }
+
+.fatia__dias {
+  font-size: var(--t-micro);
+  color: var(--texto-suave);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.mistura__soma {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: var(--t-micro);
+  border-top: 1px solid var(--borda-sutil);
+  padding-top: 0.4rem;
+}
+
+/* soma fora de 100: laranja, o mesmo da chama — é aviso, não erro,
+   e a divisão continua valendo pela proporção */
+.mistura__soma[data-fecha="nao"] { color: var(--logo-chama); }
+
+.mistura__previa {
+  margin: 0;
+  font-size: var(--t-micro);
+  color: var(--texto-suave);
+}
+
+/* ---------------------------- telas estreitas ---------------------------- */
+@media (max-width: 60rem) {
+  .calendario {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ficha-dia { position: static; }
+
+  .modelo__corpo { grid-template-columns: minmax(0, 1fr); }
+
+  .modelo__secao + .modelo__secao {
+    border-left: 0;
+    padding-left: 0;
+    border-top: 1px solid var(--borda-sutil);
+    padding-top: 0.9rem;
+  }
+}
+
+@media (max-width: 40rem) {
+  .cabecalho-cal,
+  .modelo-tira,
+  .calendario,
+  .legenda--cal { padding-inline: 1rem; }
+
+  /* no celular a célula encolhe e o bloco passa a mostrar só a hora:
+     o assunto continua na ficha, a um toque */
+  .dia { min-height: 4.6rem; padding: 0.3rem 0.25rem 0.35rem; }
+  .dia__bloco { font-size: 9px; padding: 0.1rem 0.2rem; }
+
+  .fatia { grid-template-columns: 1fr 4rem; }
+  .fatia__trilho,
+  .fatia__dias { grid-column: 1 / -1; }
+
+  .fatia__dias { text-align: left; }
+}
