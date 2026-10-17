@@ -12,82 +12,92 @@
 </head>
 <body>
 
-  <!-- ============================ quina ============================ -->
-  <!-- voltar, tema e zerar não falam nem da trilha nem do mapa: ficam
-       fora dos dois, onde não disputam leitura com nada. Só ícone — o
-       texto vive no title e no aria-label.
-
-       A ordem é de consequência crescente: sair da página, mudar uma
-       preferência, apagar o progresso. A lixeira fica na ponta, longe
-       do que se clica por engano. -->
-  <div class="canto">
-    <!-- o Obi era a rota de volta e deixou de ser: era um clique
-         escondido no mascote, e a saída precisa de um lugar próprio. -->
-    <a class="botao botao--icone" href="index.html"
-       title="Voltar para a escolha de trilha"
-       aria-label="Voltar para a escolha de trilha">
-      <!-- casa: telhado em degraus, duas paredes e o vão da porta -->
-      <svg viewBox="0 0 16 16" aria-hidden="true">
-        <rect x="7" y="1" width="2" height="1"/>
-        <rect x="6" y="2" width="4" height="1"/>
-        <rect x="5" y="3" width="6" height="1"/>
-        <rect x="4" y="4" width="8" height="1"/>
-        <rect x="3" y="5" width="10" height="1"/>
-        <rect x="2" y="6" width="12" height="1"/>
-        <rect x="3" y="7" width="3" height="8"/>
-        <rect x="10" y="7" width="3" height="8"/>
-        <rect x="6" y="7" width="4" height="2"/>
-      </svg>
-    </a>
-
-    <button id="btn-tema" class="botao botao--icone" type="button"
-            title="Alternar entre tema claro e escuro"
-            aria-label="Alternar entre tema claro e escuro">
-      <!-- lua: disco em degraus com a mordida de um segundo disco -->
-      <svg class="icone-lua" viewBox="0 0 16 16" aria-hidden="true">
-        <rect x="6" y="2" width="4" height="1"/>
-        <rect x="5" y="3" width="4" height="1"/>
-        <rect x="4" y="4" width="4" height="1"/>
-        <rect x="3" y="5" width="4" height="1"/>
-        <rect x="2" y="6" width="4" height="4"/>
-        <rect x="3" y="10" width="4" height="1"/>
-        <rect x="4" y="11" width="4" height="1"/>
-        <rect x="5" y="12" width="4" height="1"/>
-        <rect x="6" y="13" width="4" height="1"/>
-      </svg>
-      <!-- sol: núcleo quadrado e oito raios soltos -->
-      <svg class="icone-sol" viewBox="0 0 16 16" aria-hidden="true">
-        <rect x="5" y="5" width="6" height="6"/>
-        <rect x="7" y="0" width="2" height="2"/>
-        <rect x="7" y="14" width="2" height="2"/>
-        <rect x="0" y="7" width="2" height="2"/>
-        <rect x="14" y="7" width="2" height="2"/>
-        <rect x="2" y="2" width="2" height="2"/>
-        <rect x="12" y="2" width="2" height="2"/>
-        <rect x="2" y="12" width="2" height="2"/>
-        <rect x="12" y="12" width="2" height="2"/>
-      </svg>
-    </button>
-
-    <button id="btn-reset" class="botao botao--icone" type="button"
-            title="Zerar progresso" aria-label="Zerar progresso">
-      <!-- lixeira: alça, tampa, duas paredes, fundo e uma ranhura -->
-      <svg viewBox="0 0 16 16" aria-hidden="true">
-        <rect x="6" y="1" width="4" height="2"/>
-        <rect x="1" y="3" width="14" height="2"/>
-        <rect x="3" y="6" width="2" height="9"/>
-        <rect x="11" y="6" width="2" height="9"/>
-        <rect x="3" y="13" width="10" height="2"/>
-        <rect x="7" y="7" width="2" height="5"/>
-      </svg>
-    </button>
-  </div>
-
-  <!-- no celular a lateral vira gaveta; este botão é a maçaneta dela -->
-  <button id="btn-gaveta" class="macaneta" type="button"
-          aria-controls="lateral" aria-expanded="false">☰ Índice</button>
-
   <div class="aplicacao" id="aplicacao">
+
+    <!-- ============================= rail ============================= -->
+    <!-- voltar, tema e zerar não falam nem da trilha nem do mapa: ficam
+         numa coluna própria, antes das duas. Deixaram de flutuar sobre a
+         quina porque ali disputavam empilhamento com as faixas de etapa,
+         que são sticky e vêm depois no DOM.
+
+         A ordem é de consequência crescente: abrir o índice (só no
+         celular), sair da página, mudar uma preferência, apagar o
+         progresso. A lixeira fica na ponta, longe do que se clica por
+         engano. Só ícone — o texto vive no title e no aria-label. -->
+    <nav class="rail" aria-label="Ações da página">
+      <!-- no celular a lateral vira gaveta; este botão é a maçaneta dela -->
+      <button id="btn-gaveta" class="botao botao--icone rail__gaveta" type="button"
+              aria-controls="lateral" aria-expanded="false"
+              title="Abrir o índice da trilha" aria-label="Abrir o índice da trilha">
+        <!-- três barras, na mesma grade de 16 dos outros ícones -->
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <rect x="2" y="3" width="12" height="2"/>
+          <rect x="2" y="7" width="12" height="2"/>
+          <rect x="2" y="11" width="12" height="2"/>
+        </svg>
+      </button>
+
+      <!-- o Obi era a rota de volta e deixou de ser: era um clique
+           escondido no mascote, e a saída precisa de um lugar próprio. -->
+      <a class="botao botao--icone" href="index.html"
+         title="Voltar para a escolha de trilha"
+         aria-label="Voltar para a escolha de trilha">
+        <!-- casa: telhado em degraus, duas paredes e o vão da porta -->
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <rect x="7" y="1" width="2" height="1"/>
+          <rect x="6" y="2" width="4" height="1"/>
+          <rect x="5" y="3" width="6" height="1"/>
+          <rect x="4" y="4" width="8" height="1"/>
+          <rect x="3" y="5" width="10" height="1"/>
+          <rect x="2" y="6" width="12" height="1"/>
+          <rect x="3" y="7" width="3" height="8"/>
+          <rect x="10" y="7" width="3" height="8"/>
+          <rect x="6" y="7" width="4" height="2"/>
+        </svg>
+      </a>
+
+      <button id="btn-tema" class="botao botao--icone" type="button"
+              title="Alternar entre tema claro e escuro"
+              aria-label="Alternar entre tema claro e escuro">
+        <!-- lua: disco em degraus com a mordida de um segundo disco -->
+        <svg class="icone-lua" viewBox="0 0 16 16" aria-hidden="true">
+          <rect x="6" y="2" width="4" height="1"/>
+          <rect x="5" y="3" width="4" height="1"/>
+          <rect x="4" y="4" width="4" height="1"/>
+          <rect x="3" y="5" width="4" height="1"/>
+          <rect x="2" y="6" width="4" height="4"/>
+          <rect x="3" y="10" width="4" height="1"/>
+          <rect x="4" y="11" width="4" height="1"/>
+          <rect x="5" y="12" width="4" height="1"/>
+          <rect x="6" y="13" width="4" height="1"/>
+        </svg>
+        <!-- sol: núcleo quadrado e oito raios soltos -->
+        <svg class="icone-sol" viewBox="0 0 16 16" aria-hidden="true">
+          <rect x="5" y="5" width="6" height="6"/>
+          <rect x="7" y="0" width="2" height="2"/>
+          <rect x="7" y="14" width="2" height="2"/>
+          <rect x="0" y="7" width="2" height="2"/>
+          <rect x="14" y="7" width="2" height="2"/>
+          <rect x="2" y="2" width="2" height="2"/>
+          <rect x="12" y="2" width="2" height="2"/>
+          <rect x="2" y="12" width="2" height="2"/>
+          <rect x="12" y="12" width="2" height="2"/>
+        </svg>
+      </button>
+
+      <button id="btn-reset" class="botao botao--icone" type="button"
+              title="Zerar progresso" aria-label="Zerar progresso">
+        <!-- lixeira: alça, tampa, duas paredes, fundo e uma ranhura -->
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <rect x="6" y="1" width="4" height="2"/>
+          <rect x="1" y="3" width="14" height="2"/>
+          <rect x="3" y="6" width="2" height="9"/>
+          <rect x="11" y="6" width="2" height="9"/>
+          <rect x="3" y="13" width="10" height="2"/>
+          <rect x="7" y="7" width="2" height="5"/>
+        </svg>
+      </button>
+    </nav>
 
     <!-- aba de reabrir: existe só com a lateral fechada -->
     <button class="abrir-lateral" id="btn-abrir-lateral" type="button"
@@ -100,44 +110,6 @@
     <aside class="lateral" id="lateral" aria-label="Painel da trilha">
 
       <div class="lateral__identidade">
-        <!-- o Obi não leva a lugar nenhum: é só bicho. Fica fora da
-             árvore de acessibilidade porque o que ele faz — reagir a
-             quem mexe nele — não tem como ser anunciado nem alcançado
-             sem ponteiro. -->
-        <div class="lateral__logo obi" draggable="false" aria-hidden="true">
-          <span class="obi__corpo">
-            <!-- aqui ele não tem chão: os propulsores não pousam, só o
-                 trazem de volta ao ninho flutuando -->
-            <span class="obi__fogo" aria-hidden="true">
-              <svg viewBox="0 0 72 60" width="72" height="60">
-                <g class="obi__chama">
-                  <path d="M4 0h28L18 58z" fill="var(--obi-chama)"/>
-                  <path d="M11 0h14l-7 36z" fill="var(--obi-chama-nucleo)"/>
-                </g>
-                <g class="obi__chama obi__chama--dir">
-                  <path d="M40 0h28L54 58z" fill="var(--obi-chama)"/>
-                  <path d="M47 0h14l-7 36z" fill="var(--obi-chama-nucleo)"/>
-                </g>
-              </svg>
-            </span>
-            <!-- --logo-* e não --roxo-forte/--amarelo-forte: no tema escuro
-                 o Obi é mais saturado que a interface à volta dele -->
-            <svg viewBox="103 23 406 310" width="112" height="86">
-              <g class="logo__corpo" fill="var(--logo-roxo)">
-                <rect x="113" y="152" width="69" height="88" rx="34"/>
-                <rect x="430" y="152" width="69" height="88" rx="34"/>
-                <ellipse cx="306" cy="178" rx="165" ry="145"/>
-              </g>
-              <rect x="173" y="136" width="267" height="109" rx="54" fill="var(--logo-amarelo)"/>
-              <g fill="var(--logo-roxo)">
-                <ellipse class="logo__olho obi__olho" cx="247" cy="186" rx="13" ry="16"/>
-                <ellipse class="logo__olho obi__olho" cx="364" cy="186" rx="13" ry="16"/>
-                <path d="M292 201a14 14 0 0 0 28 0z"/>
-              </g>
-            </svg>
-          </span>
-        </div>
-
         <!-- o título É o trocador de trilha: um select transparente cobre
              a área inteira, então o clique abre a lista nativa e o h1
              continua sendo o h1 para o leitor de tela. -->
@@ -171,6 +143,46 @@
 
     <!-- ========================== conteúdo ========================== -->
     <div class="conteudo">
+
+      <!-- o Obi dorme no canto que os botões desocuparam: parado ali
+           ele não sobrevoa nada, e o truque de empilhamento contra as
+           faixas sticky só volta a ser preciso quando alguém o arrasta.
+           Não leva a lugar nenhum — é só bicho — e fica fora da árvore
+           de acessibilidade porque o que ele faz, reagir a quem mexe
+           nele, não tem como ser anunciado nem alcançado sem ponteiro. -->
+      <div class="ninho obi" draggable="false" aria-hidden="true">
+        <span class="obi__corpo">
+          <!-- aqui ele não tem chão: os propulsores não pousam, só o
+               trazem de volta ao ninho flutuando -->
+          <span class="obi__fogo" aria-hidden="true">
+            <svg viewBox="0 0 72 60" width="72" height="60">
+              <g class="obi__chama">
+                <path d="M4 0h28L18 58z" fill="var(--obi-chama)"/>
+                <path d="M11 0h14l-7 36z" fill="var(--obi-chama-nucleo)"/>
+              </g>
+              <g class="obi__chama obi__chama--dir">
+                <path d="M40 0h28L54 58z" fill="var(--obi-chama)"/>
+                <path d="M47 0h14l-7 36z" fill="var(--obi-chama-nucleo)"/>
+              </g>
+            </svg>
+          </span>
+          <!-- --logo-* e não --roxo-forte/--amarelo-forte: no tema escuro
+               o Obi é mais saturado que a interface à volta dele -->
+          <svg viewBox="103 23 406 310" width="112" height="86">
+            <g class="logo__corpo" fill="var(--logo-roxo)">
+              <rect x="113" y="152" width="69" height="88" rx="34"/>
+              <rect x="430" y="152" width="69" height="88" rx="34"/>
+              <ellipse cx="306" cy="178" rx="165" ry="145"/>
+            </g>
+            <rect x="173" y="136" width="267" height="109" rx="54" fill="var(--logo-amarelo)"/>
+            <g fill="var(--logo-roxo)">
+              <ellipse class="logo__olho obi__olho" cx="247" cy="186" rx="13" ry="16"/>
+              <ellipse class="logo__olho obi__olho" cx="364" cy="186" rx="13" ry="16"/>
+              <path d="M292 201a14 14 0 0 0 28 0z"/>
+            </g>
+          </svg>
+        </span>
+      </div>
 
       <!-- busca e legenda falam do mapa, então moram com o mapa -->
       <div class="conteudo__barra">

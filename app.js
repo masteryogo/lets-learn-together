@@ -447,7 +447,7 @@
     /* `.obi__corpo > svg` e não `svg`: desde que o Obi ganhou
        propulsores há dois svg dentro do link, e o da chama vem
        primeiro no DOM */
-    var original = document.querySelector(".lateral__logo .obi__corpo > svg");
+    var original = document.querySelector(".ninho .obi__corpo > svg");
     if (!original) return;
 
     ["vazio-mascote", "completa-selo"].forEach(function (id) {
@@ -459,21 +459,22 @@
   }
 
   /* ------------------------------------------------------------
-     O Obi do painel reage como o da mesa de cartas — o obi.js é o
+     O Obi do roadmap reage como o da mesa de cartas — o obi.js é o
      mesmo nas duas páginas. A diferença é que aqui ele não tem chão:
-     volta flutuando em vez de pousar.
+     volta flutuando ao ninho, na quina do conteúdo, em vez de pousar.
      ------------------------------------------------------------ */
   var cutucadas = 0;
   var vezCutucadas = null;
 
   function darVidaAoObi() {
-    var ninho = document.querySelector(".lateral__logo");
+    var ninho = document.querySelector(".ninho");
     if (!ninho || !window.Obi) return;
 
     var obi = window.Obi.animar(ninho, {
       chao: false,
 
-      /* com o painel recolhido no celular não há de onde tirá-lo */
+      /* arrastar só vale em tela larga: no celular o gesto disputa com
+         a rolagem do mapa, e não produz nada que valha o conflito */
       podeMexer: function () {
         return !window.matchMedia ||
                !window.matchMedia("(max-width: 900px)").matches;
@@ -968,6 +969,17 @@
     if (estudando) frase += ", " + estudando + " em estudo";
     if (pulados) frase += ", " + pulados + " pulados";
     barra.setAttribute("aria-valuetext", frase);
+
+    /* sem nada marcado a lixeira não tem o que apagar. Ela precisa
+       dizer isso de si mesma: sozinha na ponta do rail, um clique que
+       só anuncia numa região viva invisível lê como botão quebrado. */
+    var lixeira = document.getElementById("btn-reset");
+    if (lixeira) {
+      var vazio = !Object.keys(progresso).length;
+      lixeira.disabled = vazio;
+      lixeira.title = vazio ? "Nada marcado para zerar" : "Zerar progresso";
+      lixeira.setAttribute("aria-label", lixeira.title);
+    }
 
     /* 100% é literal: "pulado" não conta como feito, então chegar aqui
        exige ter marcado todos. É o que torna o momento raro o bastante

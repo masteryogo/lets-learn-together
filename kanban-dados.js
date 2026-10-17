@@ -71,7 +71,7 @@ const KANBAN_CARDS = [
     porque: "O gesto mais usado deve ser o mais barato." },
 
   { id: "aba-calendario", titulo: "Aba de calendário", raia: "interface", coluna: "fazer",
-    resumo: "Grade de mês no próprio site, para escrever as sessões de estudo — com conexão opcional ao Google Calendar.",
+    resumo: "Grade de mês no próprio site, com modelo do mês por proporção — o que o Google não faz. Layout de pé; falta o comportamento.",
     blocos: [
       { tipo: "lista", itens: [
         "Escrever no calendário do site: clicar num dia e anotar o que vai estudar, sem sair da página.",
@@ -83,9 +83,21 @@ const KANBAN_CARDS = [
       { tipo: "p", texto: "Decidido: o calendário é dono dos eventos, não uma vista. No modo Google o dono é o Google e a escrita é chamada de API, com OAuth e escopo calendar.events. No modo Lets learn together o dono somos nós e a escrita vai para o Postgres do Supabase — depende do banco e da conta, não do localStorage." },
       { tipo: "p", texto: "Consequência na ordem: o modo Google é construível primeiro, porque não espera o banco. O modo Lets learn together não sai antes do Supabase e da conta — o inverso não é indesejável, é impossível." },
       { tipo: "p", texto: "O motivo de conectar o Google é notificação: o lembrete chega no celular com o site fechado. Dá para empatar no modo próprio — Web Push disparado por uma Edge Function em Deno, acordada por agendamento no banco — então não é limitação de arquitetura, é trabalho a mais. O que não se empata é o lembrete cair na agenda que a pessoa já abre todo dia, junto com o resto da vida dela, em vez de numa notificação isolada." },
-      { tipo: "p", texto: "Troca de modo, decidida: o site recusa trocar enquanto houver eventos locais, e oferece exportar antes. Perder plano escrito em silêncio é o pior desfecho, e migrar automático inventa eventos no calendário real de alguém." }
+      { tipo: "p", texto: "Troca de modo, decidida: o site recusa trocar enquanto houver eventos locais, e oferece exportar antes. Perder plano escrito em silêncio é o pior desfecho, e migrar automático inventa eventos no calendário real de alguém." },
+      { tipo: "p", texto: "O modelo do mês é o motivo de existir um calendário próprio. No Google a unidade é o evento; aqui é a proporção: declara-se a janela (seg–sáb, a partir das 19h, 1h30 por sessão) e a mistura em dias (50% ML, 40% OpenCV, 10% Projetos), e o mês se preenche. Recorrência não sabe alternar assunto, então isso não é um RRULE — é um dia de cada vez, o que no modo Google significa ~26 chamadas por mês e tratamento de falha parcial." },
+      { tipo: "lista", itens: [
+        "A porcentagem é de dias, não de horas: é o que se confere olhando a grade.",
+        "Aplicar nunca reescreve o passado — escreve de hoje em diante, e os dias já estudados contam na cota. Efeito aceito: dia elegível que passou em branco some da cota, em vez de empilhar três sessões na mesma semana para compensar.",
+        "Distribuição intercalada, pelo maior déficit: 13 dias seguidos de ML fecham a mesma conta e matam a outra trilha na semana."
+      ] },
+      { tipo: "p", texto: "De pé (layout, out/2026): calendario.html e calendario.css com a grade do mês, a ficha do dia (régua de 17h à 1h, sessões, formulário), a tira do modelo e o diálogo de configuração; a entrada é uma carta na mesa, pregada com alfinete e fora da fileira das trilhas, com cascata nos dias ao clicar. Nada disso tem comportamento ainda." },
+      { tipo: "lista", itens: [
+        "Falta 1 — calendario.js: ?trilha= ligando a aba ativa, abrir e fechar o diálogo, selecionar o dia, escrever à mão. É só DOM, não espera nada.",
+        "Falta 2 — distribuição: cotas por maior resto e reparte pelo maior déficit. Lógica pura, e a única parte que erra em silêncio: testar antes de ligar na tela.",
+        "Falta 3 — persistência, e aqui o card para: no modo próprio depende do Supabase e da conta; no modo Google, de OAuth com escopo calendar.events."
+      ] }
     ],
-    porque: "É a única parte do projeto que sabe quando você estuda — o roadmap só sabe o quê. Fica em A fazer porque o modo Google não espera o banco; o modo próprio espera.",
+    porque: "É a única parte do projeto que sabe quando você estuda — o roadmap só sabe o quê. O layout está de pé; o que falta é comportamento, e só o último passo (persistência) espera o banco.",
     vejaTambem: ["anotacoes", "supabase", "login"] },
 
   { id: "i18n", titulo: "Outros idiomas (i18n)", raia: "conteudo", coluna: "fazer",
@@ -101,15 +113,21 @@ const KANBAN_CARDS = [
     resumo: "Criar e editar trilha pela interface.",
     porque: "Hoje trilha nova é escrever trilhas/<id>/*.js à mão e acertar a contagem no manifesto." },
 
-  { id: "anotacoes", titulo: "Anotações por tópico", raia: "interface", coluna: "bloqueado",
-    resumo: "Campo de texto livre por tópico, numa seção nova do drawer.",
+  { id: "anotacoes", titulo: "Notas em post-it", raia: "interface", coluna: "bloqueado",
+    resumo: "Mural de post-its por trilha, em aba própria. Substitui o campo de texto dentro do drawer do tópico.",
     blocos: [
+      { tipo: "p", texto: "Mudou de ideia em outubro de 2026: a proposta original era um campo de texto livre por tópico, numa seção nova do drawer. Ficou pequena demais — a maior parte do que se anota estudando não cabe em um tópico só." },
+      { tipo: "p", texto: "A nota é uma só, vista de dois lugares: nasce solta na trilha e pode ser ancorada num tópico. Ancorada, aparece no mural e no drawer daquele tópico; solta, só no mural. Uma entidade com dois pontos de entrada, e não dois recursos escrevendo a mesma ideia em lugares que nunca se encontram. A nota guarda trilha, texto, cor, tópico opcional e posição opcional." },
       { tipo: "lista", itens: [
+        "Abas por trilha, como no calendário: notas.html?trilha=ml com uma aba Todas. Mesma solução nas duas telas novas, e cada filtro é um endereço.",
+        "A cor é de quem escreve, não da trilha: a trilha já é a aba. Serve para separar dúvida, ideia e erro que não se quer repetir.",
+        "Arranjo responsivo, decidido: mural livre arrastando em tela larga, com a posição guardada por nota; grade que flui no celular, mais recente primeiro. A posição é adorno, não dado — nota sem x/y cai numa vaga automática, e no celular x/y é ignorado.",
         "Com BaaS, cai a necessidade de exportar/importar como pré-requisito. Sem BaaS, exportar/importar vinha antes — não junto.",
         "Entrar na busca não é de graça: o corpus de buscar() é titulo + desc + detalhe. Somar a nota é uma linha, mas um tópico que casa só pela anotação aparece no mapa sem pista de por quê. Precisa de um sinal na linha."
       ] }
     ],
-    porque: "Texto escrito não se refaz. É o primeiro dado do projeto que não é reconstruível clicando, e isso muda o contrato de durabilidade da aplicação inteira." },
+    porque: "Texto escrito não se refaz. É o primeiro dado do projeto que não é reconstruível clicando, e isso muda o contrato de durabilidade da aplicação inteira — um mural perdido não se reconstrói nem com esforço.",
+    vejaTambem: ["supabase", "login", "aba-calendario"] },
   { id: "rota-condicional", titulo: "Rota condicional", raia: "interface", coluna: "bloqueado",
     resumo: "Caminhos alternativos dentro da trilha — pular visão computacional se o objetivo é NLP.",
     blocos: [

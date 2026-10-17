@@ -77,6 +77,8 @@
   --tracking-rotulo:  0.14em;
 
   --largura-max:      1180px;
+  --rail-w:           3.25rem;  /* coluna das ações; deita e vira barra
+                                   inferior no celular */
   --lateral-w:        21rem;    /* coluna da trilha; vira gaveta no celular.
                                    21rem e não 19: com o índice em 16,5px,
                                    19 fazia metade dos tópicos quebrarem
@@ -159,6 +161,7 @@ body {
 /* a largura e o respiro lateral passaram a ser da coluna de conteúdo:
    a lateral encosta na beira da tela e não pode ter margem nenhuma. */
 .conteudo {
+  position: relative;        /* o ninho do Obi se pendura nesta quina */
   min-width: 0;
   width: 100%;
   max-width: var(--largura-max);
@@ -181,18 +184,21 @@ body {
 }
 
 /* ============================ casca ============================ */
-/* duas colunas: a lateral da trilha e o mapa. Fechada, a coluna some
-   e a lateral sai pela esquerda — a largura dela continua fixa durante
-   o trajeto, senão o índice se espremeria e o texto refluiria a cada
-   quadro. */
+/* três colunas: o rail das ações, a lateral da trilha e o mapa. Com a
+   lateral fechada só a coluna do meio some — o rail não fecha nunca,
+   porque fechar as ações da página seria esconder a saída. A largura da
+   lateral continua fixa durante o trajeto, senão o índice se espremeria
+   e o texto refluiria a cada quadro. */
 .aplicacao {
   display: grid;
-  grid-template-columns: var(--lateral-w) minmax(0, 1fr);
+  grid-template-columns: var(--rail-w) var(--lateral-w) minmax(0, 1fr);
   align-items: start;
   transition: grid-template-columns 0.2s ease;
 }
 
-.aplicacao[data-lateral="fechada"] { grid-template-columns: 0 minmax(0, 1fr); }
+.aplicacao[data-lateral="fechada"] {
+  grid-template-columns: var(--rail-w) 0 minmax(0, 1fr);
+}
 .aplicacao[data-lateral="fechada"] .lateral {
   transform: translateX(-100%);
   visibility: hidden;
@@ -205,7 +211,7 @@ body {
   display: none;
   position: fixed;
   top: 50%;
-  left: 0;
+  left: var(--rail-w);
   transform: translateY(-50%);
   z-index: 40;
   width: 2rem;
@@ -250,9 +256,17 @@ body {
 
 /* o flutuar mudou de elemento: ele mora no corpo, e o involólucro
    fica livre para o transform do arrasto. São dois eixos em dois
-   elementos — ver obi.css. */
-.lateral__logo {
-  flex-shrink: 0;
+   elementos — ver obi.css.
+
+   O ninho saiu da lateral e foi para a quina do conteúdo, que os
+   botões desocuparam. Absoluto e não fixo: assim ele rola junto com
+   o mapa em vez de acompanhar a tela, e o repouso continua sendo
+   posição da página — o obi.js nunca escreve a dele. */
+.ninho {
+  position: absolute;
+  top: 1rem;
+  right: var(--pad-lateral);
+  z-index: 15;
   display: block;
   /* aqui ele é menor que na mesa, e a chama acompanha */
   --obi-fogo-largura: 40px;
@@ -263,17 +277,17 @@ body {
 
 /* o Obi fora do ninho sobrevoa o mapa, e as faixas de etapa também
    são sticky: vindo depois no DOM, cobririam ele. Enquanto durar o
-   passeio o painel inteiro sobe — é por isso que o obi.js marca a
+   passeio o ninho inteiro sobe — é por isso que o obi.js marca a
    raiz, e não só o próprio Obi. */
-[data-obi-solto] .lateral { z-index: 70; }
+[data-obi-solto] .ninho { z-index: 70; }
 
-.lateral__logo .obi__corpo {
+.ninho .obi__corpo {
   display: block;
   animation: flutuar 3.4s ease-in-out infinite;
 }
 
 /* só o desenho do Obi, e não o svg da chama, que tem tamanho próprio */
-.lateral__logo .obi__corpo > svg {
+.ninho .obi__corpo > svg {
   display: block;
   width: 4rem;
   height: auto;
@@ -427,7 +441,9 @@ body {
 .lateral__fechar:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: 2px; }
 
 /* ----------------------------- quina ----------------------------- */
-/* tema e zerar ficam juntos, fora da trilha e fora do mapa */
+/* o roadmap não tem mais quina: os botões dele viraram o rail abaixo.
+   Isto sobrevive para as páginas que ainda flutuam os seus na quina —
+   calendario.html e notas.html. */
 .canto {
   position: fixed;
   top: 1rem;
@@ -440,6 +456,63 @@ body {
   background: var(--fundo-elevado);
   box-shadow: var(--sombra-dura);
 }
+
+/* ------------------------------ rail ------------------------------ */
+/* coluna das ações da página: sticky de ponta a ponta, como a lateral,
+   e com a mesma régua à direita. Sem sombra dura nos botões — ela
+   existia para descolar a quina do conteúdo que passava por baixo, e
+   aqui não passa nada por baixo. */
+.rail {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0;
+  background: var(--fundo-elevado);
+  border-right: 2px solid var(--linha);
+}
+
+.rail .botao {
+  background: var(--fundo-elevado);
+  box-shadow: none;
+  border-color: var(--borda-sutil);
+  color: var(--texto-suave);
+}
+
+.rail .botao:disabled:hover { color: var(--texto-suave); border-color: var(--borda-sutil); }
+
+.rail .botao:hover,
+.rail .botao:focus-visible {
+  border-color: var(--linha);
+  color: var(--texto);
+  transform: none;
+}
+
+/* a lixeira desce para a ponta: longe do que se clica por engano */
+.rail #btn-reset { margin-top: auto; position: relative; }
+
+/* o afastamento sozinho é ambíguo: numa janela alta o vão passa de
+   600px e lê como espaço esquecido, não como intenção. O filete
+   fecha o grupo de cima e diz que daqui para baixo é outra coisa —
+   sem encostar a lixeira no que se clica todo dia. */
+.rail #btn-reset::before {
+  content: "";
+  position: absolute;
+  top: -0.75rem;
+  left: 50%;
+  width: 1.5rem;
+  height: 2px;
+  margin-left: -0.75rem;
+  background: var(--borda-sutil);
+}
+
+/* a maçaneta da gaveta só existe onde existe gaveta. O seletor repete
+   `.rail` porque `.botao--icone` declara display e vem depois. */
+.rail .rail__gaveta { display: none; }
 
 /* --------------------------- controles --------------------------- */
 .botao {
@@ -458,6 +531,16 @@ body {
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.08s, box-shadow 0.08s;
 }
+
+/* desligado: sem sombra para levantar e sem o deslocamento do clique —
+   o botão deixa de parecer que vai responder */
+.botao:disabled {
+  color: var(--texto-suave);
+  border-color: var(--borda-sutil);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.botao:disabled:hover { transform: none; }
 
 .botao:hover { transform: translate(2px, 2px); box-shadow: none; }
 .botao:active { transform: translate(2px, 2px); box-shadow: none; }
@@ -535,14 +618,15 @@ body {
 
 /* ------------------------ barra do conteúdo ------------------------ */
 /* busca e legenda falam do mapa, então moram com o mapa. A folga à
-   direita é para os botões da quina, que flutuam sobre esse canto. */
+   direita é do Obi, que dorme naquela quina: sem ela a legenda ia
+   parar debaixo dele. */
 .conteudo__barra {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.6rem 1.25rem;
   margin-bottom: 1.5rem;
-  padding-right: 6.5rem;
+  padding-right: 8rem;
 }
 
 .conteudo__barra .busca { width: min(18rem, 100%); }
@@ -554,6 +638,63 @@ body {
   font-variant-numeric: tabular-nums;
 }
 .busca__contagem:empty { display: none; }
+
+/* ----------------------- filtro de trilha ----------------------- */
+/* abas do calendário e do mural de notas. São links de verdade, e não
+   botões: cada filtro é um endereço (?trilha=ml), então a aba e um
+   atalho vindo de outra página são a mesma coisa — e o botão de
+   voltar funciona de graça.
+
+   Mora aqui, e não na folha de cada tela, porque as duas usam as
+   mesmas abas: duas cópias divergiriam na primeira mudança. As cores
+   das trilhas (--trilha-ml e companhia) são declaradas por página. */
+.filtro {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+}
+
+.filtro__aba {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.7rem;
+  font-size: var(--t-micro);
+  letter-spacing: var(--tracking-rotulo);
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--texto-suave);
+  border: 1px solid var(--borda-sutil);
+  border-radius: var(--raio);
+}
+
+.filtro__aba:hover { border-color: var(--linha); color: var(--texto); }
+.filtro__aba:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: 2px; }
+
+/* a aba carrega a cor da trilha num quadradinho: o mesmo sinal que a
+   legenda e o bloco do dia usam */
+.filtro__aba[data-trilha]::before {
+  content: "";
+  width: 0.65rem;
+  height: 0.65rem;
+  border: 1px solid var(--linha);
+}
+
+/* a cor vem na própria aba (--trilha-cor), e não de uma regra por
+   trilha: o manifesto ganha trilhas sem que o CSS precise saber */
+.filtro__aba[data-trilha]::before { background: var(--trilha-cor, var(--cinza)); }
+
+/* a aba em vigor é inversão, não só cor: a fonte tem um peso só */
+.filtro__aba[aria-current="page"] {
+  background: var(--texto);
+  color: var(--fundo);
+  border-color: var(--linha);
+}
+
+/* a contagem é dado, não enfeite: some quando é zero seria mentira,
+   então fica, apagada */
+.filtro__n { font-variant-numeric: tabular-nums; opacity: 0.7; }
 
 /* ---------------------------- legenda ---------------------------- */
 /* a legenda decodifica a barra de prioridade do tópico, que só existe
@@ -1359,7 +1500,7 @@ body:has(.drawer--ajustando) .sobreposicao {
 
 @media (prefers-reduced-motion: reduce) {
   .drawer { animation: none; }
-  .lateral__logo .obi__corpo,
+  .ninho .obi__corpo,
   .logo__olho { animation: none; }
   * { transition-duration: 0.01ms !important; }
 }
@@ -1704,15 +1845,17 @@ body:has(.drawer--ajustando) .sobreposicao {
 body:has(.drawer:not([hidden])) { overflow: hidden; }
 
 /* --------------------- lateral vira gaveta --------------------- */
-/* abaixo de 900px não há largura para duas colunas: a lateral sai do
-   fluxo, vira gaveta sobre o mapa, e a maçaneta é quem a chama. */
-.macaneta { display: none; }
+/* abaixo de 900px não há largura para três colunas: a lateral sai do
+   fluxo e vira gaveta sobre o mapa, chamada pela maçaneta que mora no
+   rail; o rail deita e vira barra inferior. */
 
+/* 32 e não 20: a barra inferior está em 30, e um véu por baixo dela
+   deixaria as ações clicáveis com a gaveta aberta por cima. */
 .veu {
   display: none;
   position: fixed;
   inset: 0;
-  z-index: 20;
+  z-index: 32;
   background: rgba(0, 0, 0, 0.45);
 }
 
@@ -1723,24 +1866,43 @@ body:has(.drawer:not([hidden])) { overflow: hidden; }
   .aplicacao[data-lateral="fechada"] .conteudo { padding-left: var(--pad-lateral); }
   .aplicacao[data-lateral="fechada"] .lateral { visibility: visible; }
 
-  .macaneta {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
+  /* o rail deita: sai do grid e vira barra no rodapé da tela, onde o
+     polegar alcança. Fixa, porque uma barra de ações que rola embora
+     deixa de ser barra de ações. */
+  .rail {
     position: fixed;
-    left: 1rem;
-    bottom: 1rem;
+    inset: auto 0 0;
     z-index: 30;
-    font: inherit;
-    font-size: var(--t-base);
-    padding: 0.6rem 0.9rem;
-    color: var(--tinta-bloco);
-    background: var(--amarelo-forte);
-    border: 2px solid var(--linha);
-    box-shadow: var(--sombra-dura);
-    cursor: pointer;
+    height: auto;
+    flex-direction: row;
+    justify-content: space-evenly;
+    gap: 0.75rem;
+    padding: 0.5rem var(--pad-lateral);
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+    border-right: 0;
+    border-top: 2px solid var(--linha);
   }
-  .macaneta:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: 2px; }
+
+  /* deitado, "na ponta" é a direita, e o auto do eixo vertical não
+     empurra mais nada */
+  .rail #btn-reset { margin-top: 0; margin-left: auto; }
+
+  /* o filete vira de pé e desce para o vão entre os botões: aqui ele
+     faz todo o trabalho, porque a barra é curta e não sobra
+     afastamento para separar sozinho */
+  .rail #btn-reset::before {
+    top: 50%;
+    left: -0.3rem;
+    width: 2px;
+    height: 1.5rem;
+    margin: -0.75rem 0 0 0;
+  }
+  .rail .rail__gaveta { display: inline-flex; }
+
+  /* a barra cobre o fim do mapa: o rodapé reserva a altura dela */
+  .conteudo {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  }
 
   .veu { display: block; }
 
@@ -1748,7 +1910,7 @@ body:has(.drawer:not([hidden])) { overflow: hidden; }
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 25;
+    z-index: 35;               /* por cima da barra inferior */
     width: min(21rem, 90vw);
     height: 100dvh;
     box-shadow: none;
@@ -1762,8 +1924,10 @@ body:has(.drawer:not([hidden])) { overflow: hidden; }
   .aplicacao .lateral[data-aberta="sim"],
   .aplicacao[data-lateral="fechada"] .lateral[data-aberta="sim"] { transform: none; }
 
-  /* a quina desce para não cobrir a primeira linha do conteúdo */
-  .conteudo__barra { padding-right: 6.5rem; }
+  /* sem rail à esquerda, o Obi encosta na beira e ocupa menos largura */
+  .ninho { top: 0.5rem; }
+  .ninho .obi__corpo > svg { width: 3.25rem; }
+  .conteudo__barra { padding-right: 5rem; }
 }
 
 /* ---------------------- responsivo: tablet ---------------------- */
