@@ -30,8 +30,69 @@
 
   <!-- a mesa: as cartas em cima, o Obi de pé na frente delas -->
   <main class="mesa" id="mesa">
-    <div class="cartas" id="cartas">
-      <!-- preenchido por inicio.js, a partir do manifesto -->
+    <!-- o tampo: a grade de trilhas à esquerda, o estojo à direita.
+         Lado a lado, e não em fila: a grade cresce para baixo, então
+         a coluna da direita fica onde está por mais trilhas que haja. -->
+    <div class="tampo">
+      <div class="cartas" id="cartas">
+        <!-- preenchido por inicio.js, a partir do manifesto -->
+      </div>
+
+      <!-- o estojo fechado: uma tampa, não uma prateleira. Mostra o
+           que guarda em miniatura e abre num clique só, como uma
+           pasta de aplicativos — o conteúdo cresce sem a mesa crescer
+           junto. As miniaturas são desenho, não botões: o alvo é a
+           tampa inteira, senão metade dos cliques erraria o que
+           queria abrir. -->
+      <button class="estojo" type="button" id="estojo-tampa"
+              aria-haspopup="dialog" aria-expanded="false"
+              aria-label="Abrir o estojo: calendário e notas">
+        <span class="estojo__etiqueta">
+          Estojo
+        </span>
+        <span class="estojo__miniaturas" id="estojo-miniaturas" aria-hidden="true">
+          <!-- preenchido por inicio.js -->
+        </span>
+        <span class="estojo__abrir">abrir</span>
+      </button>
+    </div>
+
+    <!-- a caminha do Obi. São duas peças e não uma: o aro de trás
+         vem antes dele no DOM e o da frente depois — é a ordem do DOM
+         que o põe DENTRO da cama em vez de em cima dela. Sem z-index
+         de propósito: pendurado, o próprio Obi sobe para 60 e sai da
+         cama sozinho. -->
+    <div class="caminha caminha--fundo" aria-hidden="true">
+      <svg viewBox="0 0 240 58" width="240" height="58">
+        <!-- o aro de trás: largo o bastante para sobrar dos dois lados
+             dele. Enquanto era estreito, o Obi cobria o fundo inteiro
+             e só restavam duas lascas nas beiras — e duas lascas não
+             fazem uma cama. -->
+        <g stroke="var(--borda-tampo)" stroke-width="2">
+          <path d="M25 1h190v22H25z" fill="var(--cama-aro)"/>
+          <path d="M25 1v22L1 55V31z" fill="var(--cama-aro-lado)"/>
+          <path d="M215 1v22l24 32V31z" fill="var(--cama-aro-lado)"/>
+          <!-- a almofada é mais CLARA que o tampo, ao contrário do aro:
+               é a inversão que a faz ler como tecido macio posto sobre
+               a mesa, e não como um buraco nela -->
+          <path d="M25 23h190l24 32H1z" fill="var(--cama-almofada)"/>
+        </g>
+
+        <!-- o acolchoado do aro: tiques verticais, como o costurado de
+             uma almofada de rolo. É o detalhe que diz "cama" antes de
+             qualquer formato. -->
+        <g fill="var(--cama-costura)">
+          <rect x="49" y="5" width="2" height="14"/>
+          <rect x="85" y="5" width="2" height="14"/>
+          <rect x="121" y="5" width="2" height="14"/>
+          <rect x="157" y="5" width="2" height="14"/>
+          <rect x="193" y="5" width="2" height="14"/>
+        </g>
+
+        <!-- as peças dele: brinquedo de robô é parafuso -->
+        <rect x="46" y="44" width="8" height="7" fill="var(--amarelo)"/>
+        <rect x="182" y="46" width="8" height="6" fill="var(--roxo)"/>
+      </svg>
     </div>
 
     <div class="ator obi" id="ator">
@@ -68,20 +129,48 @@
         </svg>
       </span>
     </div>
+
+    <div class="caminha caminha--frente" aria-hidden="true">
+      <svg viewBox="0 0 240 36" width="240" height="36">
+        <path d="M1 1h238v34H1z" fill="var(--cama-aro-frente)"
+              stroke="var(--borda-tampo)" stroke-width="2"/>
+        <!-- a dobra de onde o aro encontra a almofada: sem esta linha
+             o aro da frente lia como um degrau, não como um rolo -->
+        <path d="M2 3h236v4H2z" fill="var(--cama-aro)"/>
+
+        <!-- a mesma costura do aro de trás, para os dois serem a mesma
+             peça dando a volta -->
+        <g fill="var(--cama-costura)">
+          <rect x="37" y="12" width="2" height="18"/>
+          <rect x="73" y="12" width="2" height="18"/>
+          <rect x="167" y="12" width="2" height="18"/>
+          <rect x="203" y="12" width="2" height="18"/>
+        </g>
+
+        <!-- a luz do carregador: ele é robô, a cama dele carrega -->
+        <rect x="14" y="15" width="7" height="7" fill="var(--amarelo)"/>
+        <!-- a chapinha de nome, costurada no aro -->
+        <path d="M88 9h64v19H88z" fill="var(--cama-chapa)"/>
+      </svg>
+      <span class="caminha__etiqueta">obi</span>
+    </div>
   </main>
 
-  <div class="ficha">
-    <p class="ficha__titulo" id="ficha-titulo">Escolha um território</p>
-    <p class="ficha__linha" id="ficha-linha">
-      Passe o ponteiro pelas cartas — o Obi vai junto.
-    </p>
-    <!-- o único lugar do site que avisa onde o progresso mora. Fica na
-         linha onde o olho já está, e sai de cena quando você escolhe. -->
-    <p class="ficha__aviso" id="ficha-aviso">
-      Seu progresso fica salvo neste navegador.
-    </p>
-    <a id="ficha-partir" href="roadmap.html" hidden></a>
-  </div>
+  <!-- o estojo aberto. <dialog> nativo pelo que ele dá de graça: foco
+       preso dentro, Esc que fecha e ::backdrop que escurece a mesa
+       numa camada própria — sem disputa de z-index com o Obi solto. -->
+  <dialog class="aberto" id="estojo-aberto" aria-labelledby="aberto-titulo">
+    <div class="aberto__topo">
+      <p class="aberto__titulo" id="aberto-titulo">Estojo</p>
+      <button class="aberto__fechar" type="button" id="estojo-fechar"
+              aria-label="Fechar o estojo">×</button>
+    </div>
+    <div class="aberto__itens" id="estojo">
+      <!-- preenchido por inicio.js -->
+    </div>
+  </dialog>
+
+
 
   <!-- mesmo conteúdo do rodapé do roadmap, na linguagem da mesa:
        o cartucho de uma folha de levantamento, que é onde vão o autor

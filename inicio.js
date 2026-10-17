@@ -16,6 +16,8 @@
   var CHAVE_LEGADA = "roadmap-ml:progresso:v1"; /* de antes das trilhas */
 
   var cartas = document.getElementById("cartas");
+  var estojo = document.getElementById("estojo");
+  var miniaturas = document.getElementById("estojo-miniaturas");
   var mesa = document.getElementById("mesa");
   var ator = document.getElementById("ator");
   var cara = document.getElementById("ator-cara");
@@ -165,12 +167,245 @@
   }
 
   /* ------------------------------------------------------------
+     as peças do estojo
+
+     Calendário e notas não são trilhas: não têm rota, não têm
+     progresso e não entram em `nos` — o Obi passeia entre trilhas, e
+     ele não saberia o que dizer sobre estas.
+
+     Por isso moram no estojo, e não na fileira: a fileira de trilhas
+     cresce sem teto, e o que vale para todas elas não pode ficar
+     pendurado no fim da fila da quinquagésima.
+
+     No lugar da rota, cada uma mostra em miniatura o que a pessoa
+     vai encontrar do outro lado, desenhado em var(--rota) — que
+     aqui é a cor da peça, não a de uma trilha.
+     ------------------------------------------------------------ */
+  var ESTOJO = [
+    {
+      id: "agenda",
+      href: "calendario.html",
+      nome: "Calendário",
+      rodape: "Planeje o mês",
+      rotulo: "Calendário de estudos, planejar o mês entre as trilhas",
+      desenho: desenharMes
+    },
+    {
+      id: "notas",
+      href: "notas.html",
+      nome: "Notas",
+      rodape: "Escreva o que aprendeu",
+      rotulo: "Mural de notas, um por trilha",
+      desenho: desenharMural
+    }
+  ];
+
+  function montarEstojo() {
+    if (!estojo) return;
+    ESTOJO.forEach(function (f) {
+      estojo.appendChild(montarPeca(f));
+      if (miniaturas) miniaturas.appendChild(montarMiniatura(f));
+    });
+    ligarTampa();
+  }
+
+  /* a miniatura é o mesmo desenho da peça, menor e sem texto: a tampa
+     mostra o que guarda, não repete o nome do que guarda */
+  function montarMiniatura(f) {
+    var cela = texto("span", "estojo__mini carta--" + f.id);
+    cela.appendChild(f.desenho());
+    return cela;
+  }
+
+  /* ------------------------------------------------------------
+     abrir e fechar o estojo
+
+     O <dialog> nativo resolve sozinho o que daria mais trabalho que
+     o resto junto: foco preso dentro, Esc que fecha, e um ::backdrop
+     em camada própria — nada de z-index brigando com o Obi, que voa
+     solto por cima da mesa.
+     ------------------------------------------------------------ */
+  function ligarTampa() {
+    var tampa = document.getElementById("estojo-tampa");
+    var painel = document.getElementById("estojo-aberto");
+    var fechar = document.getElementById("estojo-fechar");
+    if (!tampa || !painel) return;
+
+    function abrir() {
+      tampa.setAttribute("aria-expanded", "true");
+      if (painel.showModal) {
+        painel.showModal();
+      } else {
+        painel.setAttribute("open", "");   /* sem <dialog>: abre sem véu */
+      }
+      /* a primeira peça recebe o foco: quem abriu o estojo quer pegar
+         alguma coisa, e não ler o título de novo */
+      var primeira = painel.querySelector(".carta--peca");
+      if (primeira && primeira.focus) primeira.focus();
+    }
+
+    function fechada() {
+      tampa.setAttribute("aria-expanded", "false");
+      /* o foco volta para a tampa: sem isso ele cai no começo da
+         página e quem usa teclado perde o lugar */
+      if (tampa.focus) tampa.focus();
+    }
+
+    tampa.addEventListener("click", abrir);
+    if (fechar) fechar.addEventListener("click", function () { painel.close(); });
+
+    /* clique no veu fecha: o alvo é o próprio <dialog> só quando se
+       acerta a área de fora do painel */
+    painel.addEventListener("click", function (ev) {
+      if (ev.target === painel) painel.close();
+    });
+
+    painel.addEventListener("close", fechada);
+    painel.addEventListener("cancel", fechada);
+  }
+
+  function montarPeca(f) {
+    var classe = "carta carta--peca carta--" + f.id;
+
+    var a = document.createElement("a");
+    a.className = classe;
+    a.href = f.href;
+    a.setAttribute("aria-label", f.rotulo);
+
+    /* a etiqueta do estojo já disse o que isto é; na carta
+       sobra o que distingue uma da outra — para quem ela vale */
+    var carimbo = texto("span", "carta__carimbo");
+    carimbo.appendChild(texto("span", null, f.escopo));
+
+    var quadro = texto("span", "carta__quadro");
+    quadro.appendChild(f.desenho());
+
+    var rodape = texto("span", "carta__rodape");
+    rodape.appendChild(texto("span", null, f.rodape));
+
+    a.appendChild(carimbo);
+    a.appendChild(texto("span", "carta__nome", f.nome));
+    a.appendChild(quadro);
+    a.appendChild(rodape);
+
+    a.addEventListener("click", function (ev) {
+      /* mesma regra das trilhas: modificador ou botão do meio é
+         pedido de nova aba, e aí quem anima seria a aba errada */
+      if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey || ev.button !== 0) {
+        return;
+      }
+      ev.preventDefault();
+      a.className = classe + " carta--indo";
+
+      /* 900ms é o que a cascata leva: o último pedaço começa aos
+         470ms e a animação dura 420. Sair antes disso deixaria a
+         carta pela metade na saída. */
+      var espera = semMovimento() ? 120 : 900;
+      window.setTimeout(function () { window.location.href = a.href; }, espera);
+    });
+
+    return a;
+  }
+
+  /* o mês em miniatura, no quadro de 300×240 das outras cartas: seis
+     colunas cheias e a sétima vazia, que é o domingo de folga */
+  function desenharMes() {
+    var raiz = svg("svg", {
+      viewBox: "0 0 300 240", class: "carta__mapa",
+      role: "img", "aria-hidden": "true"
+    });
+
+    var col, lin, x, y, marcado;
+    for (lin = 0; lin < 5; lin++) {
+      for (col = 0; col < 7; col++) {
+        x = 44 + col * 32;
+        y = 54 + lin * 28;
+        marcado = col < 6 && (lin + col) % 3 !== 2;
+        raiz.appendChild(svg("rect", {
+          /* só o dia marcado ganha a classe: a cascata do clique
+             acende o que está escrito, e o vazio continua vazio */
+          class: marcado ? "carta__acender" : "",
+          x: x, y: y, width: 22, height: 18,
+          fill: marcado ? "var(--rota)" : "none",
+          "fill-opacity": marcado ? "0.75" : "0",
+          stroke: "var(--rota)",
+          "stroke-opacity": marcado ? "1" : "0.35",
+          "stroke-width": "2",
+          "shape-rendering": "crispEdges",
+          /* a cascata corre por semana, de cima para baixo: é a
+             ordem em que se lê um mês, não a ordem do DOM */
+          style: marcado ? "animation-delay: " + (lin * 90 + col * 22) + "ms" : ""
+        }));
+      }
+    }
+
+    /* a faixa de cabeçalho do mês, para a miniatura não virar um
+       xadrez solto no meio do papel */
+    raiz.appendChild(svg("rect", {
+      x: 44, y: 30, width: 214, height: 10,
+      fill: "var(--rota)", "fill-opacity": "0.35",
+      "shape-rendering": "crispEdges"
+    }));
+
+    return raiz;
+  }
+
+  /* o mural em miniatura: post-its espalhados e tortos, cada um com
+     duas linhas de escrita. A torção é fixa por nota, como na tela —
+     papel pregado não fica reto, mas também não dança sozinho. */
+  function desenharMural() {
+    var raiz = svg("svg", {
+      viewBox: "0 0 300 240", class: "carta__mapa",
+      role: "img", "aria-hidden": "true"
+    });
+
+    var postits = [
+      { x: 44,  y: 36,  g: -5 },
+      { x: 168, y: 28,  g: 4 },
+      { x: 60,  y: 132, g: 3 },
+      { x: 178, y: 140, g: -4 }
+    ];
+
+    postits.forEach(function (p, i) {
+      var g = svg("g", {
+        class: "carta__acender",
+        transform: "rotate(" + p.g + " " + (p.x + 39) + " " + (p.y + 34) + ")",
+        style: "animation-delay: " + (i * 130) + "ms"
+      });
+
+      g.appendChild(svg("rect", {
+        x: p.x, y: p.y, width: 78, height: 68,
+        fill: "var(--rota)", "fill-opacity": "0.75",
+        stroke: "var(--rota)", "stroke-width": "2",
+        "shape-rendering": "crispEdges"
+      }));
+
+      /* as duas linhas de escrita: é o que diferencia um post-it de
+         um retângulo qualquer */
+      g.appendChild(svg("rect", {
+        x: p.x + 12, y: p.y + 22, width: 54, height: 5,
+        fill: "var(--papel)", "fill-opacity": "0.85",
+        "shape-rendering": "crispEdges"
+      }));
+      g.appendChild(svg("rect", {
+        x: p.x + 12, y: p.y + 38, width: 36, height: 5,
+        fill: "var(--papel)", "fill-opacity": "0.85",
+        "shape-rendering": "crispEdges"
+      }));
+
+      raiz.appendChild(g);
+    });
+
+    return raiz;
+  }
+
+  /* ------------------------------------------------------------
      montagem
      ------------------------------------------------------------ */
   function montar() {
     Object.keys(window.TRILHAS).forEach(function (id, i) {
       var t = window.TRILHAS[id];
-      if (!t.rota) return;   /* trilha sem ficha ainda não vai à mesa */
+      if (!t.rota) return;   /* trilha sem rota ainda não vai à mesa */
 
       var feitos = Math.min(feitosDe(id), t.topicos);
       var fracao = t.topicos ? feitos / t.topicos : 0;
@@ -188,10 +423,6 @@
         t.rotulo + ", " + t.etapas + " etapas, " + t.topicos + " tópicos, " +
         feitos + " concluídos");
 
-      var carimbo = texto("span", "carta__carimbo");
-      carimbo.appendChild(texto("span", null, "Folha " + ("0" + (i + 1)).slice(-2)));
-      carimbo.appendChild(texto("span", null, t.etapas + " etapas"));
-
       var quadro = texto("span", "carta__quadro");
       quadro.appendChild(montarQuadro(t, fracao));
 
@@ -204,7 +435,6 @@
       rodape.appendChild(barra);
       rodape.appendChild(texto("span", null, pct + "%"));
 
-      a.appendChild(carimbo);
       a.appendChild(texto("span", "carta__nome", t.rotulo));
       a.appendChild(quadro);
       a.appendChild(rodape);
@@ -228,21 +458,13 @@
       });
     });
 
-    /* a vaga: o README pede trilhas novas, e a mesa tem espaço */
-    var vaga = document.createElement("a");
-    vaga.className = "vaga";
-    vaga.href = "https://github.com/masteryogo/lets-learn-together/issues/new";
-    vaga.target = "_blank";
-    vaga.rel = "noopener noreferrer";
-    vaga.setAttribute("aria-label", "Sugerir uma trilha nova");
-    vaga.appendChild(texto("span", "vaga__marca", "+"));
-    vaga.appendChild(texto("span", "vaga__texto", "DÊ a sugestão do seu proprio roadmap"));
-    cartas.appendChild(vaga);
+    montarEstojo();
   }
 
   /* ------------------------------------------------------------
-     o mascote segue o ponteiro. As posições são medidas no DOM, não
-     calculadas: a largura das cartas é clamp() e muda com a janela.
+     o mascote espera no meio e só caminha quando uma carta é
+     escolhida. As posições são medidas no DOM, não calculadas: a
+     largura das cartas é clamp() e muda com a janela.
      ------------------------------------------------------------ */
   function centros() {
     var base = mesa.getBoundingClientRect();
@@ -252,8 +474,17 @@
     });
   }
 
-  function meio() { return mesa.getBoundingClientRect().width / 2; }
+  /* a posição de descanso: o canto direito da mesa, debaixo do
+     estojo. No meio ele dividia a atenção com a grade — e, com a
+     grade rolando, ficava plantado no caminho da leitura. */
+  function descanso() {
+    /* 61 é metade da largura dele; os 80 são a folga que a caminha
+       precisa à direita para ficar centrada nele sem sair da mesa */
+    return mesa.getBoundingClientRect().width - 61 - 80;
+  }
 
+  /* o ponteiro ainda levanta a carta e vira o rosto do Obi — só não
+     o faz andar */
   function focar(i) {
     if (escolhido !== null || foco === i) return;
     foco = i;
@@ -265,12 +496,16 @@
   function escolher(i, destino) {
     escolhido = i;
     foco = i;
+    ator.setAttribute("data-andando", "sim");
     pintar();
     ator.removeAttribute("data-pulando");
     void ator.offsetWidth;          /* reinicia a animação do pulo */
     ator.setAttribute("data-pulando", "sim");
 
     var espera = semMovimento() ? 120 : 1250;
+    /* a caminhada dura o tempo da transição do `left` (0.44s); depois
+       ele chega e fica parado olhando a carta até a página trocar */
+    window.setTimeout(function () { ator.removeAttribute("data-andando"); }, 460);
     window.setTimeout(function () { window.location.href = destino; }, espera);
   }
 
@@ -300,14 +535,17 @@
         : "0 8px 18px rgba(21,20,26,0.2)";
     });
 
-    /* no colo ou pousando, a posição do Obi é do arrasto, não do foco:
-       mexer no `left` aqui o arrancaria da mão de quem o segura */
+    /* no colo ou pousando, a posição do Obi é do arrasto, não da
+       escolha: mexer no `left` aqui o arrancaria da mão de quem o
+       segura */
     if (!obi || !obi.ocupado()) {
-      var x = foco === null ? meio() : centrosX[foco];
+      /* o Obi anda atrás da carta escolhida, não da que está sob o
+         ponteiro. Com a grade em duas linhas, seguir o ponteiro só no
+         eixo X o deixaria apontando para a coluna certa e a linha
+         errada — e um mascote que corre a cada passada de mouse
+         disputa a atenção com a leitura das cartas. */
+      var x = escolhido === null ? descanso() : centrosX[escolhido];
       ator.style.left = Math.round(x - 61) + "px";
-
-      if (foco !== null && escolhido === null) ator.setAttribute("data-andando", "sim");
-      else ator.removeAttribute("data-andando");
     }
 
     cara.style.transform = foco === null ? "translateY(0)" : "translateY(-8px)";
@@ -315,33 +553,12 @@
     var t = foco === null ? null : nos[foco];
     document.getElementById("ator-svg").setAttribute("aria-label",
       t ? "Obi olhando a carta de " + t.dados.rotulo : "Obi, esperando");
-
-    document.getElementById("ficha-titulo").textContent =
-      t ? t.dados.rotulo : "Escolha um território";
-
-    document.getElementById("ficha-linha").textContent = !t
-      ? "Passe o ponteiro pelas cartas — o Obi vai junto."
-      : escolhido !== null
-        ? "Rota traçada. Abrindo o roadmap de " + t.dados.rotulo + "…"
-        : t.dados.etapas + " etapas · " + t.dados.topicos + " tópicos · " +
-          (t.feitos === 0 ? "território intocado"
-           : t.feitos >= t.dados.topicos ? "percorrida inteira"
-           : t.feitos + " marcos vencidos");
-
-    /* o aviso é para quem está decidindo; com uma carta na mira, a
-       ficha dela é que importa */
-    document.getElementById("ficha-aviso").hidden = foco !== null;
-
-    var partir = document.getElementById("ficha-partir");
-    partir.hidden = escolhido === null;
-    if (escolhido !== null) partir.href = "roadmap.html?trilha=" + nos[escolhido].id;
-    /* o botão só serve de rede: se o salto automático falhar, ele leva */
   }
 
   /* ------------------------------------------------------------ */
   montar();
 
-  /* inclinação leve e fixa por carta: mapas largados numa bancada não
+  /* inclinação leve e fixa por carta: mapas largados numa mesa não
      ficam alinhados. Fixa, e não aleatória, para não dançar a cada
      repintura. */
   [-1.4, 0.9, -0.7, 1.1].forEach(function (g, i) {
@@ -386,6 +603,75 @@
   });
 
   /* ------------------------------------------------------------
+     O olhar: os olhos acompanham o ponteiro pela mesa.
+
+     As contas são em unidades do viewBox (406x310 desenhado em
+     122px), não em pixels de tela: o transform de um elemento SVG
+     com `transform-box: fill-box` vive no sistema do desenho. Daí os
+     limites parecerem grandes — 14 unidades dão uns 4px na tela, que
+     é o quanto um olho de 13 de raio pode correr sem ficar vesgo.
+     ------------------------------------------------------------ */
+  var olhos = [].slice.call(ator.querySelectorAll(".ator__olho"));
+  var ALCANCE_X = 14;
+  var ALCANCE_Y = 9;
+  var vezOlhar = null;
+  var olharAgendado = false;
+  var ultimoEvento = null;
+
+  /* susto, tontura, cutucada e colo já mandam nos olhos pelo CSS.
+     Dois donos para o mesmo transform e o último a escrever ganha —
+     então o olhar sai de cena enquanto qualquer um deles estiver. */
+  function olhosOcupados() {
+    return ator.hasAttribute("data-reagindo") ||
+           ator.hasAttribute("data-humor") ||
+           ator.hasAttribute("data-pendurado") ||
+           ator.hasAttribute("data-voltando");
+  }
+
+  function soltarOlhar() {
+    ator.removeAttribute("data-olhando");
+    olhos.forEach(function (o) { o.style.transform = ""; });
+  }
+
+  function mirar() {
+    olharAgendado = false;
+    if (!ultimoEvento || estreito() || olhosOcupados()) return soltarOlhar();
+
+    var r = ator.getBoundingClientRect();
+    var dx = ultimoEvento.clientX - (r.left + r.width / 2);
+    /* a mira sai da altura dos olhos, não do centro do corpo: ele
+       olharia por cima de tudo se a conta partisse dos pés */
+    var dy = ultimoEvento.clientY - (r.top + r.height * 0.42);
+
+    /* a distância satura rápido: a meia tela de distância o olho já
+       está no canto, e insistir só faria o gesto parar de responder */
+    var escala = Math.min(1, Math.sqrt(dx * dx + dy * dy) / 320);
+    var ang = Math.atan2(dy, dx);
+
+    var x = Math.cos(ang) * ALCANCE_X * escala;
+    var y = Math.sin(ang) * ALCANCE_Y * escala;
+    var t = "translate(" + x.toFixed(1) + "px," + y.toFixed(1) + "px)";
+
+    ator.setAttribute("data-olhando", "sim");
+    olhos.forEach(function (o) { o.style.transform = t; });
+
+    /* parado o bastante, o olhar se desfaz e o piscar volta: um Obi
+       de olho travado no canto fica com cara de quebrado */
+    window.clearTimeout(vezOlhar);
+    vezOlhar = window.setTimeout(soltarOlhar, 2600);
+  }
+
+  document.addEventListener("pointermove", function (ev) {
+    if (ev.pointerType === "touch") return;
+    ultimoEvento = ev;
+    /* um frame por vez: pointermove dispara muito mais que isso, e
+       cada chamada custa um getBoundingClientRect */
+    if (olharAgendado) return;
+    olharAgendado = true;
+    window.requestAnimationFrame(mirar);
+  });
+
+  /* ------------------------------------------------------------
      O Obi reage a quem mexe nele — encostar, cutucar e carregar no
      colo moram no obi.js, que o roadmap também usa. O que é da mesa
      entra aqui pelas opções: aqui ele tem chão, e cutucada é
@@ -412,17 +698,18 @@
       window.clearTimeout(vezCutucadas);
       vezCutucadas = window.setTimeout(function () { cutucadas = 0; }, 1800);
 
+      /* sem a ficha, o aviso da quinta cutucada não tem onde ser
+         escrito: a tontura é a resposta inteira, como já é no
+         roadmap */
       if (cutucadas >= 5) {
         cutucadas = 0;
         obi.reagir("tonto", 1500);
-        document.getElementById("ficha-linha").textContent =
-          "O Obi ficou tonto. Dá um tempo.";
       } else {
         obi.reagir("susto", 480);
       }
     },
 
-    aoChegar: function () { pintar(); }   /* devolve a ficha ao que dizia */
+    aoChegar: function () { pintar(); }
   });
 
   pintar();
