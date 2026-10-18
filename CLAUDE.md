@@ -201,8 +201,10 @@ nisso quebra links já publicados.
 Dois lugares, e eles não são o mesmo:
 
 - `.kanban` na raiz — quadro local, fora do versionamento, não é
-  documentação. Quatro colunas: **A fazer**, **Bloqueado por BaaS**, **Em
-  análise** e **Descartado**, cada item com o motivo da decisão.
+  documentação. Cinco colunas: **A fazer**, **Bloqueado por BaaS**, **Em
+  análise**, **Descartado** e **Concluído**, cada item com o motivo da
+  decisão. Não confundir com as **raias**, que são áreas (Arquitetura,
+  Interface, Conteúdo) e viram o filtro da tela — coluna é status.
 - `/kanban` — a tela pública, com dados em `src/lib/kanban/dados.js`.
 
 Vale ler o `.kanban` antes de propor mudança grande: ideias já recusadas

@@ -10,7 +10,9 @@ export const KANBAN_COLUNAS = [
   { id: "bloqueado", rotulo: "Bloqueado por BaaS",
     nota: "Estão aprovadas na intenção e paradas pelo mesmo motivo: o estado mora só no localStorage, que aqui guarda apenas coisa refazível. O Safari apaga localStorage de site sem interação em 7 dias — e um roadmap de estudo é exatamente o site que fica duas semanas fechado." },
   { id: "analise",   rotulo: "Em análise" },
-  { id: "descartado", rotulo: "Descartado" }
+  { id: "descartado", rotulo: "Descartado" },
+  { id: "concluido",  rotulo: "Concluído",
+    nota: "O que saiu do papel. Fica no quadro porque a decisão continua valendo depois de pronta: é aqui que se confere o que foi prometido contra o que de fato existe." }
 ];
 
 export const KANBAN_RAIAS = [
@@ -34,17 +36,19 @@ export const KANBAN_CARDS = [
   {
     id: "componentes",
     titulo: "Componentes (Svelte)",
-    raia: "arquitetura", coluna: "fazer",
-    resumo: "Destrava a coluna Bloqueado por BaaS.",
+    raia: "arquitetura", coluna: "concluido",
+    resumo: "Feito em 18/10/2026. Destrava a coluna Bloqueado por BaaS.",
     blocos: [
       { tipo: "lista", itens: [
         "Leitura de dados remotos. app.js monta o DOM uma vez, a partir de globais já carregados. Dado que chega depois — do Supabase, assíncrono, e que muda quando outra aba marca um tópico — não tem para onde ir.",
         "Criar componente novo fica barato. Drawer, ficha, chip de rodapé e carta hoje são funções que concatenam string e colam no DOM."
       ] },
       { tipo: "p", texto: "Custo conhecido: quebra o contrato de ordem de carga do CLAUDE.md (s.async = false, ES5 em IIFE, sem bundler). A trilha vira import, e trilhas.js deixa de ser carregador para virar só manifesto." },
-      { tipo: "p", texto: "O site ser estático é condição de protótipo, não decisão. O alvo é Svelte na frente, Supabase como BaaS e Deno edge para o que precisa de servidor — push agendado, segredo que não pode ir para o navegador, trabalho que não é do cliente. Os cards devem ser lidos contra esse alvo: limitação que só existe hoje (file://, sem build, sem conta) não é argumento para recusar nada." }
+      { tipo: "p", texto: "O site ser estático é condição de protótipo, não decisão. O alvo é Svelte na frente, Supabase como BaaS e Deno edge para o que precisa de servidor — push agendado, segredo que não pode ir para o navegador, trabalho que não é do cliente. Os cards devem ser lidos contra esse alvo: limitação que só existe hoje (file://, sem build, sem conta) não é argumento para recusar nada." },
+      { tipo: "p", texto: "Entregue: SvelteKit com adapter-static, cinco rotas pré-renderizadas e deploy no Pages por Action. O progresso virou uma classe reativa, e é nela e no mural de notas que o Supabase entra — os dois pontos estão isolados e comentados." },
+      { tipo: "p", texto: "O que não veio junto, e vale saber antes do próximo card: o CSS continua global por tela, então a travessia entre elas é documento novo (data-sveltekit-reload). Enquanto for assim, link interno novo precisa disso e do prefixo base. Abrir por file:// deixou de funcionar." }
     ],
-    porque: "Vem antes ou junto do Supabase, não depois — senão a camada de leitura é escrita duas vezes."
+    porque: "Vinha antes ou junto do Supabase, não depois — senão a camada de leitura seria escrita duas vezes."
   },
   { id: "supabase", titulo: "Supabase DB + Auth", raia: "arquitetura", coluna: "fazer",
     resumo: "Persistência de verdade.",

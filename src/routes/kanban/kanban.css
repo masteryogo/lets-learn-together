@@ -28,6 +28,9 @@
   --col-bloqueado: #c0392b;
   --col-analise:   #b8860b;
   --col-descartado:#6b6558;
+  /* verde da mesma família dessaturada: é o único "deu certo" do quadro,
+     e precisa se distinguir do vermelho de bloqueado sem gritar */
+  --col-concluido: #1c6e51;
 
   --linha-dura:     #15141a;
   --sombra-dura:    4px 4px 0 var(--linha-dura);
