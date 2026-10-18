@@ -1245,13 +1245,59 @@ body {
    [i] ficaria sozinho ocupando a linha de um topico escondido */
 .topico-par:has(.topico[data-oculto]) { display: none; }
 
-/* durante a busca, grupos sem nenhum resultado colapsam o título */
-.mapa[data-filtrando] .grupo:not(:has(.topico:not([data-oculto]))) { display: none; }
+/* grupos sem nenhum tópico visível colapsam o título. Vale para as duas
+   razões de sumir — a busca e os pulados escondidos: um título de grupo
+   pairando sobre o nada é igualmente estranho nos dois casos. */
+.mapa[data-filtrando] .grupo:not(:has(.topico:not([data-oculto]))),
+.mapa[data-sem-pulados] .grupo:not(:has(.topico:not([data-oculto]))) { display: none; }
 
 /* e a etapa inteira some junto: sem isto a faixa continua de pé sobre
    um corpo vazio, e numa busca sem resultado nenhum sobravam cinco
    barras desmentindo a mensagem de que nada foi encontrado */
-.mapa[data-filtrando] .etapa:not(:has(.topico:not([data-oculto]))) { display: none; }
+.mapa[data-filtrando] .etapa:not(:has(.topico:not([data-oculto]))),
+.mapa[data-sem-pulados] .etapa:not(:has(.topico:not([data-oculto]))) { display: none; }
+
+/* --------------------- a janelinha dos pulados --------------------- */
+/* Fica na barra do conteúdo, ao lado da busca, porque fala do mapa como
+   a busca fala. É um interruptor, não um filtro a mais: por isso
+   aria-pressed e não um terceiro campo.
+
+   Parece o que guarda, e não um botão qualquer: o × é a mesma marca que
+   o tópico pulado carrega no mapa, e o traço riscado do rótulo é o mesmo
+   que risca o tópico. Pressionado, ela se acende — o conteúdo está fora
+   da caixa, na mesa. */
+.pulados {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--linha);
+  background: var(--fundo-elevado);
+  color: var(--texto-suave);
+  font: inherit;
+  font-size: var(--t-micro);
+  letter-spacing: var(--tracking-rotulo);
+  cursor: pointer;
+  text-decoration: line-through;
+  text-decoration-color: var(--texto-suave);
+}
+
+.pulados__marca {
+  text-decoration: none;
+  font-size: var(--t-base);
+  line-height: 1;
+}
+
+.pulados:hover { border-color: var(--texto); color: var(--texto); }
+.pulados:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: 2px; }
+
+/* aberta: o conteúdo está à vista, então o risco sai e a caixa se acende */
+.pulados[aria-pressed="true"] {
+  background: var(--roxo-forte);
+  border-color: var(--roxo-forte);
+  color: var(--tinta-roxo);
+  text-decoration: none;
+}
 
 /* ------------------------- busca vazia ------------------------- */
 /* sem moldura de propósito: numa página onde tudo é retângulo de borda

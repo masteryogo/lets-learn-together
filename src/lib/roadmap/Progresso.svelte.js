@@ -15,6 +15,7 @@ import {
   chaveProgresso,
   chaveSub,
   chaveEtapas,
+  chaveVista,
   ler,
   gravar,
 } from "$lib/progresso.js";
@@ -43,6 +44,12 @@ export class Progresso {
      bloqueado — já cai no estado certo, sem valor inicial */
   fechadas = $state({});
 
+  /* pulado sai do mapa por padrão: é o que a pessoa decidiu não fazer, e
+     mantê-lo ocupando linha é lembrar de uma decisão já tomada. Quem
+     revela é o chip, que também é o que explica a ausência — esconder
+     sem explicar faz o tópico parecer inexistente. */
+  revelarPulados = $state(false);
+
   constructor(trilha) {
     this.trilha = trilha;
   }
@@ -57,6 +64,12 @@ export class Progresso {
       {};
     this.sub = ler(chaveSub(this.trilha)) || {};
     this.fechadas = ler(chaveEtapas(this.trilha)) || {};
+    this.revelarPulados = !!(ler(chaveVista(this.trilha)) || {}).revelarPulados;
+  }
+
+  alternarPulados() {
+    this.revelarPulados = !this.revelarPulados;
+    gravar(chaveVista(this.trilha), { revelarPulados: this.revelarPulados });
   }
 
   /* ----------------------------- tópicos ----------------------------- */

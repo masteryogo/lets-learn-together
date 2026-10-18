@@ -60,9 +60,17 @@ export const KANBAN_CARDS = [
     resumo: "No canto superior direito.",
     porque: "Entrada da conta precisa de lugar fixo, fora da área que muda por trilha." },
 
-  { id: "ocultar-pulados", titulo: "Ocultar pulados", raia: "interface", coluna: "fazer",
-    resumo: "Com uma janelinha tipo lixeira que desoculta.",
-    porque: "A ficha da rota condicional argumenta que esconder sem explicar faz o tópico parecer inexistente — aqui a janelinha é justamente o que explica.",
+  { id: "ocultar-pulados", titulo: "Ocultar pulados", raia: "interface", coluna: "concluido",
+    resumo: "Feito. Pulado sai do mapa, e um chip \"× N pulados\" na barra do conteúdo revela.",
+    blocos: [
+      { tipo: "lista", itens: [
+        "Escondido por padrão, e a preferência fica salva por trilha — em roadmap:<trilha>:vista:v1, separada do progresso: é como a pessoa olha a trilha, não o que ela fez nela.",
+        "O chip só existe havendo o que esconder, e se acende quando está aberto. Riscado e com ×, ele parece o que guarda.",
+        "Grupo e etapa que esvaziam colapsam, pelo mesmo mecanismo que a busca já usava — título de grupo pairando sobre o nada é estranho nas duas situações."
+      ] },
+      { tipo: "p", texto: "Decidido no caminho: com a busca ativa, o pulado escondido continua escondido, e a contagem de resultados conta só o que está na tela. Dizer \"6 encontrados\" com dois invisíveis seria mentir sobre o que se vê — buscar \"come\" devolve 13 com o chip fechado e 14 com ele aberto." }
+    ],
+    porque: "A ficha da rota condicional argumenta que esconder sem explicar faz o tópico parecer inexistente — a janelinha é justamente o que explica, e é por isso que esconder aqui é defensável e lá não é.",
     vejaTambem: ["rota-condicional"] },
   { id: "feito-verde", titulo: "Tópico concluído fica verdinho", raia: "interface", coluna: "concluido",
     resumo: "Feito. Cor no estado feito, somada à marca ■ que já existe.",
@@ -77,9 +85,13 @@ export const KANBAN_CARDS = [
       { tipo: "p", texto: "A lixeira fica na ponta de baixo, longe do que se clica por engano, e se desabilita sozinha quando não há nada marcado — sozinha num canto, um botão que só anuncia numa região viva invisível lê como botão quebrado." }
     ],
     porque: "São controles do site, não da trilha: deixaram de disputar o topo com o conteúdo, que era o ponto." },
-  { id: "inverter-shift", titulo: "Inverter shift+clique", raia: "interface", coluna: "fazer",
-    resumo: "Trocar o gesto com shift pelo clique normal.",
-    porque: "O gesto mais usado deve ser o mais barato." },
+  { id: "inverter-shift", titulo: "Inverter shift+clique", raia: "interface", coluna: "concluido",
+    resumo: "Feito. Clique abre o detalhe; shift + clique cicla o estado.",
+    blocos: [
+      { tipo: "p", texto: "No toque nada mudou: lá não há Shift, então o toque continua ciclando e o [i] continua abrindo. É a única divergência entre mouse e dedo, e a legenda anuncia a que vale em cada aparelho — como já fazia." },
+      { tipo: "p", texto: "Saiu junto: o clique com o botão direito abria o detalhe, como atalho para quem não quisesse usar o Shift. Agora o clique simples já faz isso, e sequestrar o menu do navegador para repetir o gesto mais barato da tela não se paga." }
+    ],
+    porque: "O gesto mais usado deve ser o mais barato — e ler o detalhe é mais frequente que mudar de estado." },
 
   { id: "aba-calendario", titulo: "Aba de calendário", raia: "interface", coluna: "fazer",
     resumo: "Grade de mês no próprio site, com modelo do mês por proporção — o que o Google não faz. Layout de pé; falta o comportamento.",

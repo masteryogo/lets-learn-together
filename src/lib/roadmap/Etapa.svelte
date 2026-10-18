@@ -18,6 +18,7 @@
     progresso,
     rotuloEstado,
     dicaLer,
+    toque,
     oculto,
     aoAlternar,
     aoAbrirEtapa,
@@ -111,6 +112,7 @@
                   estado={progresso.estadoDe(topico.id)}
                   {rotuloEstado}
                   {dicaLer}
+                  {toque}
                   oculto={oculto.has(topico.id)}
                   aoCiclar={() => progresso.ciclar(topico.id)}
                   aoAbrir={() => aoAbrirTopico(topico.id)}

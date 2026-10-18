@@ -54,7 +54,7 @@
   const toque = new MediaQuery("pointer: coarse");
   const estreito = new MediaQuery("max-width: 900px");
   const dicaLer = $derived(
-    toque.current ? "toque no [i] para ler" : "shift + clique para ler"
+    toque.current ? "toque no [i] para ler" : "clique para ler"
   );
 
   let termo = $state("");
@@ -75,10 +75,17 @@
   const alvo = $derived(normalizar(termo.trim()));
   const filtrando = $derived(alvo.length > 0);
 
-  /* quem NÃO casou. Era um data-oculto escrito tópico a tópico; agora
-     é um conjunto, e cada tópico lê o seu. */
+  /* quem o mapa não mostra, por duas razões que se somam: não casou com
+     a busca, ou está pulado com o chip fechado. Um conjunto só porque o
+     efeito é o mesmo — sair do fluxo — e porque é assim que o grupo e a
+     etapa sabem quando colapsar. */
+  const pulados = $derived(
+    Object.keys(indice).filter((id) => progresso.estadoDe(id) === "pulado")
+  );
+
   const ocultos = $derived.by(() => {
     const fora = new Set();
+    if (!progresso.revelarPulados) for (const id of pulados) fora.add(id);
     if (!filtrando) return fora;
     for (const id of Object.keys(indice)) {
       const t = indice[id].topico;
@@ -88,6 +95,8 @@
     return fora;
   });
 
+  /* conta o que a busca achou E o mapa mostra: dizer "6 encontrados" com
+     dois deles escondidos por estarem pulados seria mentir sobre a tela */
   const achados = $derived(Object.keys(indice).length - ocultos.size);
 
   /* buscar desdobra o que casou: esconder o resultado atrás de uma seta
@@ -467,6 +476,26 @@
         {/if}
       </p>
 
+      <!-- a janelinha dos pulados: é ela que explica a ausência. Esconder
+           sem explicar faz o tópico parecer inexistente — o argumento é
+           da ficha da rota condicional, e vale igual aqui. Só aparece
+           havendo o que esconder. -->
+      {#if pulados.length}
+        <button
+          class="pulados"
+          type="button"
+          aria-pressed={progresso.revelarPulados}
+          title={progresso.revelarPulados
+            ? "Esconder os tópicos pulados"
+            : "Mostrar os tópicos pulados"}
+          onclick={() => progresso.alternarPulados()}
+        >
+          <span class="pulados__marca" aria-hidden="true">×</span>
+          {pulados.length}
+          {pulados.length === 1 ? "pulado" : "pulados"}
+        </button>
+      {/if}
+
       <div class="legenda">
         <div class="legenda__grupo">
           {#each data.LEGENDA as item}
@@ -476,18 +505,25 @@
             </span>
           {/each}
         </div>
+        <!-- o gesto anunciado é o gesto que o aparelho tem. No toque o
+             [i] continua sendo quem abre o detalhe: lá não há Shift. -->
         <p class="legenda__dica">
           {#if toque.current}
             <strong>Toque</strong> cicla o estado · <strong>[i]</strong> abre o detalhe
           {:else}
-            <strong>Clique</strong> cicla o estado ·
-            <strong>Shift + clique</strong> abre o detalhe
+            <strong>Clique</strong> abre o detalhe ·
+            <strong>Shift + clique</strong> cicla o estado
           {/if}
         </p>
       </div>
     </div>
 
-    <main class="mapa" data-filtrando={filtrando ? "sim" : null} aria-label="Roadmap de estudos">
+    <main
+      class="mapa"
+      data-filtrando={filtrando ? "sim" : null}
+      data-sem-pulados={!progresso.revelarPulados && pulados.length ? "sim" : null}
+      aria-label="Roadmap de estudos"
+    >
       {#each etapas as etapa (etapa.id)}
         <Etapa
           {etapa}
@@ -495,6 +531,7 @@
           {progresso}
           {rotuloEstado}
           {dicaLer}
+          toque={toque.current}
           oculto={ocultos}
           aoAlternar={() =>
             progresso.alternarEtapa(etapa.id, !progresso.etapaAberta(etapa.id))}

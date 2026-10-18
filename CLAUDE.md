@@ -77,6 +77,8 @@ acessos ficam em `src/lib/progresso.js`; o estado reativo em
 - `roadmap:<trilha>:progresso:v1` — `{ idDoTopico: estado }`
 - `roadmap:<trilha>:sub:v1` — subassuntos marcados
 - `roadmap:<trilha>:etapas:v1` — etapas **fechadas** (o padrão é aberta)
+- `roadmap:<trilha>:vista:v1` — como a trilha é olhada, não o que foi feito
+  nela; hoje só `revelarPulados`
 - `roadmap:tema:v1` — tema, comum a todas as trilhas, gravado como string
   crua porque o script inline do `app.html` o lê antes do bundle existir
 - `roadmap-ml:progresso:v1` — chave legada, de antes das trilhas; ainda lida
@@ -88,6 +90,17 @@ site funciona, só não lembra.
 Os estados ciclam em `pendente → estudando → feito → pulado`. As marcas
 `□ ► ■ ×` existem porque a Departure Mono não tem `◔` nem `✓` — e porque o
 estado não deve depender só de cor.
+
+O gesto difere por aparelho, e a legenda anuncia o que vale em cada um:
+com mouse, **clique abre o detalhe e shift + clique cicla** (o gesto mais
+usado é o mais barato); no toque, onde não há Shift, o toque cicla e o
+`[i]` abre.
+
+Tópico `pulado` sai do mapa por padrão, e quem o revela é o chip
+`× N pulados` na barra do conteúdo. Esconder só é defensável porque o chip
+explica a ausência — sem ele, o tópico pareceria inexistente, que é
+exatamente o argumento pelo qual a rota condicional vai **atenuar** em vez
+de esconder.
 
 As **notas não persistem**, de propósito: texto escrito não se refaz, e o
 Safari apaga o `localStorage` de site sem visita em 7 dias. É o primeiro

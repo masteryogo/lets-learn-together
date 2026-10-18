@@ -26,6 +26,11 @@ export function chaveEtapas(trilha) {
   return "roadmap:" + trilha + ":etapas:v1";
 }
 
+/* preferências de exibição do mapa — hoje só os pulados */
+export function chaveVista(trilha) {
+  return "roadmap:" + trilha + ":vista:v1";
+}
+
 /* tema é comum a todas as trilhas */
 export const CHAVE_TEMA = "roadmap:tema:v1";
 

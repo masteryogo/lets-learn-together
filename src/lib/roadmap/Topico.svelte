@@ -5,15 +5,30 @@
      HTML inválido. Os dois são irmãos num invólucro, que passa a ser
      o item da lista no lugar do botão.
 
-     Clique cicla o estado; shift + clique e o botão direito abrem o
-     detalhe. O botão direito é atalho para quem prefere não usar o
-     Shift.
+     O gesto mais usado é o mais barato, e ler o detalhe é mais
+     frequente que mudar de estado: **clique abre o detalhe, shift +
+     clique cicla**. No toque não há Shift, então lá o toque continua
+     ciclando e o [i] continua abrindo — é a única divergência entre
+     os dois aparelhos, e a legenda anuncia a que vale em cada um.
+
+     O clique com o botão direito abria o detalhe, como atalho para
+     quem não quisesse usar o Shift. Saiu junto com a inversão: agora
+     o clique simples já faz isso, e sequestrar o menu do navegador
+     para repetir o gesto mais barato da tela não se paga.
      ============================================================ -->
 <script>
   import { MARCAS } from "./Progresso.svelte.js";
 
-  let { topico, estado, rotuloEstado, dicaLer, oculto, aoCiclar, aoAbrir } =
-    $props();
+  let {
+    topico,
+    estado,
+    rotuloEstado,
+    dicaLer,
+    toque,
+    oculto,
+    aoCiclar,
+    aoAbrir,
+  } = $props();
 
   const descricao = $derived(topico.titulo + " — " + rotuloEstado(estado));
 </script>
@@ -29,10 +44,9 @@
     data-oculto={oculto ? "sim" : null}
     aria-label={descricao}
     title="{descricao} ({dicaLer})"
-    onclick={(ev) => (ev.shiftKey ? aoAbrir() : aoCiclar())}
-    oncontextmenu={(ev) => {
-      ev.preventDefault();
-      aoAbrir();
+    onclick={(ev) => {
+      if (toque) return aoCiclar();
+      return ev.shiftKey ? aoCiclar() : aoAbrir();
     }}
   >
     <span class="topico__marca">{MARCAS[estado]}</span>{topico.titulo}
