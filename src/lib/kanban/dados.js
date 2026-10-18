@@ -64,12 +64,19 @@ export const KANBAN_CARDS = [
     resumo: "Com uma janelinha tipo lixeira que desoculta.",
     porque: "A ficha da rota condicional argumenta que esconder sem explicar faz o tópico parecer inexistente — aqui a janelinha é justamente o que explica.",
     vejaTambem: ["rota-condicional"] },
-  { id: "feito-verde", titulo: "Tópico concluído fica verdinho", raia: "interface", coluna: "fazer",
-    resumo: "Cor no estado feito, somada à marca ■ que já existe.",
-    porque: "A cor entra como reforço, não como único sinal — o estado continua legível sem ela." },
-  { id: "mover-tema", titulo: "Mover tema e reset", raia: "interface", coluna: "fazer",
-    resumo: "Para o canto inferior esquerdo da sidebar.",
-    porque: "São controles do site, não da trilha: não disputam o topo com o conteúdo." },
+  { id: "feito-verde", titulo: "Tópico concluído fica verdinho", raia: "interface", coluna: "concluido",
+    resumo: "Feito. Cor no estado feito, somada à marca ■ que já existe.",
+    blocos: [
+      { tipo: "p", texto: "A marca do tópico, a do índice e o estado no painel passam a --verde-forte quando o tópico está feito. Só \"feito\" ganha cor: é o tom que passa em contraste nos dois temas a 11px." }
+    ],
+    porque: "A cor entrou como reforço, não como único sinal — a marca (□ ► ■ ×) continua distinguindo os quatro estados sem depender dela." },
+  { id: "mover-tema", titulo: "Mover tema e reset", raia: "interface", coluna: "concluido",
+    resumo: "Feito, em outro lugar: numa coluna própria, não no pé da sidebar.",
+    blocos: [
+      { tipo: "p", texto: "Resolvido diferente do que o card pedia, e vale registrar: em vez do canto inferior da sidebar, os botões foram para o rail — uma coluna só de ações da página, antes da lateral e do mapa. A ordem lá é de consequência crescente: abrir o índice, sair da página, mudar o tema, apagar o progresso." },
+      { tipo: "p", texto: "A lixeira fica na ponta de baixo, longe do que se clica por engano, e se desabilita sozinha quando não há nada marcado — sozinha num canto, um botão que só anuncia numa região viva invisível lê como botão quebrado." }
+    ],
+    porque: "São controles do site, não da trilha: deixaram de disputar o topo com o conteúdo, que era o ponto." },
   { id: "inverter-shift", titulo: "Inverter shift+clique", raia: "interface", coluna: "fazer",
     resumo: "Trocar o gesto com shift pelo clique normal.",
     porque: "O gesto mais usado deve ser o mais barato." },
