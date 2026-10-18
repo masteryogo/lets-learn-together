@@ -7,5 +7,4 @@
 node_modules/
 .svelte-kit/
 build/
-# saída do build do SvelteKit, não fonte
 page.html

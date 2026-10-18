@@ -1,0 +1,23 @@
+/* ============================================================
+   O que é comum às duas telas — e só isso.
+
+   Paleta não entra aqui de propósito: a mesa e o roadmap declaram
+   tokens de mesmo nome com valores diferentes (lá dentro amarelo e
+   roxo significam prioridade; na mesa não significam nada), e juntá-los
+   num :root só faria uma tela herdar o vocabulário da outra. Cada rota
+   importa a sua folha.
+   ============================================================ */
+
+/* swap: o texto aparece na fonte do sistema e troca ao carregar, em vez
+   de a página nascer em branco. A fonte é servida de static/, então o
+   caminho é absoluto a partir da raiz do site. */
+@font-face {
+  font-family: "Departure Mono";
+  src: url("/fonts/departure-mono-propo.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
