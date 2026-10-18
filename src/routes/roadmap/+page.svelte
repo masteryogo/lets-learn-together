@@ -12,6 +12,7 @@
      sanfona crescer) e o arrasto do painel, que vive no Drawer.
      ============================================================ -->
 <script>
+  import { base } from "$app/paths";
   import { MediaQuery } from "svelte/reactivity";
   import { goto } from "$app/navigation";
 
@@ -195,7 +196,7 @@
   }
 
   function trocarTrilha(ev) {
-    goto("/roadmap?trilha=" + ev.currentTarget.value);
+    goto(`${base}/roadmap?trilha=${ev.currentTarget.value}`);
   }
 
   function zerar() {
@@ -287,7 +288,7 @@
          escondido no mascote, e a saída precisa de um lugar próprio. -->
     <a
       class="botao botao--icone"
-      href="/"
+      href="{base}/"
       data-sveltekit-reload
       title="Voltar para a escolha de trilha"
       aria-label="Voltar para a escolha de trilha"

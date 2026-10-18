@@ -13,6 +13,7 @@
      solto por cima da mesa.
      ============================================================ -->
 <script>
+  import { base } from "$app/paths";
   import Peca from "./Peca.svelte";
   import Mes from "./desenhos/Mes.svelte";
   import Mural from "./desenhos/Mural.svelte";
@@ -21,7 +22,7 @@
   const PECAS = [
     {
       id: "agenda",
-      href: "/calendario",
+      href: `${base}/calendario`,
       nome: "Calendário",
       rodape: "Planeje o mês",
       rotulo: "Calendário de estudos, planejar o mês entre as trilhas",
@@ -29,7 +30,7 @@
     },
     {
       id: "notas",
-      href: "/notas",
+      href: `${base}/notas`,
       nome: "Notas",
       rodape: "Escreva o que aprendeu",
       rotulo: "Mural de notas, um por trilha",

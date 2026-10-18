@@ -1,0 +1,63 @@
+# Publica o site no GitHub Pages a cada push na main.
+#
+# Antes da migração o Pages servia a branch direto, porque o repositório
+# era o site. Agora há um build, e build não se versiona — daí a Action.
+name: Publicar no GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # para republicar sem um commit novo
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# uma publicação por vez; se chegar outra, a fila espera em vez de
+# atropelar — mas não cancela a que já está no ar
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # devolve o caminho onde o site será servido (/lets-learn-together),
+      # em vez de deixá-lo escrito à mão em dois lugares
+      - id: pages
+        uses: actions/configure-pages@v5
+
+      # ci e não install: respeita o package-lock e falha se ele estiver
+      # fora de sincronia com o package.json
+      - run: npm ci
+
+      - name: Construir
+        # o site não mora na raiz do domínio, e sim em
+        # /lets-learn-together/ — é daqui que sai o kit.paths.base
+        env:
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build
+
+  publicar:
+    needs: construir
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

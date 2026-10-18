@@ -13,6 +13,7 @@
      foco volta para o card que começou tudo, não para o último lido.
      ============================================================ -->
 <script>
+  import { base } from "$app/paths";
   import {
     KANBAN_COLUNAS,
     KANBAN_RAIAS,
@@ -112,7 +113,7 @@
 
 <header class="topo">
   <div class="topo__linha">
-    <a class="botao" href="/" data-sveltekit-reload>← Trilhas</a>
+    <a class="botao" href="{base}/" data-sveltekit-reload>← Trilhas</a>
     <h1 class="marca">Quadro de trabalho</h1>
   </div>
   <p class="topo__nota">
