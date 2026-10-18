@@ -578,10 +578,21 @@ body {
 :root[data-tema="escuro"] .botao .icone-sol { display: block; }
 :root[data-tema="escuro"] .botao .icone-lua { display: none; }
 
+/* --------------------------- busca --------------------------- */
+/* Mora na lateral, com o índice: procurar e achar são a mesma tarefa, e
+   o mapa é para ler. Fica na moldura fixa, acima da parte que rola —
+   campo que sobe junto com o resultado é campo que se perde. */
+.busca-caixa {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0 var(--pad-painel) 0.85rem;
+}
+
 .busca {
   font: inherit;
   font-size: var(--t-base);
-  width: 12rem;
+  width: 100%;
   padding: 0.35rem 0.6rem;
   background: var(--fundo);
   color: var(--texto);
@@ -623,6 +634,8 @@ body {
 /* busca e legenda falam do mapa, então moram com o mapa. A folga à
    direita é do Obi, que dorme naquela quina: sem ela a legenda ia
    parar debaixo dele. */
+/* sobrou a legenda e a janelinha dos pulados: como ler o mapa, e o que
+   está escondido dele. O respiro à direita é do Obi, que dorme na quina. */
 .conteudo__barra {
   display: flex;
   flex-wrap: wrap;
@@ -631,8 +644,6 @@ body {
   margin-bottom: 1.5rem;
   padding-right: 8rem;
 }
-
-.conteudo__barra .busca { width: min(18rem, 100%); }
 
 .busca__contagem {
   margin: 0;

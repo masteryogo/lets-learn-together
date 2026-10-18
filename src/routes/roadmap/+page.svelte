@@ -431,6 +431,29 @@
       </div>
     </div>
 
+    <!-- a busca mora com o índice porque é a mesma tarefa: achar. Fica na
+         moldura fixa da lateral, acima da parte que rola — campo de busca
+         que sobe junto com o resultado é campo que se perde. -->
+    <div class="busca-caixa">
+      <input
+        id="busca"
+        class="busca"
+        type="search"
+        placeholder="Buscar tópico…"
+        aria-label="Buscar tópico"
+        autocomplete="off"
+        value={termo}
+        oninput={(ev) => definirTermo(ev.currentTarget.value)}
+      />
+      <p class="busca__contagem" role="status" aria-live="polite">
+        {#if filtrando}
+          {achados === 0
+            ? "Nenhum tópico encontrado"
+            : achados + (achados === 1 ? " tópico encontrado" : " tópicos encontrados")}
+        {/if}
+      </p>
+    </div>
+
     <Indice
       {etapas}
       {progresso}
@@ -456,26 +479,10 @@
          sticky só volta a ser preciso quando alguém o arrasta. -->
     <Obi variante="ninho" {controle} bind:elemento={ninho} />
 
-    <!-- busca e legenda falam do mapa, então moram com o mapa -->
+    <!-- a legenda fala de como o mapa se lê, então mora com o mapa. A
+         busca saiu daqui: procurar é trabalho do índice, e ela foi
+         para a lateral, logo acima dele. -->
     <div class="conteudo__barra">
-      <input
-        id="busca"
-        class="busca"
-        type="search"
-        placeholder="Buscar tópico…"
-        aria-label="Buscar tópico"
-        autocomplete="off"
-        value={termo}
-        oninput={(ev) => definirTermo(ev.currentTarget.value)}
-      />
-      <p class="busca__contagem" role="status" aria-live="polite">
-        {#if filtrando}
-          {achados === 0
-            ? "Nenhum tópico encontrado"
-            : achados + (achados === 1 ? " tópico encontrado" : " tópicos encontrados")}
-        {/if}
-      </p>
-
       <!-- a janelinha dos pulados: é ela que explica a ausência. Esconder
            sem explicar faz o tópico parecer inexistente — o argumento é
            da ficha da rota condicional, e vale igual aqui. Só aparece
