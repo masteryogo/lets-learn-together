@@ -1,0 +1,4 @@
+Sem este arquivo o GitHub Pages passa o site pelo Jekyll, que ignora
+pastas começadas por _ — e o SvelteKit publica tudo em _app/. O site
+subiria sem JavaScript nenhum, com o HTML pré-renderizado e nada mais.
+Precisa existir; o conteúdo é irrelevante.

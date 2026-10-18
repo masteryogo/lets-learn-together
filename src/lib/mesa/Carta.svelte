@@ -12,6 +12,7 @@
      a cada repintura.
      ============================================================ -->
 <script>
+  import { base } from "$app/paths";
   import QuadroRota from "./QuadroRota.svelte";
 
   let {
@@ -49,7 +50,7 @@
 <a
   class="carta"
   class:carta--aberta={aberta}
-  href="/roadmap?trilha={trilha}"
+  href="{base}/roadmap?trilha={trilha}"
   data-sveltekit-reload
   style:--rota={dados.cor || null}
   style:transform="translateY({y}px) rotate({inclinacao}deg) scale({escala})"

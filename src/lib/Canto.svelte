@@ -7,6 +7,7 @@
      só no projeto.
      ============================================================ -->
 <script>
+  import { base } from "$app/paths";
   import { alternarTema } from "$lib/tema.js";
 </script>
 
@@ -15,7 +16,7 @@
        global, que não pode dividir documento com esta -->
   <a
     class="botao botao--icone"
-    href="/"
+    href="{base}/"
     data-sveltekit-reload
     title="Voltar para a escolha de trilha"
     aria-label="Voltar para a escolha de trilha"

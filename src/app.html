@@ -30,9 +30,15 @@
        publicados. */
     (function () {
       var p = location.pathname;
-      if (p !== "/" && p !== "/index.html") return;
+      /* só na entrada: a raiz do site, com ou sem index.html. Serve
+         tanto em / quanto em /lets-learn-together/, que é onde o
+         GitHub Pages publica — por isso a conta é feita em cima do
+         próprio pathname, e não com um caminho absoluto escrito aqui,
+         que este script não tem como saber. */
+      if (!/(^|\/)(index\.html)?$/.test(p)) return;
       var achado = /[?&]trilha=([\w-]+)/.exec(location.search);
-      if (achado) location.replace("/roadmap?trilha=" + achado[1]);
+      if (!achado) return;
+      location.replace(p.replace(/index\.html$/, "") + "roadmap?trilha=" + achado[1]);
     })();
   </script>
   %sveltekit.head%

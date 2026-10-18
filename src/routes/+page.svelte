@@ -17,6 +17,7 @@
      reflow.
      ============================================================ -->
 <script>
+  import { base } from "$app/paths";
   import { MediaQuery } from "svelte/reactivity";
 
   import { TRILHAS } from "$lib/trilhas.js";
@@ -200,7 +201,7 @@
     /* documento novo, e não goto: a folha de estilo do roadmap é global
        e colidiria com a da mesa se as duas vivessem na mesma página */
     setTimeout(
-      () => (location.href = "/roadmap?trilha=" + trilhas[i][0]),
+      () => (location.href = `${base}/roadmap?trilha=${trilhas[i][0]}`),
       semMovimento() ? 120 : 1250
     );
   }
@@ -307,7 +308,7 @@
          destaque continua só no Contribuir -->
     <a
       class="botao botao--destaque"
-      href="/kanban"
+      href="{base}/kanban"
       data-sveltekit-reload
       target="_blank"
       rel="noopener noreferrer">Contribuir</a

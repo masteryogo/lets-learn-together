@@ -11,6 +11,7 @@
      agora é o roteador, e o botão de voltar funciona de graça.
      ============================================================ -->
 <script>
+  import { base } from "$app/paths";
   import { MediaQuery } from "svelte/reactivity";
   import { page } from "$app/state";
   import { goto } from "$app/navigation";
@@ -74,7 +75,7 @@
            ninguém escrever uma regra para ela -->
       <a
         class="filtro__aba"
-        href="/notas?trilha={id}"
+        href="{base}/notas?trilha={id}"
         data-trilha={id}
         style:--trilha-cor={t.cor || null}
         aria-current={id === atual ? "page" : undefined}
@@ -85,7 +86,7 @@
             return;
           }
           ev.preventDefault();
-          goto("/notas?trilha=" + id);
+          goto(`${base}/notas?trilha=${id}`);
         }}
       >
         {t.rotulo}

@@ -13,6 +13,7 @@
      abre o <dialog>, porque nunca houve quem o abrisse.
      ============================================================ -->
 <script>
+  import { base } from "$app/paths";
   import Canto from "$lib/Canto.svelte";
   import "$lib/estilos/base.css";
   import "./calendario.css";
@@ -41,10 +42,10 @@
          (/calendario?trilha=ml), a aba daquela trilha nasce ativa
          — mas "Todas" fica ao lado, visível, a um clique. -->
     <nav class="filtro" aria-label="Filtrar por trilha">
-      <a class="filtro__aba" href="/calendario" aria-current="page">Todas</a>
-      <a class="filtro__aba" href="/calendario?trilha=ml" data-trilha="ml" style="--trilha-cor: var(--trilha-ml)">Machine Learning</a>
-      <a class="filtro__aba" href="/calendario?trilha=cv" data-trilha="cv" style="--trilha-cor: var(--trilha-cv)">OpenCV</a>
-      <a class="filtro__aba" href="/calendario?trilha=pr" data-trilha="pr" style="--trilha-cor: var(--trilha-pr)">Projetos</a>
+      <a class="filtro__aba" href="{base}/calendario" aria-current="page">Todas</a>
+      <a class="filtro__aba" href="{base}/calendario?trilha=ml" data-trilha="ml" style="--trilha-cor: var(--trilha-ml)">Machine Learning</a>
+      <a class="filtro__aba" href="{base}/calendario?trilha=cv" data-trilha="cv" style="--trilha-cor: var(--trilha-cv)">OpenCV</a>
+      <a class="filtro__aba" href="{base}/calendario?trilha=pr" data-trilha="pr" style="--trilha-cor: var(--trilha-pr)">Projetos</a>
     </nav>
   </header>
 
