@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="%sveltekit.assets%/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="192x192"
+        href="%sveltekit.assets%/logo/icon-192.png">
+  <link rel="apple-touch-icon" href="%sveltekit.assets%/logo/apple-touch-icon.png">
+  <script>
+    /* o tema vai no <html> antes de qualquer pintura: lê-lo só depois
+       da hidratação faria a página nascer clara e piscar para escura.
+       Guardado como string crua, o mesmo formato de antes da migração —
+       quem já tem o tema salvo não o perde. */
+    (function () {
+      var tema;
+      try { tema = localStorage.getItem("roadmap:tema:v1"); } catch (e) {}
+      if (!tema) {
+        tema = window.matchMedia &&
+               window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "escuro" : "claro";
+      }
+      document.documentElement.setAttribute("data-tema", tema);
+    })();
+
+    /* index.html?trilha=cv ainda circula: aponta para o roadmap, não
+       para a mesa. Vai antes de qualquer desenho, para não piscar a
+       tela de escolha no caminho — era um script inline no index.html,
+       e mudou de casa sem mudar de efeito. Mexer nisto quebra links já
+       publicados. */
+    (function () {
+      var p = location.pathname;
+      if (p !== "/" && p !== "/index.html") return;
+      var achado = /[?&]trilha=([\w-]+)/.exec(location.search);
+      if (achado) location.replace("/roadmap?trilha=" + achado[1]);
+    })();
+  </script>
+  %sveltekit.head%
+</head>
+<!-- sem data-sveltekit-preload-data: cada tela tem a sua folha de estilo
+     global, e as duas definem body, :root, .botao e .rodape. Pré-carregar
+     uma rota no hover injeta o CSS dela no documento atual — e folha
+     injetada pelo Vite não é removida depois. Era isso que pintava a mesa
+     de preto ao passar o ponteiro por uma carta.
+
+     Enquanto o CSS for global por tela, a travessia entre elas é um
+     documento novo (data-sveltekit-reload nos links), como já era antes
+     da migração. O dia em que cada componente levar o próprio estilo,
+     isto some junto com o problema. -->
+<body>
+  <div style="display: contents">%sveltekit.body%</div>
+</body>
+</html>

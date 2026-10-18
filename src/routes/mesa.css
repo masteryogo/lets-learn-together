@@ -1,0 +1,810 @@
+/* ============================================================
+   Página de entrada — a mesa de cartas
+
+   Paleta própria, e não a do roadmap: lá dentro amarelo, roxo e
+   verde significam prioridade e estado, e não podem significar
+   "trilha" aqui. O que distingue uma carta da outra é o traçado
+   da rota, que é dado de verdade.
+
+   A rota também tem cor própria por trilha, declarada no manifesto
+   (`cor`) e aplicada como --rota na própria carta. Não contradiz o
+   parágrafo acima: quem distingue continua sendo a rota, e a cor
+   anda com ela — por isso o traço, os marcos e a barra do rodapé
+   viram juntos, sem nenhum deles saber de trilha. Um tom dessaturado,
+   de carta náutica: a mesa é de papel, não é um painel de controle.
+   ============================================================ */
+
+/* @font-face e o reset moram em src/app.css: valem para as duas telas */
+
+:root {
+  --tampo:      #b9bfa0;
+  --papel:      #faf8f2;
+  --borda:      #b9b0a0;
+  --regua:      #ddd5c6;
+  --malha:      #cddbe4;
+  --relevo:     #cdbfa4;
+  --tinta:      #2b3a45;
+  --tinta-fraca:#6b6558;
+  /* o tampo oliva é bem mais escuro que o bege anterior, e o
+     --tinta-fraca (pensado para o papel claro da carta) caía para
+     3:1 em cima dele. Quem escreve ou risca sobre o tampo usa estes;
+     quem escreve sobre o papel continua no --tinta-fraca. */
+  --tinta-tampo:  #3f4636;
+  --borda-tampo:  #5e6448;
+  /* cor padrão da rota; cada carta redefine a sua, vinda do manifesto */
+  --rota:       #2d6a8a;
+  --alfinete:   #c0392b;
+  --roxo:       #7c5cf0;
+  --amarelo:    #f5c518;
+  /* só a chama dos propulsores do Obi usa este: é o único laranja da
+     mesa, e é de propósito — fogo não se confunde com nada daqui */
+  --laranja:    #f0802a;
+  /* tinta sobre bloco sólido, como no roadmap: branca no roxo (que é
+     escuro) e escura no amarelo (que é claro) */
+  --tinta-roxo:   #ffffff;
+  --tinta-bloco:  #15141a;
+  --linha-dura:   #15141a;
+  /* a caminha do Obi: tons do tampo em degraus, porque aqui a
+     profundidade é contada por valor e não por sombra — o aro de
+     trás mais escuro, o da frente mais claro, a almofada no meio */
+  --cama-aro:        #7b8264;
+  --cama-aro-lado:   #878e6e;
+  --cama-aro-frente: #939a78;
+  /* a almofada vai para o outro lado do tampo, mais clara: é a
+     inversão que a faz ler como tecido posto sobre a mesa. Enquanto
+     tudo era um degrau mais escuro que o tampo, a cama sumia. */
+  --cama-almofada:   #ccd2b4;
+  --cama-chapa:      #dfe3cb;
+  --cama-costura:    #6a7056;
+  --sombra-dura:    4px 4px 0 var(--linha-dura);
+  --sombra-dura-sm: 2px 2px 0 var(--linha-dura);
+
+  --mono: "Departure Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+
+body {
+  margin: 0;
+  /* altura travada, não mínima: o rodapé é pé de página fixo, e quem
+     rola é a grade de cartas lá dentro. Com min-height o body crescia
+     junto com as trilhas e empurrava o rodapé para fora da tela. */
+  height: 100dvh;
+  overflow: hidden;
+  padding: clamp(22px, 3vh, 44px) clamp(16px, 2.4vw, 32px);
+  /* luz caindo de cima no tampo: a queda nas bordas é o que dá
+     profundidade sem virar lavagem decorativa */
+  background: radial-gradient(130% 92% at 50% 4%,
+              #c4caac 0%, var(--tampo) 46%, #a3a98b 100%);
+  color: #15141a;
+  font-family: var(--mono);
+  font-size: 13.75px;
+  line-height: 1.6;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+}
+
+.marca {
+  margin: 0;
+  flex: none;
+  text-align: center;
+  font-size: clamp(21px, 3.4vw, 34px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ----------------------------- mesa ----------------------------- */
+.mesa {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: clamp(16px, 3vh, 40px);
+  /* o mascote não mora mais no pé da mesa: a faixa que era dele vira
+     altura de grade, que é o que falta quando há muitas trilhas */
+  padding-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  /* o tampo em cima, o Obi (absoluto) na frente. (Era `space-between`
+     quando a mesa tinha um filho só no fluxo — com a grade crescendo
+     para baixo, isso empurraria tudo contra o rodapé.) */
+  justify-content: flex-start;
+}
+
+/* ------------------------- o tampo ------------------------- */
+/* duas colunas: a grade de trilhas, que cresce para baixo, e a
+   estojo, que não cresce. Era isso que faltava — enquanto as
+   peças do estojo eram as últimas da fila, a posição delas dependia de
+   quantas trilhas existiam. */
+.tampo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(18px, 2.6vw, 44px);
+  /* a coluna da esquerda rola; para isso o tampo precisa caber na
+     mesa em vez de esticar com a grade */
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+/* ------------------------ o estojo ------------------------ */
+/* a tampa: o estojo fechado em cima da mesa. É um botão inteiro, e
+   não uma prateleira com itens clicáveis — alvo único, como a pasta
+   de aplicativos que ele imita. */
+.estojo {
+  flex: 0 0 auto;
+  width: clamp(150px, 13vw, 196px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  /* o recorte de feltro sob o papel: encosto, não moldura. Tracejado
+     porque é marcação de área da mesa, e não mais uma folha. */
+  padding: 14px 16px 16px;
+  border: 1px dashed var(--borda);
+  background: rgba(21, 20, 26, 0.045);
+  transition: transform 0.16s cubic-bezier(0.2, 0.9, 0.25, 1),
+              box-shadow 0.16s, background 0.16s;
+}
+
+/* encostar levanta a tampa um fio — o gesto de quem vai abrir */
+.estojo:hover,
+.estojo:focus-visible {
+  transform: translateY(-3px);
+  background: rgba(21, 20, 26, 0.075);
+  box-shadow: 0 8px 16px rgba(21, 20, 26, 0.16);
+}
+
+.estojo:focus-visible { outline: 3px solid var(--roxo); outline-offset: 4px; }
+.estojo:active { transform: translateY(-1px); }
+
+/* as miniaturas: o que o estojo guarda, visto de cima e de longe.
+   São desenho, não botões — quem decide o que abrir decide dentro. */
+.estojo__miniaturas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.estojo__mini {
+  display: block;
+  padding: 5px;
+  background: var(--papel);
+  border: 1px solid var(--borda);
+  /* cada miniatura tomba para o lado da peça que ela representa,
+     mas com um terço do ângulo: em caixa pequena a torção cheia
+     comeria o canto do desenho */
+  transform: rotate(calc(var(--torcao, 0deg) * 0.35));
+}
+
+.estojo__mini svg { display: block; width: 100%; height: auto; }
+
+/* a palavra que promete o clique: miúda, no pé, como o verso de uma
+   carta de baralho */
+.estojo__abrir {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--tinta-fraca);
+}
+
+.estojo:hover .estojo__abrir,
+.estojo:focus-visible .estojo__abrir { color: #15141a; }
+
+.estojo__etiqueta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 0 10px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #15141a;
+}
+
+/* o escopo vem junto do título do grupo, e não repetido em cada
+   carta: dito uma vez, vale para as duas */
+.estojo__etiqueta span {
+  color: var(--tinta-fraca);
+  letter-spacing: 0.08em;
+}
+
+
+/* ------------------------ a grade ------------------------- */
+/* três por linha: mais do que isso e a carta fica estreita demais
+   para a rota caber; menos, e a mesa fica vazia. A grade é o que
+   permite a quarta trilha descer em vez de espremer as outras. */
+.cartas {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: clamp(14px, 2vw, 32px);
+  padding-top: 6px;
+  /* a largura da fileira antiga vira a largura da grade inteira,
+     para a carta no clamp() de sempre */
+  max-width: calc(404px * 3 + 32px * 2);
+  flex: 1 1 auto;
+  /* a única área rolável da página. O estojo é irmão daqui, então
+     fica parado por mais trilhas que deçam. */
+  min-height: 0;
+  align-self: stretch;
+  overflow-y: auto;
+  /* só na vertical: a grade já cabe na largura, e um trilho deitado
+     sob as cartas seria ruído puro */
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  /* folga embaixo: a última fileira não encosta na borda do corte */
+  padding-bottom: 8px;
+  /* um trilho fino no tom do tampo: existe para dizer que há mais
+     cartas abaixo, não para ser olhado. Sem o trilho a grade cortada
+     no meio de uma fileira era a única pista de que havia mais. */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(94, 100, 72, 0.3) transparent;
+}
+
+/* o mesmo no WebKit, que ignora as duas de cima */
+.cartas::-webkit-scrollbar { width: 6px; }
+.cartas::-webkit-scrollbar:horizontal { height: 0; }
+.cartas::-webkit-scrollbar-track { background: transparent; }
+
+.cartas::-webkit-scrollbar-thumb {
+  /* --raio: 0 vale aqui também: pixel não tem curva */
+  background: rgba(94, 100, 72, 0.3);
+}
+
+.cartas:hover::-webkit-scrollbar-thumb { background: rgba(94, 100, 72, 0.5); }
+
+/* dentro da grade quem dita a largura é a coluna, não a carta */
+.cartas > * { width: auto; }
+
+
+/* ---------------------- uma folha de carta ---------------------- */
+.carta {
+  position: relative;
+  width: clamp(290px, 25vw, 404px);
+  text-decoration: none;
+  color: #15141a;
+  background: var(--papel);
+  border: 1px solid var(--borda);
+  box-shadow: 0 8px 18px rgba(21, 20, 26, 0.2);
+  transition: transform 0.36s cubic-bezier(0.2, 0.9, 0.25, 1),
+              opacity 0.28s, box-shadow 0.28s;
+}
+
+/* o papel não é liso: fibra fina na diagonal */
+.carta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(32deg,
+              rgba(0, 0, 0, 0.018) 0 2px, transparent 2px 5px);
+}
+
+/* o vinco de quem guardou o mapa dobrado no bolso */
+.carta::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 14px;
+  margin-left: -7px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(21, 20, 26, 0.07) 45%,
+              rgba(255, 255, 255, 0.7) 55%, transparent);
+}
+
+.carta:focus-visible { outline: 3px solid var(--roxo); outline-offset: 4px; }
+
+/* a faixa sólida sobrou só para a peça: é ela que diz, de
+   longe, que aquela folha não é uma trilha e sim algo do sistema */
+.carta__carimbo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  background: var(--rota);
+  color: #eef3f5;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* sem a faixa, a trilha ainda precisa dizer a sua cor mesmo zerada:
+   um friso no topo do papel, no lugar do bloco que saiu */
+.carta:not(.carta--peca) { border-top: 4px solid var(--rota); }
+
+.carta:not(.carta--peca) .carta__nome { padding-top: 18px; }
+
+.carta__nome {
+  display: block;
+  padding: 14px 14px 6px;
+  font-size: clamp(17px, 1.5vw, 24px);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.15;
+}
+
+/* a malha é fundo CSS; o SVG por cima só leva relevo e rota */
+.carta__quadro {
+  display: block;
+  position: relative;
+  background-image:
+    repeating-linear-gradient(0deg,  var(--malha) 0 1px, transparent 1px 30px),
+    repeating-linear-gradient(90deg, var(--malha) 0 1px, transparent 1px 30px);
+}
+
+.carta__quadro svg { display: block; width: 100%; height: auto; }
+
+.carta__rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 13px 12px;
+  border-top: 1px solid var(--regua);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tinta-fraca);
+}
+
+.carta__barra {
+  flex-grow: 1;
+  height: 7px;
+  margin: 0 4px;
+  background: #e2dccd;
+  border: 1px solid var(--borda);
+  display: flex;
+}
+
+.carta__barra span { display: block; height: 100%; background: var(--rota); }
+
+/* escolher a carta traça a rota inteira, do primeiro ao último marco */
+.carta--aberta { z-index: 4; }
+.carta--aberta .carta__rota-cheia { animation: tracar 1.15s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+@keyframes tracar { to { stroke-dashoffset: 0; } }
+
+/* ----------------------- o estojo aberto ----------------------- */
+/* a pasta de aplicativos: a mesa escurece, o estojo cresce do canto
+   onde estava e as peças aparecem em tamanho de carta. O <dialog>
+   nativo entrega foco preso, Esc e véu próprio; o resto é desenho. */
+.aberto {
+  width: min(560px, calc(100vw - 2rem));
+  max-height: 90dvh;
+  overflow: auto;
+  padding: 0;
+  border: 1px solid var(--borda);
+  border-radius: 0;
+  background: var(--papel);
+  color: #15141a;
+  box-shadow: 0 24px 50px rgba(21, 20, 26, 0.38);
+}
+
+/* o véu é escuro e quente, da cor do tampo: a mesa continua embaixo,
+   só apagada */
+.aberto::backdrop { background: rgba(21, 20, 26, 0.55); }
+
+/* abre crescendo do canto direito, que é de onde a tampa saiu. Sem
+   FLIP nem medição: a origem no canto já conta a história certa. */
+.aberto[open] { animation: abrir-estojo 0.2s cubic-bezier(0.2, 0.9, 0.25, 1); }
+
+@keyframes abrir-estojo {
+  from { opacity: 0; transform: scale(0.9) translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.aberto__topo {
+  position: relative;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--regua);
+}
+
+.aberto__titulo {
+  margin: 0;
+  font-size: 15px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.aberto__nota {
+  margin: 3px 0 0;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tinta-fraca);
+}
+
+/* o × no canto, e não um botão largo: fechar é saída, não ação */
+.aberto__fechar {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1;
+  color: #15141a;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.aberto__fechar:hover { border-color: var(--borda); }
+.aberto__fechar:focus-visible { outline: 3px solid var(--roxo); outline-offset: 2px; }
+
+/* as peças em tamanho de carta: é para isso que o estojo abriu */
+.aberto__itens {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 18px;
+  padding: 18px;
+}
+
+/* dentro do estojo aberto as peças deitam retas e ficam maiores: o
+   alfinete e a torção eram para explicar que elas não eram trilhas,
+   e aqui ninguém confunde — não há trilha nenhuma por perto */
+.aberto .carta--peca {
+  width: auto;
+  margin: 0;
+  align-self: stretch;
+  --torcao: 0deg;
+}
+
+.aberto .carta--peca::before { display: none; }
+
+/* --------------------- as peças do estojo --------------------- */
+/* mesmo papel das folhas de levantamento, menores e tortas: o que as
+   separa não é mais a cor nem o rótulo, é estarem noutro lugar da
+   mesa — o agrupamento diz sozinho que ali não se escolhe trilha. */
+.carta--peca {
+  width: auto;                /* a coluna do estojo é que dá a largura */
+  transform: rotate(var(--torcao, -2.5deg));
+  transform-origin: top center;
+}
+
+/* a carta encolheu; o nome tem de encolher com ela, senão
+   "Calendário" quebra em duas linhas e desalinha o par */
+.carta--peca .carta__nome {
+  padding: 10px 11px 5px;
+  font-size: 13.75px;
+}
+
+.carta--peca .carta__carimbo { padding: 6px 11px; font-size: 9px; }
+.carta--peca .carta__rodape { padding: 7px 11px 9px; font-size: 9px; }
+
+/* cada uma com a sua cor e o seu jeito de estar pregada: papel
+   espetado à mão não sai reto, e duas folhas iguais denunciariam o
+   carimbo */
+.carta--agenda { --rota: #6b5bb5; --torcao: -2.5deg; }
+.carta--notas  { --rota: #c2622f; --torcao: 1.8deg; }
+
+/* o alfinete que a prende: o mesmo vermelho dos pinos da rota, aqui
+   espetado no papel em vez de desenhado dentro do mapa */
+.carta--peca::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 13px;
+  height: 13px;
+  margin-left: -6.5px;
+  border-radius: 50%;
+  background: var(--alfinete);
+  box-shadow: 0 2px 0 rgba(21, 20, 26, 0.35);
+  z-index: 2;
+}
+
+/* encostar endireita um pouco a folha, como quem a ajeita no prego */
+.carta--peca:hover,
+.carta--peca:focus-visible {
+  transform: rotate(calc(var(--torcao, -2.5deg) * 0.3)) translateY(-4px);
+}
+
+/* o rodapé da trilha tem três partes (feitos, barra, porcentagem);
+   o da peça tem uma frase só, e ela fica à esquerda em vez de
+   esticar pelo espaço das outras duas */
+.carta--peca .carta__rodape { justify-content: flex-start; }
+
+/* ---- o clique: a folha se solta do alfinete ---- */
+/* a trilha, ao ser escolhida, desenha a própria rota; a peça
+   faz o gesto equivalente com o que ela tem — os dias do mês ou os
+   post-its acendem em cascata, enquanto a folha se endireita. */
+.carta--indo {
+  transform: rotate(0deg) translateY(-14px) scale(1.03);
+  box-shadow: 0 18px 30px rgba(21, 20, 26, 0.28);
+  z-index: 4;
+}
+
+.carta--indo::before {
+  /* o alfinete fica para trás: é dele que a folha se solta */
+  transform: translateY(10px) scale(0.6);
+  opacity: 0;
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+.carta--indo .carta__acender {
+  animation: acender 0.42s ease-out both;
+}
+
+/* só fill-opacity: transform em <rect> exigiria transform-box e
+   transform-origin por elemento, e o ganho não paga o risco */
+@keyframes acender {
+  from { fill-opacity: 0; }
+  to   { fill-opacity: 0.75; }
+}
+
+/* ------------------------- a caminha --------------------------- */
+/* o canto do Obi. Fica parada quando ele sai andando atrás de uma
+   carta — é a cama dele, e cama não segue dono.
+
+   O desenho vem em duas peças porque ele precisa ficar DENTRO dela:
+   o aro de trás antes dele no DOM, o da frente depois. Ambas têm a
+   mesma largura e o mesmo `right`, senão a cama sai do prumo. */
+.caminha {
+  position: absolute;
+  right: 21px;
+  width: 240px;
+  line-height: 0;
+}
+
+.caminha svg { display: block; }
+
+.caminha--fundo { top: calc(46% + 42px); }
+
+.caminha--frente {
+  top: calc(46% + 74px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* o nome vai por cima da chapinha desenhada: texto HTML e não <text>
+   no SVG, para herdar a Departure Mono e a grade de 11px */
+.caminha__etiqueta {
+  position: absolute;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--tinta-tampo);
+}
+
+/* -------------------------- o mascote -------------------------- */
+.ator {
+  position: absolute;
+  /* na coluna da direita, logo abaixo do estojo: a faixa livre da
+     mesa. No pé ele brigava com o rodapé; no meio da grade, com a
+     leitura das cartas. */
+  top: 46%;
+  width: 122px;
+  /* o `top` entra na transição junto com o `left` porque ao escolher
+     uma carta ele desce para o vazio embaixo dela: o caminho é
+     diagonal, e animar só um eixo faria o movimento ler como dois
+     gestos emendados */
+  transition:
+    left 0.44s cubic-bezier(0.3, 0.9, 0.25, 1),
+    top  0.44s cubic-bezier(0.3, 0.9, 0.25, 1);
+}
+
+.ator__sombra {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 92px;
+  height: 16px;
+  margin-left: -46px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse,
+              rgba(21, 20, 26, 0.34) 0%, rgba(21, 20, 26, 0) 70%);
+}
+
+.ator__corpo { display: block; transform-origin: center bottom; }
+
+.ator__corpo                      { animation: respirar 3.6s ease-in-out infinite; }
+.ator[data-andando] .ator__corpo  { animation: bambolear 0.36s ease-in-out infinite; }
+.ator[data-andando] .ator__sombra { animation: sombra-andando 0.36s ease-in-out infinite; }
+.ator[data-pulando] .ator__corpo  { animation: pular 0.82s cubic-bezier(0.3, 1.1, 0.4, 1) 1; }
+.ator[data-pulando] .ator__sombra { animation: sombra-pulo 0.82s ease-out 1; }
+
+@keyframes respirar {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  50%      { transform: translateY(-3px) scale(0.99, 1.02); }
+}
+
+@keyframes bambolear {
+  0%   { transform: translateY(0)     rotate(-5deg) scale(1.03, 0.97); }
+  50%  { transform: translateY(-11px) rotate(5deg)  scale(0.97, 1.04); }
+  100% { transform: translateY(0)     rotate(-5deg) scale(1.03, 0.97); }
+}
+
+@keyframes sombra-andando {
+  0%, 100% { transform: scale(1, 1);      opacity: 1; }
+  50%      { transform: scale(0.74, 0.7); opacity: 0.55; }
+}
+
+/* a sombra é o que faz o pulo ler como pulo: ela encolhe no ápice
+   e estoura no pouso. Sem ela o mascote só desliza para cima. */
+@keyframes pular {
+  0%   { transform: translateY(0)     scale(1, 1); }
+  13%  { transform: translateY(6px)   scale(1.24, 0.78); }
+  38%  { transform: translateY(-74px) scale(0.86, 1.2); }
+  58%  { transform: translateY(-80px) scale(0.94, 1.08); }
+  82%  { transform: translateY(0)     scale(1.2, 0.8); }
+  100% { transform: translateY(0)     scale(1, 1); }
+}
+
+@keyframes sombra-pulo {
+  0%   { transform: scale(1, 1);       opacity: 1; }
+  48%  { transform: scale(0.34, 0.34); opacity: 0.3; }
+  82%  { transform: scale(1.22, 1.14); opacity: 1; }
+  100% { transform: scale(1, 1);       opacity: 1; }
+}
+
+/* ---------------------- o Obi tem vida ----------------------
+   As reações dele moram no obi.css, que o roadmap carrega também.
+   Aqui fica só o que é da mesa: a cor da chama, e a sombra batendo
+   no pouso — ele só tem chão nesta página.
+   ------------------------------------------------------------ */
+.ator {
+  --obi-chama:        var(--laranja);
+  --obi-chama-nucleo: var(--amarelo);
+}
+
+.ator[data-reagindo="pouso"] .ator__sombra {
+  animation: sombra-andando 0.4s ease-out 1;
+}
+
+
+.ator__olho {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: piscar 5.2s ease-in-out infinite;
+}
+
+@keyframes piscar {
+  0%, 88%, 100% { transform: scaleY(1); }
+  90%, 92%      { transform: scaleY(0.1); }
+  94%           { transform: scaleY(1); }
+  96%, 97%      { transform: scaleY(0.1); }
+  99%           { transform: scaleY(1); }
+}
+
+/* a armadilha de sempre: animação ganha de `transform` declarado,
+   e o piscar é animação. Sem desligar o piscar o olhar não sai do
+   lugar — e ninguém pisca enquanto encara, então não se perde nada.
+   O JS devolve o piscar sozinho quando o ponteiro para. */
+.ator[data-olhando] .ator__olho { animation: none; }
+
+.ator__cara { transition: transform 0.24s ease; }
+
+/* --------------------------- rodapé --------------------------- */
+/* mesma receita do rodapé do roadmap, para as duas páginas terem o
+   mesmo pé: moldura de 2px, chip roxo e botão amarelo de borda dura.
+   O roxo e o amarelo são da marca, não da paleta desta página — por
+   isso atravessam as duas. */
+.rodape {
+  flex: none;
+  width: min(760px, 100%);
+  margin: clamp(16px, 2.5vh, 32px) auto 0;
+  padding: 1.25rem;
+  border: 2px solid var(--borda-tampo);
+  font-size: 11px;
+  color: var(--tinta-tampo);
+  text-align: center;
+}
+
+.rodape__linha {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.rodape__credito {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 11px;
+}
+
+.rodape__label { color: var(--tinta-tampo); }
+
+.rodape__chip {
+  padding: 0.2rem 0.6rem;
+  background: var(--roxo);
+  color: var(--tinta-roxo);
+  border: 2px solid var(--linha-dura);
+  box-shadow: var(--sombra-dura-sm);
+  text-decoration: none;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.rodape__chip:hover { transform: translate(2px, 2px); box-shadow: none; }
+
+.botao {
+  display: inline-block;
+  font: inherit;
+  font-size: 11px;
+  padding: 0.35rem 0.75rem;
+  color: var(--linha-dura);
+  background: var(--papel);
+  border: 2px solid var(--linha-dura);
+  box-shadow: var(--sombra-dura-sm);
+  text-decoration: none;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.botao--destaque {
+  padding: 0.45rem 1.1rem;
+  background: var(--amarelo);
+  color: var(--tinta-bloco);
+  box-shadow: var(--sombra-dura);
+}
+
+.botao--destaque:hover { transform: translate(4px, 4px); box-shadow: none; }
+
+.rodape__chip:focus-visible,
+.botao:focus-visible { outline: 3px solid var(--roxo); outline-offset: 3px; }
+
+
+
+/* -------------------------- responsivo -------------------------- */
+/* numa tela estreita a fila vira pilha, e cada carta ocupa a largura */
+@media (max-width: 900px) {
+  /* o mascote volta a ser estático aqui, então a faixa reservada a ele
+     na posição absoluta vira só espaço morto */
+  .mesa { justify-content: flex-start; padding-bottom: 0; }
+
+  .cartas { grid-template-columns: 1fr; gap: 14px; max-width: none; }
+  .carta { width: auto; }
+
+  /* sem largura para duas colunas, o estojo desce para baixo da
+     grade — mas inteira, com a etiqueta e as duas juntas: é o grupo
+     que não pode se desmanchar, a posição é negociável */
+  .tampo { flex-direction: column; align-items: stretch; gap: 20px; }
+  /* a tampa deita e vira faixa: o nome à esquerda, as miniaturas à
+     direita — ocupa a largura da tela sem virar um quadrado enorme */
+  .estojo {
+    width: auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+  }
+  .estojo__miniaturas { width: 128px; flex: 0 0 auto; }
+  .estojo__abrir { display: none; }   /* a faixa inteira já convida */
+
+  /* aberta, uma peça por linha: a tela estreita não comporta duas
+     cartas lado a lado sem encolher o desenho até virar selo */
+  .aberto__itens { grid-template-columns: minmax(0, 1fr); }
+
+  /* sem ponteiro não há caminhada: o Obi volta a ser rodapé. E sem
+     posição absoluta não há como carregá-lo no colo — o arrasto fica
+     de fora aqui, no JS e no CSS. */
+  .ator {
+    position: static; width: auto; margin: 28px auto 0; text-align: center;
+    cursor: default; touch-action: auto;
+  }
+  .ator__sombra { display: none; }
+  .obi__fogo { display: none; }
+  /* a cama é uma posição na mesa, e aqui não há mesa: o Obi vira
+     rodapé centrado, e uma cama vazia no canto não diz nada */
+  .caminha { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ator__corpo, .ator__sombra, .ator__olho,
+  .carta--aberta .carta__rota-cheia,
+  .carta--indo .carta__acender,
+  .aberto[open] { animation: none !important; }
+  * { transition-duration: 0.01ms !important; }
+}

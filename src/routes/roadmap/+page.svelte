@@ -1,0 +1,628 @@
+<!-- ============================================================
+     O roadmap.
+
+     O que mudou de forma em relação ao app.js: não há mais repintura.
+     Funções como pintarTopico, pintarLinhaIndice, aplicarEstado,
+     marcarBotoesEstado e atualizarProgresso existiam só para
+     reescrever no DOM um estado que já estava em memória — e cada uma
+     precisava ser lembrada no lugar certo. Agora o estado é a fonte e
+     a tela é derivada dele.
+
+     O que continua imperativo: rolar até um tópico (precisa esperar a
+     sanfona crescer) e o arrasto do painel, que vive no Drawer.
+     ============================================================ -->
+<script>
+  import { MediaQuery } from "svelte/reactivity";
+  import { goto } from "$app/navigation";
+
+  import { TRILHAS } from "$lib/trilhas.js";
+  import { alternarTema } from "$lib/tema.js";
+  import Obi from "$lib/obi/Obi.svelte";
+  import { ControleObi } from "$lib/obi/ControleObi.svelte.js";
+  import { Progresso } from "$lib/roadmap/Progresso.svelte.js";
+  import Etapa from "$lib/roadmap/Etapa.svelte";
+  import Indice from "$lib/roadmap/Indice.svelte";
+  import Drawer from "$lib/roadmap/Drawer.svelte";
+
+  import "$lib/obi/obi.css";
+  import "$lib/estilos/base.css";
+
+  let { data } = $props();
+
+  const etapas = $derived(data.ROADMAP.etapas);
+
+  /* índice id -> { topico, etapa, grupo }, para o painel e a busca */
+  const indice = $derived.by(() => {
+    const mapa = {};
+    for (const etapa of etapas) {
+      for (const grupo of etapa.grupos) {
+        for (const topico of grupo.topicos) {
+          mapa[topico.id] = { topico, etapa, grupo: grupo.origem || grupo };
+        }
+      }
+    }
+    return mapa;
+  });
+
+  const progresso = $derived(new Progresso(data.trilha));
+  $effect(() => progresso.carregar());
+
+  /* o gesto de ler o detalhe tem que ser o gesto que o aparelho tem.
+     `pointer: coarse` descreve o ponteiro primário, que é o dedo em
+     celular e tablet. */
+  const toque = new MediaQuery("pointer: coarse");
+  const estreito = new MediaQuery("max-width: 900px");
+  const dicaLer = $derived(
+    toque.current ? "toque no [i] para ler" : "shift + clique para ler"
+  );
+
+  let termo = $state("");
+  let aberto = $state(null); /* { tipo: "topico" | "etapa", id } */
+  let atualNoIndice = $state(null);
+  let abertasNoIndice = $state(new Set());
+  let lateralFechada = $state(false);
+  let gaveta = $state(false);
+  let confirmandoReset = $state(false);
+  let aviso = $state("");
+
+  /* --------------------------------- busca --------------------------- */
+
+  function normalizar(texto) {
+    return texto.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  }
+
+  const alvo = $derived(normalizar(termo.trim()));
+  const filtrando = $derived(alvo.length > 0);
+
+  /* quem NÃO casou. Era um data-oculto escrito tópico a tópico; agora
+     é um conjunto, e cada tópico lê o seu. */
+  const ocultos = $derived.by(() => {
+    const fora = new Set();
+    if (!filtrando) return fora;
+    for (const id of Object.keys(indice)) {
+      const t = indice[id].topico;
+      const corpus = normalizar(t.titulo + " " + t.desc + " " + (t.detalhe || ""));
+      if (!corpus.includes(alvo)) fora.add(id);
+    }
+    return fora;
+  });
+
+  const achados = $derived(Object.keys(indice).length - ocultos.size);
+
+  /* buscar desdobra o que casou: esconder o resultado atrás de uma seta
+     seria pedir a mesma busca duas vezes. Sem busca, cada etapa volta ao
+     que a pessoa deixou — e não ao fechado, senão a busca viraria um
+     jeito de fechar o mapa todo. */
+  function etapaAberta(etapa) {
+    if (!filtrando) return progresso.etapaAberta(etapa.id);
+    return etapa.grupos.some((g) => g.topicos.some((t) => !ocultos.has(t.id)));
+  }
+
+  function alternarNoIndice(id) {
+    const copia = new Set(abertasNoIndice);
+    if (copia.has(id)) copia.delete(id);
+    else copia.add(id);
+    abertasNoIndice = copia;
+  }
+
+  /* A sanfona do índice é estado, não derivação — e é por isso que ela
+     passa por aqui em vez de sair de um $derived.
+
+     Ela nasce fechada (a lateral é para achar, não para ler), abre no
+     clique, e toda busca a SOBRESCREVE: com termo, abre o que casou;
+     sem termo, devolve o que o mapa está mostrando. É o comportamento
+     de antes, onde buscar("") chamava abrirNoIndice para cada etapa —
+     o efeito colateral de limpar a busca é o índice inteiro abrir.
+
+     Ler `ocultos` logo depois de escrever `termo` dá o valor novo:
+     $derived é preguiçoso, avaliado na leitura. */
+  function definirTermo(valor) {
+    termo = valor;
+    abertasNoIndice = new Set(
+      etapas
+        .filter((etapa) =>
+          filtrando
+            ? etapa.grupos.some((g) => g.topicos.some((t) => !ocultos.has(t.id)))
+            : progresso.etapaAberta(etapa.id)
+        )
+        .map((e) => e.id)
+    );
+  }
+
+  /* ------------------------------- progresso ------------------------- */
+
+  const contagem = $derived.by(() => {
+    let total = 0, feitos = 0, pulados = 0, estudando = 0;
+    for (const id of Object.keys(indice)) {
+      const estado = progresso.estadoDe(id);
+      total++;
+      if (estado === "feito") feitos++;
+      else if (estado === "pulado") pulados++;
+      else if (estado === "estudando") estudando++;
+    }
+    return { total, feitos, pulados, estudando };
+  });
+
+  const pct = $derived(
+    contagem.total ? Math.round((contagem.feitos / contagem.total) * 100) : 0
+  );
+
+  /* nada de contador visível: a barra mostra a proporção, e um placar de
+     9/156 cansa antes de a pessoa começar. A frase exata continua indo
+     para o leitor de tela, que precisa de um valor. */
+  const frase = $derived.by(() => {
+    let f = `${contagem.feitos} de ${contagem.total} tópicos concluídos (${pct}%)`;
+    if (contagem.estudando) f += `, ${contagem.estudando} em estudo`;
+    if (contagem.pulados) f += `, ${contagem.pulados} pulados`;
+    return f;
+  });
+
+  /* 100% é literal: "pulado" não conta como feito, então chegar aqui
+     exige ter marcado todos. É o que torna o momento raro o bastante
+     para merecer a faixa. A busca a esconde: ela fala do mapa inteiro,
+     não do filtro. */
+  const completa = $derived(
+    !filtrando && contagem.total > 0 && contagem.feitos === contagem.total
+  );
+
+  function rotuloEstado(chave) {
+    return data.ESTADOS.find((e) => e.chave === chave)?.rotulo ?? chave;
+  }
+
+  /* ------------------------------ navegação -------------------------- */
+
+  /* o tópico pode estar numa etapa fechada: abrir primeiro, senão a
+     rolagem para numa faixa e o tópico não está em lugar nenhum da
+     tela. E só rolar depois da sanfona — mirar numa posição que ainda
+     está crescendo deixa o alvo fora de quadro no fim. */
+  function irParaTopico(id) {
+    const ref = indice[id];
+    if (!ref) return;
+
+    const precisavaAbrir = !progresso.etapaAberta(ref.etapa.id);
+    if (precisavaAbrir) progresso.alternarEtapa(ref.etapa.id, true);
+    atualNoIndice = id;
+
+    setTimeout(() => {
+      document
+        .getElementById("topico-" + id)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, precisavaAbrir ? 260 : 0);
+
+    /* no celular a gaveta cobre a tela: mantê-la aberta esconderia
+       justamente o tópico que a pessoa pediu para ver */
+    if (estreito.current) gaveta = false;
+  }
+
+  function trocarTrilha(ev) {
+    goto("/roadmap?trilha=" + ev.currentTarget.value);
+  }
+
+  function zerar() {
+    progresso.zerar();
+    confirmandoReset = false;
+    aberto = null; /* o painel aberto ficaria desatualizado */
+  }
+
+  /* Esc fecha a camada mais de cima primeiro: confirmação, painel,
+     gaveta, e só então limpa a busca */
+  function aoTeclar(ev) {
+    if (ev.key !== "Escape") return;
+    if (confirmandoReset) { confirmandoReset = false; return; }
+    if (aberto) { aberto = null; return; }
+    if (gaveta) { gaveta = false; return; }
+    if (document.activeElement?.id === "busca" && termo) definirTermo("");
+  }
+
+  /* --------------------------------- Obi ----------------------------- */
+
+  let ninho = $state(null);
+  let cutucadas = 0;
+  let vezCutucadas = null;
+
+  const controle = new ControleObi({
+    /* aqui ele não tem chão: volta flutuando ao ninho em vez de pousar */
+    chao: false,
+
+    /* arrastar só vale em tela larga: no celular o gesto disputa com a
+       rolagem do mapa, e não produz nada que valha o conflito */
+    podeMexer: () => !estreito.current,
+
+    /* a página inteira é o limite: fora do ninho ele não pertence mais
+       ao painel, e prendê-lo ali deixaria o gesto apertado demais */
+    limite: () => {
+      const r = ninho.getBoundingClientRect();
+      return {
+        x: Math.max(innerWidth - r.right, r.left) + r.width,
+        y: Math.max(innerHeight - r.bottom, r.top) + r.height,
+      };
+    },
+
+    aoCutucar: () => {
+      cutucadas += 1;
+      clearTimeout(vezCutucadas);
+      vezCutucadas = setTimeout(() => { cutucadas = 0; }, 1800);
+
+      if (cutucadas >= 5) {
+        cutucadas = 0;
+        controle.reagir("tonto", 1500);
+      } else {
+        controle.reagir("susto", 480);
+      }
+    },
+  });
+</script>
+
+<svelte:head>
+  <title>Roadmap de {data.ROADMAP.titulo}</title>
+</svelte:head>
+
+<svelte:window onkeydown={aoTeclar} />
+
+<div class="aplicacao" data-lateral={lateralFechada ? "fechada" : null}>
+  <!-- ============================= rail =============================
+       voltar, tema e zerar não falam nem da trilha nem do mapa: ficam
+       numa coluna própria, antes das duas. A ordem é de consequência
+       crescente: abrir o índice (só no celular), sair da página, mudar
+       uma preferência, apagar o progresso. A lixeira fica na ponta,
+       longe do que se clica por engano. -->
+  <nav class="rail" aria-label="Ações da página">
+    <!-- no celular a lateral vira gaveta; este botão é a maçaneta dela -->
+    <button
+      class="botao botao--icone rail__gaveta"
+      type="button"
+      aria-expanded={gaveta}
+      title="Abrir o índice da trilha"
+      aria-label="Abrir o índice da trilha"
+      onclick={() => (gaveta = !gaveta)}
+    >
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <rect x="2" y="3" width="12" height="2" />
+        <rect x="2" y="7" width="12" height="2" />
+        <rect x="2" y="11" width="12" height="2" />
+      </svg>
+    </button>
+
+    <!-- o Obi era a rota de volta e deixou de ser: era um clique
+         escondido no mascote, e a saída precisa de um lugar próprio. -->
+    <a
+      class="botao botao--icone"
+      href="/"
+      data-sveltekit-reload
+      title="Voltar para a escolha de trilha"
+      aria-label="Voltar para a escolha de trilha"
+    >
+      <!-- casa: telhado em degraus, duas paredes e o vão da porta -->
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <rect x="7" y="1" width="2" height="1" />
+        <rect x="6" y="2" width="4" height="1" />
+        <rect x="5" y="3" width="6" height="1" />
+        <rect x="4" y="4" width="8" height="1" />
+        <rect x="3" y="5" width="10" height="1" />
+        <rect x="2" y="6" width="12" height="1" />
+        <rect x="3" y="7" width="3" height="8" />
+        <rect x="10" y="7" width="3" height="8" />
+        <rect x="6" y="7" width="4" height="2" />
+      </svg>
+    </a>
+
+    <button
+      class="botao botao--icone"
+      type="button"
+      title="Alternar entre tema claro e escuro"
+      aria-label="Alternar entre tema claro e escuro"
+      onclick={alternarTema}
+    >
+      <!-- lua: disco em degraus com a mordida de um segundo disco -->
+      <svg class="icone-lua" viewBox="0 0 16 16" aria-hidden="true">
+        <rect x="6" y="2" width="4" height="1" />
+        <rect x="5" y="3" width="4" height="1" />
+        <rect x="4" y="4" width="4" height="1" />
+        <rect x="3" y="5" width="4" height="1" />
+        <rect x="2" y="6" width="4" height="4" />
+        <rect x="3" y="10" width="4" height="1" />
+        <rect x="4" y="11" width="4" height="1" />
+        <rect x="5" y="12" width="4" height="1" />
+        <rect x="6" y="13" width="4" height="1" />
+      </svg>
+      <!-- sol: núcleo quadrado e oito raios soltos -->
+      <svg class="icone-sol" viewBox="0 0 16 16" aria-hidden="true">
+        <rect x="5" y="5" width="6" height="6" />
+        <rect x="7" y="0" width="2" height="2" />
+        <rect x="7" y="14" width="2" height="2" />
+        <rect x="0" y="7" width="2" height="2" />
+        <rect x="14" y="7" width="2" height="2" />
+        <rect x="2" y="2" width="2" height="2" />
+        <rect x="12" y="2" width="2" height="2" />
+        <rect x="2" y="12" width="2" height="2" />
+        <rect x="12" y="12" width="2" height="2" />
+      </svg>
+    </button>
+
+    <!-- sem nada marcado a lixeira não tem o que apagar, e precisa dizer
+         isso de si mesma: sozinha na ponta do rail, um clique que só
+         anuncia numa região viva invisível lê como botão quebrado -->
+    <button
+      class="botao botao--icone rail__zerar"
+      type="button"
+      disabled={progresso.marcados === 0}
+      title={progresso.marcados ? "Zerar progresso" : "Nada marcado para zerar"}
+      aria-label={progresso.marcados ? "Zerar progresso" : "Nada marcado para zerar"}
+      onclick={() => (confirmandoReset = true)}
+    >
+      <!-- lixeira: alça, tampa, duas paredes, fundo e uma ranhura -->
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <rect x="6" y="1" width="4" height="2" />
+        <rect x="1" y="3" width="14" height="2" />
+        <rect x="3" y="6" width="2" height="9" />
+        <rect x="11" y="6" width="2" height="9" />
+        <rect x="3" y="13" width="10" height="2" />
+        <rect x="7" y="7" width="2" height="5" />
+      </svg>
+    </button>
+  </nav>
+
+  <!-- aba de reabrir: existe só com a lateral fechada -->
+  <button
+    class="abrir-lateral"
+    type="button"
+    title="Abrir o painel da trilha"
+    aria-label="Abrir o painel da trilha"
+    onclick={() => (lateralFechada = false)}
+  >»</button>
+
+  <!-- =========================== lateral ===========================
+       cola na quina e vai de ponta a ponta. Moldura fixa: identidade e
+       progresso. Só o índice rola. -->
+  <aside class="lateral" data-aberta={gaveta ? "sim" : null} aria-label="Painel da trilha">
+    <div class="lateral__identidade">
+      <!-- o título É o trocador de trilha: um select transparente cobre
+           a área inteira, então o clique abre a lista nativa e o h1
+           continua sendo o h1 para o leitor de tela. -->
+      <div class="lateral__nome">
+        <div class="lateral__trilha">
+          <select
+            id="trilha"
+            class="lateral__select"
+            aria-label="Trocar de trilha"
+            value={data.trilha}
+            onchange={trocarTrilha}
+          >
+            {#each Object.entries(TRILHAS) as [id, t]}
+              <option value={id}>{t.rotulo}</option>
+            {/each}
+          </select>
+          <h1>{data.ROADMAP.titulo}</h1>
+        </div>
+      </div>
+
+      <button
+        class="lateral__fechar"
+        type="button"
+        title="Fechar o painel da trilha"
+        aria-label="Fechar o painel da trilha"
+        onclick={() => (estreito.current ? (gaveta = false) : (lateralFechada = true))}
+      >«</button>
+    </div>
+
+    <!-- só a barra: a razão exata vira um placar, e placar de 9/156 cansa
+         antes de a pessoa começar. O número continua em aria-valuetext. -->
+    <div class="progresso">
+      <div
+        class="progresso__barra"
+        role="progressbar"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow={pct}
+        aria-valuetext={frase}
+        aria-label="Progresso total do roadmap"
+      >
+        <span class="progresso__preenchido" style:width="{pct}%"></span>
+      </div>
+    </div>
+
+    <Indice
+      {etapas}
+      {progresso}
+      atual={atualNoIndice}
+      abertas={abertasNoIndice}
+      aoAlternar={alternarNoIndice}
+      aoIr={irParaTopico}
+    />
+  </aside>
+
+  {#if gaveta}
+    <div
+      class="veu"
+      onclick={() => (gaveta = false)}
+      aria-hidden="true"
+    ></div>
+  {/if}
+
+  <!-- ========================== conteúdo ========================== -->
+  <div class="conteudo">
+    <!-- o Obi dorme no canto que os botões desocuparam: parado ali ele
+         não sobrevoa nada, e o truque de empilhamento contra as faixas
+         sticky só volta a ser preciso quando alguém o arrasta. -->
+    <Obi variante="ninho" {controle} bind:elemento={ninho} />
+
+    <!-- busca e legenda falam do mapa, então moram com o mapa -->
+    <div class="conteudo__barra">
+      <input
+        id="busca"
+        class="busca"
+        type="search"
+        placeholder="Buscar tópico…"
+        aria-label="Buscar tópico"
+        autocomplete="off"
+        value={termo}
+        oninput={(ev) => definirTermo(ev.currentTarget.value)}
+      />
+      <p class="busca__contagem" role="status" aria-live="polite">
+        {#if filtrando}
+          {achados === 0
+            ? "Nenhum tópico encontrado"
+            : achados + (achados === 1 ? " tópico encontrado" : " tópicos encontrados")}
+        {/if}
+      </p>
+
+      <div class="legenda">
+        <div class="legenda__grupo">
+          {#each data.LEGENDA as item}
+            <span class="legenda__item" title={item.desc}>
+              <span class="legenda__amostra" data-prioridade={item.chave}></span
+              >{item.rotulo}
+            </span>
+          {/each}
+        </div>
+        <p class="legenda__dica">
+          {#if toque.current}
+            <strong>Toque</strong> cicla o estado · <strong>[i]</strong> abre o detalhe
+          {:else}
+            <strong>Clique</strong> cicla o estado ·
+            <strong>Shift + clique</strong> abre o detalhe
+          {/if}
+        </p>
+      </div>
+    </div>
+
+    <main class="mapa" data-filtrando={filtrando ? "sim" : null} aria-label="Roadmap de estudos">
+      {#each etapas as etapa (etapa.id)}
+        <Etapa
+          {etapa}
+          aberta={etapaAberta(etapa)}
+          {progresso}
+          {rotuloEstado}
+          {dicaLer}
+          oculto={ocultos}
+          aoAlternar={() =>
+            progresso.alternarEtapa(etapa.id, !progresso.etapaAberta(etapa.id))}
+          aoAbrirEtapa={() => (aberto = { tipo: "etapa", id: etapa.id })}
+          aoAbrirTopico={(id) => (aberto = { tipo: "topico", id })}
+        />
+      {/each}
+
+      <!-- busca sem resultado: o mapa inteiro some, e sem isto sobrava uma
+           página em branco. O termo é repetido de volta porque metade das
+           buscas vazias é erro de digitação. -->
+      <div class="vazio" hidden={!(filtrando && achados === 0)}>
+        <span class="vazio__mascote" aria-hidden="true"></span>
+        <p class="vazio__titulo">Nada encontrado para “{termo.trim()}”</p>
+        <p class="vazio__dica">
+          A busca olha título, descrição e explicação de todos os tópicos desta
+          trilha. Tente outra palavra, ou confira a digitação.
+        </p>
+        <button
+          class="botao botao--destaque"
+          type="button"
+          onclick={() => {
+            definirTermo("");
+            document.getElementById("busca")?.focus();
+          }}>Limpar a busca</button
+        >
+      </div>
+    </main>
+
+    <!-- 100% da trilha: entra depois da última etapa -->
+    <section class="completa" aria-labelledby="completa-titulo" hidden={!completa}>
+      <div class="completa__faixa">
+        <span class="completa__selo" aria-hidden="true"></span>
+        <h2 class="completa__titulo" id="completa-titulo">Fim do mapa</h2>
+        <p class="completa__meta">
+          {data.ROADMAP.titulo} · {contagem.feitos} de {contagem.total} tópicos
+        </p>
+        <span class="completa__barra"></span>
+      </div>
+
+      <div class="completa__saida">
+        <p class="completa__nota">
+          Você marcou todos os tópicos desta trilha. O mapa acabou — o que vem
+          depois dele não cabe em checklist nenhum, vem de projeto.
+        </p>
+        <div class="completa__acoes">
+          <!-- o seletor é o controle de verdade; o botão só leva até ele —
+               e ele mora na lateral, que pode estar fechada ou em gaveta -->
+          <button
+            class="botao botao--destaque"
+            type="button"
+            onclick={() => {
+              lateralFechada = false;
+              if (estreito.current) gaveta = true;
+              document.getElementById("trilha")?.focus();
+            }}>Escolher outra trilha</button
+          >
+          <a
+            class="botao"
+            href="https://github.com/masteryogo/lets-learn-together/fork"
+            target="_blank"
+            rel="noopener noreferrer">Contribuir com um tópico</a
+          >
+        </div>
+      </div>
+    </section>
+
+    <footer class="rodape">
+      <div class="rodape__linha">
+        <p class="rodape__credito">
+          <span class="rodape__label">Feito por</span>
+          <a
+            class="rodape__chip"
+            href="https://github.com/masteryogo"
+            target="_blank"
+            rel="noopener noreferrer">@masteryogo</a
+          >
+        </p>
+        <a
+          class="botao botao--destaque"
+          href="https://github.com/masteryogo/lets-learn-together/fork"
+          target="_blank"
+          rel="noopener noreferrer">Contribuir</a
+        >
+      </div>
+    </footer>
+  </div>
+</div>
+
+<!-- ====================== confirmar o zerar ======================
+     zerar é o único gesto irreversível da página, e a caixa diz quantos
+     tópicos somem — "tem certeza?" todo mundo responde no automático;
+     um número faz pesar o clique. -->
+<div class="modal" hidden={!confirmandoReset}>
+  <div class="modal__veu" onclick={() => (confirmandoReset = false)} aria-hidden="true"></div>
+  <div
+    class="modal__caixa"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-titulo"
+    aria-describedby="modal-texto"
+  >
+    <h2 class="modal__titulo" id="modal-titulo">Zerar progresso?</h2>
+    <p class="modal__texto" id="modal-texto">
+      {progresso.marcados === 1
+        ? "1 tópico volta para pendente. Não dá para desfazer."
+        : progresso.marcados + " tópicos voltam para pendente. Não dá para desfazer."}
+    </p>
+    <div class="modal__acoes">
+      <button class="botao" type="button" onclick={() => (confirmandoReset = false)}
+        >Cancelar</button
+      >
+      <button class="botao botao--destaque" type="button" onclick={zerar}
+        >Zerar tudo</button
+      >
+    </div>
+  </div>
+</div>
+
+<!-- região viva: o leitor de tela não percebe a troca do ícone de
+     copiar, então o resultado é narrado por aqui -->
+<p class="oculto-visual" role="status" aria-live="polite">{aviso}</p>
+
+<Drawer
+  {aberto}
+  {indice}
+  {etapas}
+  dados={data}
+  {progresso}
+  aoFechar={() => (aberto = null)}
+  aoAnunciar={(t) => (aviso = t)}
+/>

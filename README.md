@@ -1,6 +1,6 @@
 # lets-learn-together
 
-<img src="logo/icon-512.png" alt="" width="110">
+<img src="static/logo/icon-512.png" alt="" width="110">
 
 Roadmaps de estudo em português, com prioridade, critério de conclusão e
 progresso salvo no navegador.
@@ -30,24 +30,30 @@ O site publicado está em
 [masteryogo.github.io/lets-learn-together](https://masteryogo.github.io/lets-learn-together/)
 — rodar local só é necessário para desenvolver.
 
-Sem build, sem dependência, sem `npm install`. Abra o `index.html` no navegador,
-ou sirva a pasta:
+O site é feito com [SvelteKit](https://svelte.dev/docs/kit) e publicado como
+arquivo estático:
 
 ```bash
-python -m http.server 8000
+npm install
+npm run dev       # desenvolvimento, com recarga
+npm run build     # gera build/
+npm run preview   # serve o build/ como em produção
 ```
 
-São duas páginas:
+As telas:
 
-- `index.html` — a **mesa de cartas**, onde você escolhe a trilha. Cada
-  trilha é um mapa com a rota desenhada: um marco por etapa, o trecho em
-  tinta cheia é o que você já andou.
-- `roadmap.html` — o roadmap em si. Aceita `?trilha=ml` (padrão),
-  `?trilha=cv`, `?trilha=langchain`, e também dá para trocar pelo seletor
-  no topo. O logo leva de volta para a mesa.
+- `/` — a **mesa de cartas**, onde você escolhe a trilha. Cada trilha é um
+  mapa com a rota desenhada: um marco por etapa, o trecho em tinta cheia é o
+  que você já andou.
+- `/roadmap` — o roadmap em si. Aceita `?trilha=ml` (padrão), `?trilha=cv`,
+  `?trilha=langchain`, e também dá para trocar pelo seletor no topo. A
+  casinha no canto leva de volta para a mesa.
+- `/calendario` e `/notas` — o calendário de estudos e o mural de notas,
+  guardados no estojo da mesa.
+- `/kanban` — o quadro de trabalho: o que vem por aí e por quê.
 
-Um link antigo no formato `index.html?trilha=cv` continua valendo: a página
-de entrada o repassa para o roadmap.
+Um link antigo no formato `index.html?trilha=cv` continua valendo: a mesa o
+repassa para o roadmap.
 
 ## Usando o mapa
 
@@ -100,25 +106,29 @@ Toda contribuição aqui é alguém dizendo "no mundo real não é bem assim":
 - **Rediscutir prioridades** - o que é fundamental para quem faz NLP não é o
   mesmo para quem faz visão.
 - **Trocar um recurso** por um melhor, ou aposentar um desatualizado.
-- **Abrir uma trilha nova**: crie `trilhas/<id>/` com um `data.js` e os
-  `conteudo-*.js`, e registre o id no manifesto em `trilhas.js`. No
-  manifesto vão também a ficha da trilha e a rota da carta:
+- **Abrir uma trilha nova**: crie `src/lib/trilhas/<id>/` com um `data.js`,
+  os `conteudo-*.js` e um `index.js` que os junta na ordem certa; depois
+  registre o id no manifesto (`src/lib/trilhas.js`), nos dois lugares — a
+  ficha da trilha e o mapa de carregadores:
 
   ```js
+  // em TRILHAS
   nlp: {
     rotulo: "NLP",
+    cor: "#2d6a8a",
     etapas: 6,            // confira no rodapé do roadmap
     topicos: 72,          // idem
     rota: [[30,190], [90,160], [150,130], [210,100], [250,70], [275,45]],
-    pasta: "trilhas/nlp/",
-    arquivos: ["data.js", "conteudo-1-....js"],
-  }
+  },
+
+  // em CARREGADORES
+  nlp: () => import("./trilhas/nlp/index.js"),
   ```
 
-  A `rota` é um marco por etapa, num quadro de 300×240 — é ela que a
-  página de entrada desenha. `etapas` e `topicos` são derivados dos dados,
-  mas ficam no manifesto porque descobri-los exigiria baixar as trilhas
-  inteiras só para montar a tela de escolha.
+  A `rota` é um marco por etapa, num quadro de 300×240 — é ela que a mesa
+  desenha na carta. `etapas` e `topicos` são derivados dos dados, mas ficam
+  no manifesto porque descobri-los exigiria baixar as trilhas inteiras só
+  para montar a tela de escolha.
 
 Um tópico tem esta cara, mexer nele é editar cinco campos:
 
