@@ -128,6 +128,22 @@
         <ellipse class={v.olho} cx="364" cy="186" rx="13" ry="16" />
         <path d="M292 201a14 14 0 0 0 28 0z" />
       </g>
+
+      <!-- as pálpebras de olho fechado: arcos, e não os olhos achatados
+           por scaleY — elipse espremida vira um traço reto, que lê como
+           olho riscado. Arco é outra forma, então é outro desenho; eles
+           ficam invisíveis até ele fechar os olhos. -->
+      <g
+        class="obi__palpebras"
+        fill="none"
+        stroke="var({v.tinta})"
+        stroke-width="8"
+        stroke-linecap="round"
+        aria-hidden="true"
+      >
+        <path d="M233 190q14-15 28 0" />
+        <path d="M350 190q14-15 28 0" />
+      </g>
     </svg>
   </span>
 </div>

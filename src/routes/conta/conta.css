@@ -1,0 +1,270 @@
+/* ============================================================
+   A tela de conta.
+
+   Carrega a casca escura (base.css) e acrescenta só o que é daqui:
+   o palco de duas colunas, a cena do Obi e a ficha. Nenhum token
+   novo — os de base.css bastam, e inventar outros aqui faria esta
+   tela divergir das demais na primeira manutenção.
+
+   Duas colunas e não uma ficha centrada: o Obi é quem guarda o
+   progresso, então ele ocupa metade da tela em vez de aparecer como
+   enfeite acima do formulário.
+   ============================================================ */
+
+/* a casca reserva 4rem no pé para o rodapé das outras telas; esta não
+   tem rodapé, e sem zerar isso o palco centrado nasce empurrado para
+   cima por uma faixa vazia que ninguém vê */
+body { padding-bottom: 0; }
+
+/* o painel é a página inteira aqui: uma tela que só pede e-mail e
+   senha não tem por que começar colada no topo. min-height em dvh, e
+   não vh, por causa da barra do navegador no celular, que some ao
+   rolar e deixaria o painel saltando. */
+.palco {
+  min-height: 100dvh;
+  max-width: var(--largura-max);
+  margin: 0 auto;
+  padding-block: clamp(2rem, 6vh, 4.5rem);
+  padding-inline: var(--pad-lateral);
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  align-content: center;
+  gap: 0;
+  border: 0;
+}
+
+/* ------------------------------ a cena ------------------------------ */
+.cena {
+  background: var(--fundo-elevado);
+  border: 1px solid var(--linha);
+  border-right: 0;
+  box-shadow: var(--sombra-dura);
+  padding: var(--pad-painel);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  /* o Obi passa por cima de tudo quando alguém o arrasta, e a ficha
+     é vizinha imediata: sem isto ele sumiria atrás dela */
+  overflow: visible;
+}
+
+.cena__fala {
+  margin: 0;
+  font-size: var(--t-etapa);
+  line-height: 1.15;
+  max-width: 18ch;
+  text-wrap: balance;
+}
+
+/* A variante ninho nasce grudada no canto superior direito, que é o
+   lugar dela no roadmap. Aqui ele não é enfeite de quina: é o centro
+   da cena, então volta para o fluxo e cresce. A chama acompanha o
+   tamanho novo, senão sairia do tamanho de uma vela. */
+.cena .ninho {
+  position: static;
+  margin: auto;
+  --obi-fogo-largura: 68px;
+  --obi-fogo-topo: 92px;
+}
+
+.cena .ninho .obi__corpo > svg {
+  width: clamp(7rem, 11vw, 10.5rem);
+}
+
+/* ------------------------------ a ficha ------------------------------ */
+.ficha {
+  background: var(--fundo-elevado);
+  border: 1px solid var(--linha);
+  box-shadow: var(--sombra-dura);
+  padding: var(--pad-painel);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.ficha__titulo {
+  margin: 0;
+  font-size: var(--t-pagina);
+  line-height: 1.05;
+  font-weight: 400;
+  text-wrap: balance;
+}
+
+.ficha__linha {
+  margin: 0;
+  color: var(--texto-suave);
+  max-width: 40ch;
+}
+
+/* ------------------------------ os campos ------------------------------ */
+.campos { display: flex; flex-direction: column; gap: 0.9rem; }
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.campo__rotulo {
+  font-size: var(--t-micro);
+  letter-spacing: var(--tracking-rotulo);
+  color: var(--texto-suave);
+}
+
+.campo__entrada {
+  width: 100%;
+  font: inherit;
+  font-size: var(--t-leitura);
+  color: var(--texto);
+  background: var(--fundo);
+  border: 1px solid var(--borda-sutil);
+  border-radius: var(--raio);
+  padding: 0.5rem 0.6rem;
+}
+
+.campo__entrada:focus-visible {
+  outline: 2px solid var(--roxo-forte);
+  outline-offset: 2px;
+  border-color: var(--roxo-forte);
+}
+
+.campo__ajuda { font-size: var(--t-micro); color: var(--texto-suave); }
+
+/* o erro tem borda e texto, não só cor: o campo errado precisa se
+   anunciar para quem não a distingue */
+.campo[data-erro] .campo__entrada { border-color: var(--vermelho); }
+.campo[data-erro] .campo__ajuda { color: var(--vermelho); }
+
+/* ------------------------------ o medidor ------------------------------
+   As mesmas células da barra de progresso do mapa, no mesmo tamanho:
+   é a mesma ideia de "quanto já foi" em outro lugar. */
+.medidor {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: var(--t-micro);
+  color: var(--texto-suave);
+}
+
+.medidor__barra { display: flex; gap: 2px; }
+.medidor__celula { width: 9px; height: 9px; background: var(--borda-sutil); }
+.medidor__celula[data-cheia] { background: var(--verde-forte); }
+
+/* ------------------------------ o código ------------------------------ */
+.codigo { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+.codigo__caixa {
+  width: 2.75rem;
+  height: 3.3rem;
+  padding: 0;
+  font: inherit;
+  font-size: var(--t-etapa);
+  text-align: center;
+  color: var(--texto);
+  background: var(--fundo);
+  border: 1px solid var(--borda-sutil);
+  border-radius: var(--raio);
+}
+
+.codigo__caixa:focus-visible {
+  outline: 2px solid var(--roxo-forte);
+  outline-offset: 2px;
+}
+
+/* a caixa preenchida ganha relevo: o avanço se lê de relance, sem
+   contar dígito por dígito */
+.codigo__caixa[data-cheia] {
+  border-color: var(--linha);
+  box-shadow: var(--sombra-dura-sm);
+}
+
+/* ------------------------------ o recado ------------------------------ */
+.recado {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  margin: 0;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--borda-sutil);
+  font-size: var(--t-micro);
+  color: var(--texto-suave);
+}
+
+.recado__marca { flex: none; }
+.recado[data-tom="bom"] { border-color: var(--verde-forte); color: var(--verde-forte); }
+
+/* ------------------------------ as ações ------------------------------ */
+.botao--principal {
+  width: 100%;
+  background: var(--roxo-forte);
+  color: var(--tinta-roxo);
+  border: 1px solid var(--linha);
+  box-shadow: var(--sombra-dura-sm);
+  font-size: var(--t-base);
+  letter-spacing: var(--tracking-rotulo);
+  padding: 0.55rem 1rem;
+  cursor: pointer;
+}
+
+.botao--principal:hover { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--linha); }
+.botao--principal:active { transform: translate(2px, 2px); box-shadow: none; }
+
+.ficha__pe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: auto;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--borda-sutil);
+  font-size: var(--t-micro);
+  color: var(--texto-suave);
+}
+
+.ficha__elo-par { display: flex; gap: 0.4rem; align-items: baseline; }
+
+.elo {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--t-micro);
+  color: var(--roxo-forte);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.elo:focus-visible { outline: 2px solid var(--roxo-forte); outline-offset: 2px; }
+
+/* ------------------------------ no estreito ------------------------------
+   A cena vira faixa no topo e o Obi encolhe: ele continua, porque é
+   ele quem dá nome à tela, mas a ficha é o que se usa. */
+@media (max-width: 56rem) {
+  .palco { grid-template-columns: 1fr; }
+
+  .cena {
+    border-right: 1px solid var(--linha);
+    border-bottom: 0;
+    box-shadow: none;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .cena__fala { font-size: var(--t-leitura); max-width: none; }
+  .cena .obi { margin: 0; flex: none; width: 92px; }
+}
+
+@media (max-width: 30rem) {
+  .codigo__caixa { width: 2.25rem; height: 2.9rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .botao--principal:hover,
+  .botao--principal:active { transform: none; }
+}

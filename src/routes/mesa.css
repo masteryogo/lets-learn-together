@@ -95,6 +95,29 @@ body {
   text-transform: uppercase;
 }
 
+/* O atalho da conta: fixo no alto à direita, fora do fluxo, porque a
+   marca é centrada e qualquer coisa ao lado dela a tiraria do meio.
+   Discreto de propósito — entrar não é o que se vem fazer aqui, e o
+   site inteiro funciona sem conta. */
+.conta {
+  position: fixed;
+  top: clamp(22px, 3vh, 44px);
+  right: clamp(16px, 2.4vw, 32px);
+  z-index: 5;
+  padding: 0.3rem 0.65rem;
+  border: 1px dashed var(--borda);
+  color: inherit;
+  font-size: 13.75px;
+  letter-spacing: 0.14em;
+  text-decoration: none;
+  text-transform: uppercase;
+  background: #15141a0b;
+  transition: background 0.16s, border-color 0.16s;
+}
+
+.conta:hover { background: #15141a13; border-color: var(--linha-dura); }
+.conta:focus-visible { outline: 3px solid var(--roxo); outline-offset: 4px; }
+
 /* ----------------------------- mesa ----------------------------- */
 .mesa {
   position: relative;
@@ -676,11 +699,9 @@ body {
   99%           { transform: scaleY(1); }
 }
 
-/* a armadilha de sempre: animação ganha de `transform` declarado,
-   e o piscar é animação. Sem desligar o piscar o olhar não sai do
-   lugar — e ninguém pisca enquanto encara, então não se perde nada.
-   O JS devolve o piscar sozinho quando o ponteiro para. */
-.ator[data-olhando] .ator__olho { animation: none; }
+/* o desligar do piscar enquanto ele encara mora no obi.css, em
+   .obi[data-olhando]: desde que a tela de conta também olha, a regra
+   vale para as duas variantes e não é mais da mesa. */
 
 .ator__cara { transition: transform 0.24s ease; }
 

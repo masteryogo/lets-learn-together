@@ -39,6 +39,11 @@
   --cinza:            #ebe9e4;
   --verde:            #b7e4c7;
   --verde-forte:      #2d8a4e;
+  /* o único vermelho do projeto, e ele chegou tarde: até a tela de
+     conta nada aqui podia dar errado. Serve para dizer que um campo
+     precisa de conserto — nunca sozinho, sempre com o texto do que
+     houve, porque cor não é mensagem. */
+  --vermelho:         #b3261e;
 
   /* tinta sobre bloco sólido. O amarelo é claro nos dois temas e pede
      tinta escura sempre; o roxo não — ele é escuro no tema claro e
@@ -120,6 +125,9 @@
   --cinza:            #353942;
   --verde:            #2b4e3c;
   --verde-forte:      #63cf93;
+  /* mesma dessaturação do resto da paleta escura: o #b3261e sobre
+     chumbo fica abaixo do contraste de leitura e ainda vibra */
+  --vermelho:         #ef7d7d;
 
   --tinta-roxo:       #22242a;   /* o roxo clareou: a tinta escurece */
 

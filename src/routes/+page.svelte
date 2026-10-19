@@ -27,7 +27,7 @@
   import Carta from "$lib/mesa/Carta.svelte";
   import Caminha from "$lib/mesa/Caminha.svelte";
   import Estojo from "$lib/mesa/Estojo.svelte";
-  import { olhar } from "$lib/mesa/olhar.js";
+  import { olhar } from "$lib/obi/olhar.js";
 
   import "$lib/obi/obi.css";
   import "./mesa.css";
@@ -243,6 +243,10 @@
 <svelte:window onresize={posicionarObi} />
 
 <h1 class="marca">Lets learn together</h1>
+
+<!-- data-sveltekit-reload: a tela de conta carrega a casca escura, e
+     duas folhas globais no mesmo documento uma vence a outra -->
+<a class="conta" href="{base}/conta" data-sveltekit-reload>Entrar</a>
 
 <!-- a mesa: as cartas em cima, o Obi de pé na frente delas -->
 <main

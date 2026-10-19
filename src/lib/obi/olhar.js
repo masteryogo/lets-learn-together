@@ -9,6 +9,10 @@
 
    Ação Svelte, e não estado derivado, pela mesma razão do arrasto:
    escreve transform inline a cada frame e lê getBoundingClientRect.
+
+   Mora aqui e não em mesa/ porque a tela de conta também o usa: o
+   olho tem nome de classe diferente em cada variante do Obi, então
+   quem chama diz qual é. O padrão é o da mesa, que veio primeiro.
    ============================================================ */
 
 const ALCANCE_X = 14;
@@ -19,9 +23,9 @@ const ALCANCE_Y = 9;
 const ESQUECER_MS = 2600;
 
 export function olhar(ator, opcoes) {
-  let { ativo } = opcoes;
+  let { ativo, olho = ".ator__olho" } = opcoes;
 
-  const olhos = [...ator.querySelectorAll(".ator__olho")];
+  const olhos = [...ator.querySelectorAll(olho)];
   const corte = new AbortController();
 
   let vezOlhar = null;
@@ -35,7 +39,8 @@ export function olhar(ator, opcoes) {
     return ator.hasAttribute("data-reagindo") ||
       ator.hasAttribute("data-humor") ||
       ator.hasAttribute("data-pendurado") ||
-      ator.hasAttribute("data-voltando");
+      ator.hasAttribute("data-voltando") ||
+      ator.hasAttribute("data-fechando");
   }
 
   function soltar() {
@@ -80,6 +85,11 @@ export function olhar(ator, opcoes) {
   }, { signal: corte.signal });
 
   return {
+    /* o olhar escreve transform inline, e inline ganha da regra do
+       CSS: quem for mandar nos olhos por classe precisa pedir que
+       ele largue antes, ou o estado novo não aparece */
+    soltar,
+
     update(novas) {
       ativo = novas.ativo;
     },
