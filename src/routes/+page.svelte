@@ -21,7 +21,8 @@
   import { MediaQuery } from "svelte/reactivity";
 
   import { TRILHAS } from "$lib/trilhas.js";
-  import { feitosDe } from "$lib/progresso.js";
+  import { sessao } from "$lib/conta/Sessao.svelte.js";
+  import { contagens } from "$lib/roadmap/sincronia.svelte.js";
   import Obi from "$lib/obi/Obi.svelte";
   import { ControleObi, semMovimento } from "$lib/obi/ControleObi.svelte.js";
   import Carta from "$lib/mesa/Carta.svelte";
@@ -31,6 +32,13 @@
 
   import "$lib/obi/obi.css";
   import "./mesa.css";
+
+  $effect(() => sessao.iniciar());
+
+  /* o nome que a pessoa escolheu no cadastro. Conta antiga, feita
+     antes de existir o campo, cai no e-mail — e o title guarda o
+     endereço de qualquer forma, para quem tem duas contas. */
+  const apelido = $derived(sessao.nome);
 
   /* inclinação leve e fixa por carta: mapas largados numa mesa não
      ficam alinhados. Fixa, e não aleatória, para não dançar a cada
@@ -97,8 +105,20 @@
     aoChegar: () => posicionarObi(),
   });
 
+  /* a contagem vem do banco, que é o único dono do progresso. Sem
+     conta as cartas mostram zero — e é verdade: sem conta não há
+     progresso salvo em lugar nenhum. */
   $effect(() => {
-    feitos = trilhas.map(([id, t]) => Math.min(feitosDe(id), t.topicos));
+    if (!sessao.conectado) {
+      feitos = trilhas.map(() => 0);
+      return;
+    }
+    let vivo = true;
+    contagens().then((mapa) => {
+      if (!vivo || !mapa) return;
+      feitos = trilhas.map(([id, t]) => Math.min(mapa[id] ?? 0, t.topicos));
+    });
+    return () => (vivo = false);
   });
 
   $effect(() => {
@@ -245,8 +265,27 @@
 <h1 class="marca">Lets learn together</h1>
 
 <!-- data-sveltekit-reload: a tela de conta carrega a casca escura, e
-     duas folhas globais no mesmo documento uma vence a outra -->
-<a class="conta" href="{base}/conta" data-sveltekit-reload>Entrar</a>
+     duas folhas globais no mesmo documento uma vence a outra.
+
+     Enquanto a sessão é desconhecida o canto fica vazio: a página é
+     pré-renderizada, então "Entrar" sairia no HTML e piscaria para
+     quem já está conectado. Vazio por um instante é mais honesto que
+     o convite errado. -->
+{#if !sessao.carregando}
+  <a
+    class="conta"
+    href="{base}/conta"
+    data-sveltekit-reload
+    title={sessao.conectado ? sessao.usuario.email : "Entrar na conta"}
+  >
+    {#if sessao.conectado}
+      <span class="conta__marca" aria-hidden="true">■</span>
+      <span class="conta__nome">{apelido}</span>
+    {:else}
+      Entrar
+    {/if}
+  </a>
+{/if}
 
 <!-- a mesa: as cartas em cima, o Obi de pé na frente delas -->
 <main

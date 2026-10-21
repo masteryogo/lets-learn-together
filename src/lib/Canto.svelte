@@ -9,9 +9,12 @@
 <script>
   import { base } from "$app/paths";
   import { alternarTema } from "$lib/tema.js";
+  import Atalho from "$lib/conta/Atalho.svelte";
 </script>
 
 <div class="canto">
+  <Atalho />
+
   <!-- data-sveltekit-reload: a mesa tem folha de estilo própria e
        global, que não pode dividir documento com esta -->
   <a

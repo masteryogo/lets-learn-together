@@ -116,6 +116,27 @@ body {
 }
 
 .conta:hover { background: #15141a13; border-color: var(--linha-dura); }
+
+/* ele só aparece quando a sessão responde, e aparecer de estalo faz
+   a quina parecer defeito de carregamento. Curto: é um canto, não um
+   anúncio. */
+@keyframes conta-entra {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+.conta { animation: conta-entra 0.2s ease-out both; }
+
+/* conectado: a marca do feito antes do nome, como no mapa — estado
+   com forma além de cor. O nome trunca em vez de empurrar a quina. */
+.conta__marca { margin-right: 0.4em; }
+.conta__nome {
+  display: inline-block;
+  max-width: 22ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  white-space: nowrap;
+}
 .conta:focus-visible { outline: 3px solid var(--roxo); outline-offset: 4px; }
 
 /* ----------------------------- mesa ----------------------------- */
@@ -826,6 +847,7 @@ body {
   .ator__corpo, .ator__sombra, .ator__olho,
   .carta--aberta .carta__rota-cheia,
   .carta--indo .carta__acender,
+  .conta,
   .aberto[open] { animation: none !important; }
   * { transition-duration: 0.01ms !important; }
 }

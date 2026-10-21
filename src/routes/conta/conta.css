@@ -195,6 +195,9 @@ body { padding-bottom: 0; }
 
 .recado__marca { flex: none; }
 .recado[data-tom="bom"] { border-color: var(--verde-forte); color: var(--verde-forte); }
+/* o que o servidor recusou. Marca × junto da cor, como no mapa: estado
+   não deve depender só de cor. */
+.recado[data-tom="ruim"] { border-color: var(--vermelho); color: var(--vermelho); }
 
 /* ------------------------------ as ações ------------------------------ */
 .botao--principal {
@@ -264,7 +267,108 @@ body { padding-bottom: 0; }
   .codigo__caixa { width: 2.25rem; height: 2.9rem; }
 }
 
+/* o caminho social, separado do formulário por um "ou" de texto: uma
+   régua gráfica brigaria com a moldura da ficha */
+.ficha__ou {
+  margin: 0.75rem 0 0.5rem;
+  text-align: center;
+  color: var(--texto-suave);
+  font-size: var(--t-micro);
+  letter-spacing: var(--tracking-rotulo);
+}
+.ficha__google {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* os dois documentos, discretos: eles precisam existir e estar à
+   mão, não disputar atenção com o formulário */
+.palco__legais {
+  margin: 1.5rem 0 0;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  color: var(--texto-suave);
+  font-size: var(--t-micro);
+}
+.palco__legais a { color: inherit; }
+.palco__legais a:hover { color: var(--texto); }
+
+/* a porta de saída, na quina livre da tela */
+.conta-volta {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 10;
+  background: var(--fundo-elevado);
+  box-shadow: var(--sombra-dura);
+}
+
+/* --------------------------- o movimento ---------------------------
+   Tudo aqui é curto e em degraus: a tela é de pixel, e transição longa
+   num formulário vira espera. Cada estado que o servidor demora a
+   responder precisa de sinal — senão o clique parece não ter chegado. */
+
+/* a ficha entra a cada passo. Sobe pouco: o salto grande faria o
+   formulário parecer outro, e é o mesmo. */
+@keyframes ficha-entra {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+.ficha { animation: ficha-entra 0.18s ease-out both; }
+
+/* três blocos acendendo em sequência enquanto o servidor responde */
+.espera {
+  display: inline-flex;
+  gap: 4px;
+  vertical-align: middle;
+}
+.espera i {
+  width: 7px;
+  height: 7px;
+  background: currentColor;
+  opacity: 0.25;
+  animation: espera-acende 0.9s steps(1, end) infinite;
+}
+.espera i:nth-child(2) { animation-delay: 0.3s; }
+.espera i:nth-child(3) { animation-delay: 0.6s; }
+@keyframes espera-acende {
+  0%, 33% { opacity: 1; }
+  34%, 100% { opacity: 0.25; }
+}
+/* o botão ocupado para de convidar: sem isto ele continua levantando
+   no hover enquanto nada pode ser clicado */
+.botao--principal[aria-busy="true"] { cursor: progress; }
+.botao--principal:disabled:hover,
+.botao--principal:disabled:active { transform: none; }
+
+/* o recado chega deslizando da margem do formulário */
+@keyframes recado-entra {
+  from { opacity: 0; transform: translateX(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+.recado { animation: recado-entra 0.16s ease-out both; }
+/* o que o servidor recusou treme uma vez. Uma, e curta: repetir faria
+   da recusa um alarme, e ela é só uma informação. */
+.recado[data-tom="ruim"] { animation: recado-entra 0.16s ease-out both, recado-nega 0.2s steps(3, end) 1; }
+@keyframes recado-nega {
+  0%, 100% { margin-left: 0; }
+  33% { margin-left: -3px; }
+  66% { margin-left: 3px; }
+}
+
+/* a saída para a mesa: a tela se apaga antes de o documento trocar,
+   senão a travessia é um branco seco (cada tela é documento novo,
+   por causa do CSS global) */
+.palco { transition: opacity 0.18s ease-in; }
+.palco[data-saindo] { opacity: 0; pointer-events: none; }
+
 @media (prefers-reduced-motion: reduce) {
   .botao--principal:hover,
   .botao--principal:active { transform: none; }
+  .ficha, .recado { animation: none; }
+  .espera i { animation: none; opacity: 0.6; }
 }

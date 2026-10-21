@@ -468,6 +468,165 @@ body {
   box-shadow: var(--sombra-dura);
 }
 
+/* conectado: um quadrado no canto do ícone. Estado com forma, não só
+   com cor — e aqui nem cor havia, já que o ícone é o mesmo dos dois
+   lados. Quem é a pessoa fica no title e no aria-label. */
+/* a nota presa a um tópico, vista de dentro do drawer. Lembra o
+   post-it sem imitá-lo: aqui ela é citação, não objeto que se
+   arrasta — quem a move é o mural. */
+.drawer__post-it {
+  margin: 0 0 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border-left: 3px solid var(--cor-nota, var(--amarelo-forte));
+  background: var(--fundo);
+  font-size: var(--t-base);
+  white-space: pre-wrap;
+}
+.drawer__post-it[data-cor="roxo"] { --cor-nota: var(--roxo-forte); }
+.drawer__post-it[data-cor="verde"] { --cor-nota: var(--verde-forte); }
+.drawer__post-it[data-cor="cinza"] { --cor-nota: var(--texto-suave); }
+
+/* o elo para o mural: é a única saída do drawer, e sair daqui é
+   trocar de documento (folha própria por tela) */
+.drawer__elo {
+  display: inline-block;
+  margin-top: 0.25rem;
+  color: var(--texto-suave);
+  font-size: var(--t-micro);
+}
+.drawer__elo:hover { color: var(--texto); }
+
+/* o aviso de escrita que não chegou ao banco. Canto oposto ao do
+   menu de conta, para não cobrir o que a pessoa acabou de clicar. */
+.aviso-falha {
+  position: fixed;
+  left: 1rem;
+  bottom: 1rem;
+  z-index: 55;
+  max-width: min(32rem, calc(100vw - 2rem));
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--vermelho);
+  background: var(--fundo-elevado);
+  box-shadow: var(--sombra-dura);
+  color: var(--vermelho);
+  font-size: var(--t-micro);
+}
+.aviso-falha__marca { flex: none; }
+/* o texto cru é prova, não mensagem: fica menor e apagado */
+.aviso-falha__cru { color: var(--texto-suave); word-break: break-word; }
+
+/* o menu da conta: abre para o lado no rail e para baixo na quina.
+   Ancorado no botão, e não na tela, para não virar modal — isto é
+   uma escolha curta, não uma decisão. */
+.conta-menu { position: relative; }
+.conta-menu__lista {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.4rem);
+  z-index: 60;
+  min-width: 13rem;
+  display: grid;
+  border: 1px solid var(--linha-dura);
+  background: var(--fundo-elevado);
+  box-shadow: var(--sombra-dura);
+}
+/* na quina (notas, calendário) ele cai para baixo: lá o botão está no
+   topo da tela, e abrir para cima sairia da janela */
+.canto .conta-menu__lista { top: calc(100% + 0.4rem); bottom: auto; }
+
+/* no rail ele abre PARA O LADO. O rail encosta na borda esquerda da
+   janela, então alinhar o menu pela direita do botão o joga para
+   fora da tela — foi o que cortava a aba. */
+.rail .conta-menu__lista {
+  left: calc(100% + 0.4rem);
+  right: auto;
+  bottom: 0;
+}
+
+.conta-menu__quem {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--borda-sutil);
+  font-size: var(--t-micro);
+  color: var(--texto-suave);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.conta-menu__item {
+  padding: 0.55rem 0.75rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: var(--t-base);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.conta-menu__item:hover:not(:disabled) { background: var(--fundo); }
+.conta-menu__item:disabled { opacity: 0.45; cursor: not-allowed; }
+.conta-menu__item--perigo:not(:disabled) { color: var(--vermelho); }
+
+/* o convite a entrar: a tela de conta reduzida ao que destrava o
+   gesto. Os campos usam .campo, que já existe aqui. */
+.convite { display: grid; gap: 0.5rem; margin-top: var(--pad-painel); }
+.convite .botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+/* a marca do Google não acompanha o texto no tema escuro: ela tem
+   cores próprias, e são elas que a tornam reconhecível */
+.convite__google:disabled { opacity: 0.55; cursor: not-allowed; }
+.convite__embreve {
+  font-size: var(--t-micro);
+  color: var(--texto-suave);
+  letter-spacing: var(--tracking-rotulo);
+}
+
+/* a pergunta do primeiro login: faixa no rodapé, não modal. O que
+   ela decide é o destino do que já está marcado — pode esperar, e
+   bloquear a tela para isso seria cobrar pedágio por entrar. */
+.migrar {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  z-index: 45;
+  max-width: min(42rem, calc(100vw - 2rem));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--linha-dura);
+  background: var(--fundo-elevado);
+  box-shadow: var(--sombra-dura);
+  animation: migrar-entra 0.2s ease-out both;
+}
+.migrar__texto { margin: 0; flex: 1 1 18rem; font-size: var(--t-base); }
+.migrar__acoes { display: flex; gap: 0.5rem; }
+@keyframes migrar-entra {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.conta-atalho { position: relative; }
+.conta-atalho[data-conectado]::after {
+  content: "";
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 5px;
+  height: 5px;
+  background: var(--verde-forte, currentColor);
+}
+
 /* ------------------------------ rail ------------------------------ */
 /* coluna das ações da página: sticky de ponta a ponta, como a lateral,
    e com a mesma régua à direita. Sem sombra dura nos botões — ela
@@ -503,14 +662,16 @@ body {
   transform: none;
 }
 
-/* a lixeira desce para a ponta: longe do que se clica por engano */
-.rail .rail__zerar { margin-top: auto; position: relative; }
+/* a ponta do rail é da conta, que antes era da lixeira: zerar entrou
+   no menu dela, e o que fica longe do clique por engano agora é o
+   menu inteiro */
+.rail .conta-menu { margin-top: auto; position: relative; }
 
 /* o afastamento sozinho é ambíguo: numa janela alta o vão passa de
    600px e lê como espaço esquecido, não como intenção. O filete
    fecha o grupo de cima e diz que daqui para baixo é outra coisa —
    sem encostar a lixeira no que se clica todo dia. */
-.rail .rail__zerar::before {
+.rail .conta-menu::before {
   content: "";
   position: absolute;
   top: -0.75rem;
@@ -1567,7 +1728,8 @@ body:has(.drawer--ajustando) .sobreposicao {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .drawer { animation: none; }
+  .drawer, .migrar { animation: none; }
+  .espera i { animation: none; opacity: 0.6; }
   .ninho .obi__corpo,
   .logo__olho { animation: none; }
   * { transition-duration: 0.01ms !important; }
@@ -1953,12 +2115,20 @@ body:has(.drawer:not([hidden])) { overflow: hidden; }
 
   /* deitado, "na ponta" é a direita, e o auto do eixo vertical não
      empurra mais nada */
-  .rail .rail__zerar { margin-top: 0; margin-left: auto; }
+  .rail .conta-menu { margin-top: 0; margin-left: auto; }
+
+  /* deitado, o rail é uma barra: o menu volta a cair alinhado pela
+     direita, que é onde o botão está */
+  .rail .conta-menu__lista {
+    left: auto;
+    right: 0;
+    bottom: calc(100% + 0.4rem);
+  }
 
   /* o filete vira de pé e desce para o vão entre os botões: aqui ele
      faz todo o trabalho, porque a barra é curta e não sobra
      afastamento para separar sozinho */
-  .rail .rail__zerar::before {
+  .rail .conta-menu::before {
     top: 50%;
     left: -0.3rem;
     width: 2px;
