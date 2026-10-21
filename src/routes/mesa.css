@@ -806,6 +806,24 @@ body {
      na posição absoluta vira só espaço morto */
   .mesa { justify-content: flex-start; padding-bottom: 0; }
 
+  /* a quina sai do canto e vira linha própria acima do título. Fixa,
+     ela montava em cima da marca — e o nome de quem está conectado é
+     justamente o que cresce sem teto. Aqui a ordem é a da leitura:
+     quem é você, e então onde você está. */
+  .conta {
+    position: static;
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    margin: 0 0 1rem auto;
+  }
+  .conta__nome { max-width: 16ch; }
+
+  /* o título deixa de disputar espaço com ela e pode usar a largura
+     inteira; quebra em duas linhas antes de encolher a ponto de
+     sumir */
+  .marca { font-size: clamp(19px, 6vw, 28px); overflow-wrap: anywhere; }
+
   .cartas { grid-template-columns: 1fr; gap: 14px; max-width: none; }
   .carta { width: auto; }
 
@@ -841,6 +859,11 @@ body {
   /* a cama é uma posição na mesa, e aqui não há mesa: o Obi vira
      rodapé centrado, e uma cama vazia no canto não diz nada */
   .caminha { display: none; }
+}
+
+/* abaixo disto o nome inteiro não cabe nem em linha própria */
+@media (max-width: 26rem) {
+  .conta__nome { max-width: 12ch; }
 }
 
 @media (prefers-reduced-motion: reduce) {

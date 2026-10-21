@@ -1,5 +1,4 @@
 .vercel
-.kanban
 
 # dependências e artefatos: o site é servido como arquivo, então nada
 # daqui é necessário para rodá-lo — e são 67M que o histórico carregaria

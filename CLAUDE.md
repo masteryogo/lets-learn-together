@@ -127,6 +127,18 @@ deixa editar o modelo de e-mail, e o padrão manda `{{ .ConfirmationURL }}`.
 O passo do código continua escrito em `fluxo.js`, dormente, porque ele volta
 a valer no dia em que houver SMTP próprio.
 
+O **login com Google** usa a mesma porta de volta (`?code=` na URL, trocado
+por sessão pelo `detectSessionInUrl`). O app está publicado em produção no
+Google Cloud, com escopos básicos — que não exigem verificação. O nome vem
+de `full_name`, e o gatilho `criar_perfil_do_usuario` o copia para `perfil`
+sem precisar saber de onde veio.
+
+**Metade dessa configuração não mora no repositório**: cliente OAuth e tela
+de consentimento no Google Cloud, provedor e modelos de e-mail no painel do
+Supabase, e as variáveis `PUBLIC_SUPABASE_*` em *Variables* do Actions — sem
+elas, o site publicado nasce sem conta. O `.env.example` conta só a parte
+que cabe num arquivo.
+
 Os estados ciclam em `pendente → estudando → feito → pulado`. As marcas
 `□ ► ■ ×` existem porque a Departure Mono não tem `◔` nem `✓` — e porque o
 estado não deve depender só de cor.
@@ -297,16 +309,39 @@ nisso quebra links já publicados.
 
 ## Quadro de trabalho
 
-Dois lugares, e eles não são o mesmo:
+**Um lugar só:** a tela `/kanban`, com os dados em
+`src/lib/kanban/dados.js`. Havia um `.kanban` na raiz, rascunho local fora
+do versionamento; ele saiu em 21/10/2026, porque dois quadros espelhados à
+mão divergem — e o que estava só nele já tinha sido levado para cá.
 
-- `.kanban` na raiz — quadro local, fora do versionamento, não é
-  documentação. Cinco colunas: **A fazer**, **Bloqueado por BaaS**, **Em
-  análise**, **Descartado** e **Concluído**, cada item com o motivo da
-  decisão. Não confundir com as **raias**, que são áreas (Arquitetura,
-  Interface, Conteúdo) e viram o filtro da tela — coluna é status.
-- `/kanban` — a tela pública, com dados em `src/lib/kanban/dados.js`.
+**Os cards vivem no banco** desde 21/10/2026 (tabela `kanban_card`), e a
+tela os lê em runtime — por isso `/kanban` tem `ssr = false`. O
+`dados.js` ficou só com a estrutura: colunas, raias e os números medidos
+à mão. Qualquer pessoa com conta pode escrever no quadro; apagar é de
+quem criou o card ou de quem tem `perfil.admin`.
 
-Vale ler o `.kanban` antes de propor mudança grande: ideias já recusadas
-estão lá com o porquê (quiz por tópico). Supabase, conta, progresso, notas
-e calendário saíram em 19–20/10/2026; o que resta na raia Arquitetura é a
-rota condicional e o modo Google do calendário.
+Quatro colunas: **A fazer**, **Em análise**, **Descartado** e
+**Concluído**. Havia uma quinta, *Bloqueado por BaaS*, que saiu junto com
+a mudança: ela nomeava um impedimento e não um status, e esvaziou quando
+o Supabase chegou. Não confundir com as **raias**, que são áreas
+(Arquitetura, Interface, Conteúdo) e viram o filtro da tela — coluna é
+status.
+
+**Sugestões** (`sugestao`) são de quem tem conta e não viram card
+sozinhas: têm estado (`nova → lida → virou_card | recusada`) e um
+`card_id` que aponta o card nascido delas. Se escrevessem direto no
+quadro, ele deixaria de ser uma lista de decisões tomadas.
+
+A regra do arquivo: **card sem `porque` não entra**. O valor do quadro é o
+motivo, não a lista — e é por isso que vale lê-lo antes de propor mudança
+grande: ideia já recusada está lá com o porquê (quiz por tópico), e decisão
+já tomada evita refazer a discussão (o calendário ser dono dos eventos, a
+rota atenuar em vez de esconder).
+
+Os campos que a tela desenha são `titulo`, `resumo`, `blocos`, `porque` e
+`vejaTambem`. Campo novo que o componente não leia vira dado morto, sem
+erro nenhum para avisar.
+
+Supabase, conta, login social, progresso, notas e calendário saíram em
+19–21/10/2026. O que resta na raia Arquitetura é a rota condicional,
+excluir a própria conta e o modo Google do calendário.

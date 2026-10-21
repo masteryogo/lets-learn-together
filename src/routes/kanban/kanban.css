@@ -25,11 +25,15 @@
 
   /* uma cor por coluna, na mesma família dessaturada da carta náutica */
   --col-fazer:     #2d6a8a;
-  --col-bloqueado: #c0392b;
+  /* era a cor da coluna "Bloqueado por BaaS", que saiu em 21/10/2026.
+     O token fica: ele virou o vermelho desta folha, usado pelo erro da
+     sugestão e pela falha de leitura do quadro — e esta tela não
+     carrega o base.css, onde mora o --vermelho do resto do projeto. */
+  --col-erro: #c0392b;
   --col-analise:   #b8860b;
   --col-descartado:#6b6558;
   /* verde da mesma família dessaturada: é o único "deu certo" do quadro,
-     e precisa se distinguir do vermelho de bloqueado sem gritar */
+     e precisa se distinguir do vermelho do erro sem gritar */
   --col-concluido: #1c6e51;
 
   --linha-dura:     #15141a;
@@ -226,3 +230,93 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .botao:hover, .botao:active { transform: none; }
 }
+
+/* ---------------------------- sugerir ----------------------------
+   A seção fica depois do quadro, e não antes: quem chega lê as
+   decisões já tomadas primeiro — é isso que faz a sugestão vir
+   informada em vez de repetir o que já foi discutido.
+
+   Os tokens são os desta folha (--papel, --tinta, --borda). Esta tela
+   não carrega o base.css: ela tem paleta própria, como a mesa, e
+   classe emprestada de lá sai sem estilo nenhum. */
+/* o painel do card já existia; a sugestão usa o mesmo gesto — véu,
+   Escape e fechar na barra — porque é a mesma natureza: um texto que
+   se lê ou escreve sem sair do quadro */
+/* o painel do card já existia; a sugestão usa o mesmo gesto e o mesmo
+   corpo (.painel__corpo), que é quem tem o respiro. A barra pede
+   --cor-coluna: sem ela o rótulo sai branco sobre papel. */
+.topo__sugerir { margin-left: auto; }
+
+/* o título da sugestão é o mesmo tamanho do título do card, porque os
+   dois painéis são a mesma coisa vista de dois lados */
+.sugerir__titulo { margin: 5.5px 0 0; font-size: 16.5px; font-weight: 400; }
+.sugerir__linha { margin: 5.5px 0 16.5px; color: var(--tinta-fraca); }
+
+
+.sugerir__forma { display: grid; gap: 0.9rem; }
+
+.sugerir .campo { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+.sugerir .campo__rotulo {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tinta-fraca);
+}
+.sugerir .campo__controle {
+  width: 100%;
+  font: inherit;
+  color: var(--tinta);
+  background: #fff;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 0.5rem 0.6rem;
+}
+.sugerir textarea.campo__controle { resize: vertical; }
+
+/* o link de entrar é botão: quem não tem conta precisa do mesmo alvo
+   que quem tem, no mesmo lugar */
+.sugerir__entrar { display: inline-block; text-align: center; text-decoration: none; }
+
+.sugerir__eco { margin: 0; font-size: 11px; }
+.sugerir__eco[data-tom="bom"] { color: var(--col-concluido); }
+.sugerir__eco[data-tom="ruim"] { color: var(--col-erro); }
+
+.sugerir__minhas { margin-top: 2rem; }
+.sugerir__sub {
+  margin: 0 0 0.75rem;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tinta-fraca);
+  font-weight: 400;
+}
+
+.sugestao-item {
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--borda);
+  background: #fff;
+}
+.sugestao-item__topo {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+/* o estado tem forma além de cor, como o resto do projeto */
+.sugestao-item__estado { flex: none; font-size: 11px; color: var(--tinta-fraca); }
+.sugestao-item__estado[data-estado="virou_card"] { color: var(--col-concluido); }
+.sugestao-item__estado::before { content: "A1 "; }
+.sugestao-item__estado[data-estado="lida"]::before { content: "BA "; }
+.sugestao-item__estado[data-estado="virou_card"]::before { content: "A0 "; }
+.sugestao-item__estado[data-estado="recusada"]::before { content: " D7 "; }
+
+.sugestao-item__resposta { margin: 0.4rem 0 0; font-size: 11px; color: var(--tinta-fraca); }
+
+/* enquanto o quadro vem do banco */
+.quadro__espera {
+  padding: 1rem 0;
+  color: var(--tinta-tampo);
+}
+.quadro__espera[data-falha] { color: var(--col-erro); }

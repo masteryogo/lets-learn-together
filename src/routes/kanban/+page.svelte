@@ -18,9 +18,30 @@
     KANBAN_COLUNAS,
     KANBAN_RAIAS,
     KANBAN_NUMEROS,
-    KANBAN_CARDS,
   } from "$lib/kanban/dados.js";
+  import {
+    estado as estadoDoQuadro,
+    listarCards,
+    minhasSugestoes,
+    sugerir,
+  } from "$lib/kanban/remoto.svelte.js";
+  import { sessao } from "$lib/conta/Sessao.svelte.js";
   import "./kanban.css";
+
+  /* os cards vêm do banco desde 21/10/2026. A leitura é pública, então
+     a tela funciona deslogada — é ela que explica o projeto a quem
+     chega. */
+  let KANBAN_CARDS = $state([]);
+  let carregando = $state(true);
+
+  $effect(() => sessao.iniciar());
+
+  $effect(() => {
+    listarCards().then((cards) => {
+      KANBAN_CARDS = cards ?? [];
+      carregando = false;
+    });
+  });
 
   let raiaAtiva = $state("todas");
   let aberto = $state(null); /* o card no painel */
@@ -28,6 +49,41 @@
   let fecharEl = $state(null);
 
   const opcoes = [{ id: "todas", rotulo: "Todas" }, ...KANBAN_RAIAS];
+
+  /* ------------------------- sugerir ------------------------- */
+
+  let sugestao = $state({ titulo: "", corpo: "", raia: "" });
+  let enviando = $state(false);
+  let eco = $state(null);
+  let minhas = $state([]);
+  let sugerindo = $state(false);
+
+  $effect(() => {
+    if (sessao.conectado) minhasSugestoes().then((l) => (minhas = l));
+    else minhas = [];
+  });
+
+  async function enviarSugestao(ev) {
+    ev.preventDefault();
+    if (enviando) return;
+    enviando = true;
+    const falha = await sugerir(sugestao);
+    enviando = false;
+    if (falha) {
+      eco = { tom: "ruim", texto: falha };
+      return;
+    }
+    sugestao = { titulo: "", corpo: "", raia: "" };
+    eco = { tom: "bom", texto: "Enviada. Ela entra na fila para virar card." };
+    minhas = await minhasSugestoes();
+  }
+
+  const ESTADOS_SUGESTAO = {
+    nova: "na fila",
+    lida: "lida",
+    virou_card: "virou card",
+    recusada: "recusada",
+  };
 
   function rotuloRaia(id) {
     return KANBAN_RAIAS.find((r) => r.id === id)?.rotulo ?? id;
@@ -101,13 +157,14 @@
   <title>Lets learn together — quadro de trabalho</title>
   <meta
     name="description"
-    content="O que está em andamento, o que está bloqueado, o que está em análise e o que foi descartado — sempre com o motivo."
+    content="O que está em andamento, o que está em análise, o que foi descartado e o que já saiu — sempre com o motivo."
   />
 </svelte:head>
 
 <svelte:window
   onkeydown={(ev) => {
     if (ev.key === "Escape" && aberto) fechar();
+    else if (ev.key === "Escape" && sugerindo) sugerindo = false;
   }}
 />
 
@@ -115,6 +172,11 @@
   <div class="topo__linha">
     <a class="botao" href="{base}/" data-sveltekit-reload>← Trilhas</a>
     <h1 class="marca">Quadro de trabalho</h1>
+    <!-- a porta da sugestão: embaixo da última coluna ela ficava a dois
+         mil pixels de rolagem, que é o mesmo que não existir -->
+    <button class="botao topo__sugerir" type="button" onclick={() => (sugerindo = true)}>
+      + Sugerir
+    </button>
   </div>
   <p class="topo__nota">
     O que vem por aí, e o porquê de cada coisa estar onde está. Clique num
@@ -135,6 +197,16 @@
     >
   {/each}
 </nav>
+
+{#if carregando}
+  <p class="quadro__espera" role="status">Buscando o quadro…</p>
+{:else if estadoDoQuadro.falha}
+  <!-- quadro vazio por erro é indistinguível de quadro vazio: o
+       primeiro precisa se denunciar -->
+  <p class="quadro__espera" data-falha="sim" role="status">
+    Não consegui ler o quadro: {estadoDoQuadro.falha}
+  </p>
+{/if}
 
 <main class="quadro">
   {#each KANBAN_COLUNAS as coluna}
@@ -250,3 +322,106 @@
 </aside>
 
 <p class="aviso" role="status" aria-live="polite">{aviso}</p>
+
+<!-- ========================== sugerir ==========================
+     O quadro deixou de ser só leitura: quem usa o site pode propor
+     algo. A sugestão não vira card sozinha — ela entra numa fila e
+     a decisão continua sendo de quem mantém o projeto. Fosse
+     direto, qualquer pessoa escreveria no quadro, e o valor dele é
+     justamente ser uma lista de decisões tomadas. -->
+<div class="veu" hidden={!sugerindo} onclick={() => (sugerindo = false)} aria-hidden="true"></div>
+
+<aside
+  class="painel sugerir"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="sugerir-titulo"
+  hidden={!sugerindo}
+  style:--cor-coluna="var(--col-fazer)"
+>
+  <div class="painel__barra">
+    <span class="painel__coluna">Sugestão</span>
+    <button class="botao botao--icone" type="button" aria-label="Fechar"
+      onclick={() => (sugerindo = false)}>×</button>
+  </div>
+
+  <div class="painel__corpo">
+    <h2 class="sugerir__titulo" id="sugerir-titulo">Sugerir alguma coisa</h2>
+  <p class="sugerir__linha">
+    Faltou uma trilha, um recurso, um conserto? Escreva aqui — e diga o
+    <em>porquê</em>, que é o que o quadro guarda de cada card.
+  </p>
+
+  <form class="sugerir__forma" onsubmit={enviarSugestao}>
+    <label class="campo" for="sugestao-titulo">
+      <span class="campo__rotulo">Em uma linha</span>
+      <input
+        class="campo__controle"
+        id="sugestao-titulo"
+        type="text"
+        maxlength="120"
+        placeholder="ex.: trilha de bancos de dados"
+        bind:value={sugestao.titulo}
+      />
+    </label>
+
+    <label class="campo" for="sugestao-raia">
+      <span class="campo__rotulo">Onde você acha que entra</span>
+      <select class="campo__controle" id="sugestao-raia" bind:value={sugestao.raia}>
+        <option value="">não sei dizer</option>
+        {#each KANBAN_RAIAS as r}
+          <option value={r.id}>{r.rotulo}</option>
+        {/each}
+      </select>
+    </label>
+
+    <label class="campo" for="sugestao-corpo">
+      <span class="campo__rotulo">O que e por quê</span>
+      <textarea
+        class="campo__controle"
+        id="sugestao-corpo"
+        rows="5"
+        maxlength="4000"
+        placeholder="O que você faria, e o problema que isso resolve."
+        bind:value={sugestao.corpo}
+      ></textarea>
+    </label>
+
+    {#if sessao.conectado}
+      <button class="botao botao--destaque" type="submit" disabled={enviando}>
+        {enviando ? "Enviando…" : "Enviar sugestão"}
+      </button>
+    {:else}
+      <!-- data-sveltekit-reload: a tela de conta tem folha própria, e
+           esta aqui também — duas globais no mesmo documento e uma
+           vence a outra -->
+      <a class="botao botao--destaque sugerir__entrar" href="{base}/conta" data-sveltekit-reload>
+        Entrar para sugerir
+      </a>
+    {/if}
+
+    {#if eco}
+      <p class="sugerir__eco" data-tom={eco.tom} role="status">{eco.texto}</p>
+    {/if}
+  </form>
+
+  {#if minhas.length}
+    <div class="sugerir__minhas">
+      <h3 class="sugerir__sub">Suas sugestões</h3>
+      {#each minhas as s (s.id)}
+        <article class="sugestao-item">
+          <div class="sugestao-item__topo">
+            <span class="sugestao-item__titulo">{s.titulo}</span>
+            <span class="sugestao-item__estado" data-estado={s.estado}>
+              {ESTADOS_SUGESTAO[s.estado] ?? s.estado}
+            </span>
+          </div>
+          {#if s.resposta}
+            <p class="sugestao-item__resposta">{s.resposta}</p>
+          {/if}
+        </article>
+        {/each}
+      </div>
+    {/if}
+  </div>
+</aside>
