@@ -1,17 +1,29 @@
 /* ============================================================
    As notas, como estado reativo.
 
-   Nada daqui sobrevive ao recarregar: é de propósito. Texto
-   escrito não se refaz, e localStorage não é lugar para o que não
-   se refaz — o Safari apaga o de site sem visita em 7 dias.
+   Elas persistem: a tabela `nota` no Supabase é a dona, e este
+   arquivo é quem traduz os gestos do mural em escrita. Sem conta o
+   mural fica vazio e recusa o gesto, como o mapa do roadmap faz
+   com as marcações.
 
-   Quando o Supabase entrar, é este arquivo que troca de origem:
-   `itens` passa a vir do banco e `criar`/`apagar`/`mover` viram
-   escritas. A tela não muda.
+   O cuidado que o progresso não exigia é o **ritmo**: arrastar
+   dispara `definir` a cada pointermove e digitar, a cada tecla. Por
+   isso toda mudança de campo é agrupada por nota e só desce ao
+   banco depois de uma pausa — e no `pagehide`, para quem fecha a
+   aba no meio da frase.
 
-   Os exemplos existem porque mural vazio não ensina o gesto, e um
-   mural de mentira é melhor professor que uma dica de texto.
+   Havia exemplos aqui, para ensinar o gesto a quem chegava. Saíram:
+   nota de mentira é indistinguível de nota de verdade até alguém
+   tentar arrastá-la, e aí o mural mente sobre o que guarda. Quem
+   não entrou vê o convite, que diz a verdade.
    ============================================================ */
+import { sessao } from "$lib/conta/Sessao.svelte.js";
+import * as remoto from "./remoto.svelte.js";
+
+/* quanto tempo sem mexer antes de gravar. Alto o bastante para uma
+   frase inteira caber numa escrita só; baixo o bastante para a
+   pausa de quem pensa já garantir o texto. */
+const PAUSA = 700;
 
 export const CORES = ["amarelo", "roxo", "verde", "cinza"];
 
@@ -21,26 +33,70 @@ export const CORES = ["amarelo", "roxo", "verde", "cinza"];
 export const NOTA_L = 216;
 export const NOTA_A = 196;
 
-const EXEMPLOS = [
-  { id: 1, trilha: "ml", topico: "Overfitting", cor: "amarelo", x: 24, y: 20,
-    texto: "Validação cruzada não conserta vazamento de dado. Separar ANTES de normalizar." },
-  { id: 2, trilha: "ml", topico: null, cor: "roxo", x: 268, y: 52,
-    texto: "Perguntar no fórum: por que o recall cai tanto quando balanceio as classes?" },
-  { id: 3, trilha: "ml", topico: null, cor: "cinza", x: 52, y: 236,
-    texto: "Erro que não quero repetir: treinei 40 min com o shuffle desligado." },
-  { id: 4, trilha: "cv", topico: "Detecção de bordas", cor: "verde", x: 36, y: 28,
-    texto: "Canny: os dois limiares são razão 1:2 ou 1:3. Abaixo disso vira chuvisco." },
-  { id: 5, trilha: "cv", topico: null, cor: "amarelo", x: 292, y: 96,
-    texto: "findContours altera a imagem de entrada. Sempre passar uma cópia." },
-];
-
 export class Mural {
-  itens = $state(EXEMPLOS.map((n) => ({ ...n })));
+  itens = $state([]);
 
-  #proximoId = 6;
+  /* true até o banco responder: o vazio de "ainda não chegou" e o de
+     "não há nada" são diferentes, e a tela diz qual é qual */
+  carregando = $state(false);
+
+  /* cada gesto recusado por falta de conta incrementa isto, e a tela
+     transforma em convite — recusa silenciosa parece defeito */
+  recusas = $state(0);
+
+  /* uma pausa por nota: duas notas mexidas juntas não atrasam uma à
+     outra, e cada uma grava só o que mudou nela */
+  #pausas = new Map();
+  #pendentes = new Map();
   /* cada nota pegada sobe para o topo e fica lá: duas notas trocadas
      de lugar mantêm a ordem em que foram mexidas */
-  zTopo = $state(10);
+
+  get podeEscrever() {
+    return sessao.conectado;
+  }
+
+  /* chamado no onMount da tela. Sem conta não há o que buscar, e
+     inventar não é opção: o mural fica vazio. */
+  async carregar() {
+    if (!sessao.conectado) {
+      this.itens = [];
+      return;
+    }
+    this.carregando = true;
+    const linhas = await remoto.listar();
+    this.carregando = false;
+    if (linhas) this.itens = linhas;
+  }
+
+  #recusar() {
+    this.recusas += 1;
+  }
+
+  /* agrupa as mudanças de uma nota e grava depois da pausa */
+  #agendar(id, campos) {
+    const antes = this.#pendentes.get(id) ?? {};
+    this.#pendentes.set(id, { ...antes, ...campos });
+
+    clearTimeout(this.#pausas.get(id));
+    this.#pausas.set(id, setTimeout(() => this.#gravar(id), PAUSA));
+  }
+
+  #gravar(id) {
+    const campos = this.#pendentes.get(id);
+    this.#pendentes.delete(id);
+    this.#pausas.delete(id);
+    if (campos) remoto.atualizar(id, campos);
+  }
+
+  /* quem fecha a aba no meio da frase não deveria perdê-la. Chamado
+     pela tela no pagehide — não há await possível ali, mas a
+     requisição sai antes de a página morrer. */
+  descarregar() {
+    for (const id of [...this.#pendentes.keys()]) {
+      clearTimeout(this.#pausas.get(id));
+      this.#gravar(id);
+    }
+  }
 
   daTrilha(trilha) {
     return this.itens.filter((n) => n.trilha === trilha);
@@ -50,35 +106,52 @@ export class Mural {
     return this.itens.filter((n) => n.trilha === trilha).length;
   }
 
-  /* a nota nasce no topo da lista e na trilha do mural aberto */
-  criar(trilha) {
-    this.itens = [
-      {
-        id: this.#proximoId++,
-        trilha,
-        topico: null,
-        cor: "amarelo",
-        texto: "",
-        x: null,
-        y: null,
-      },
-      ...this.itens,
-    ];
+  /* a nota nasce no topo da lista e na trilha do mural aberto. O id
+     vem do banco: é ele a chave do {#each} e o alvo do foco, e um id
+     provisório trocado depois faria a caixa perder o cursor. */
+  async criar(trilha) {
+    if (!this.podeEscrever) return this.#recusar();
+    const nota = await remoto.criar(trilha);
+    if (!nota) return;
+    this.itens = [nota, ...this.itens];
+    return nota.id;
   }
 
   apagar(id) {
+    if (!this.podeEscrever) return this.#recusar();
+    /* some da tela antes de o banco confirmar: apagar é o gesto em
+       que esperar resposta mais parece travamento */
     this.itens = this.itens.filter((n) => n.id !== id);
+    this.#pendentes.delete(id);
+    clearTimeout(this.#pausas.get(id));
+    remoto.apagar(id);
   }
 
   /* mutação em campo de item: o $state é profundo, então escrever
-     direto no objeto já avisa quem o lê */
+     direto no objeto já avisa quem o lê. A ida ao banco é agendada,
+     não imediata — ver PAUSA no topo. */
   definir(id, campo, valor) {
+    if (!this.podeEscrever) return this.#recusar();
     const nota = this.itens.find((n) => n.id === id);
-    if (nota) nota[campo] = valor;
+    if (!nota) return;
+    nota[campo] = valor;
+    this.#agendar(id, { [campo]: valor });
   }
 
-  subir() {
-    return ++this.zTopo;
+  /* a nota pegada sobe ao topo e fica lá. O topo é derivado do que
+     está carregado, e não de um contador que nasce em 10: com o banco,
+     quem volta no dia seguinte tem notas com z alto, e recomeçar do 10
+     colocaria a recém-tocada embaixo de todas. */
+  levantar(id) {
+    if (!this.podeEscrever) return this.#recusar();
+    const nota = this.itens.find((n) => n.id === id);
+    if (!nota) return;
+
+    const topo = Math.max(10, ...this.itens.map((n) => n.z ?? 10));
+    if (nota.z === topo && topo > 10) return;
+
+    nota.z = topo + 1;
+    this.#agendar(id, { z: nota.z });
   }
 }
 
@@ -94,7 +167,12 @@ export function vagaLivre(indice, larguraMural) {
 }
 
 /* a torção vem do id: a mesma nota entorta sempre para o mesmo lado,
-   em vez de dançar a cada redesenho */
+   em vez de dançar a cada redesenho. O id virou uuid com o banco, e
+   texto não multiplica — então soma-se o código das letras, que é a
+   mesma ideia com a entrada que existe hoje. */
 export function torcaoDe(id) {
-  return (((id * 37) % 5) - 2) * 0.6 + "deg";
+  const texto = String(id);
+  let soma = 0;
+  for (let i = 0; i < texto.length; i++) soma += texto.charCodeAt(i);
+  return (((soma * 37) % 5) - 2) * 0.6 + "deg";
 }

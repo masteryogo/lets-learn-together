@@ -7,19 +7,35 @@
    muda um valor não repinta nada, e quem mostra não sabe quem
    mudou.
 
-   É também o ponto de troca para o Supabase. Hoje `carregar` e
-   `gravar` falam com o localStorage; quando houver conta, falam
-   com o banco — e nenhum componente precisa saber.
+   O banco é o único dono do progresso. O localStorage saiu: com
+   dois donos do mesmo dado, a mesa contava de um e o mapa do outro,
+   e eles divergiam sem que ninguém mentisse.
+
+   Consequência aceita: sem conta não se marca nada. `podeMarcar`
+   diz isso à tela, e as escritas saem pela porta sem fazer nada —
+   antes de bloquear no componente, bloqueia aqui, para não depender
+   de toda tela lembrar.
+
+   Fechadas e `revelarPulados` continuam no localStorage: não são
+   progresso, são como esta pessoa olha a trilha neste aparelho.
    ============================================================ */
 import {
-  chaveProgresso,
-  chaveSub,
   chaveEtapas,
   chaveVista,
+  chaveProgressoLegado,
+  chaveSubLegado,
   ler,
   gravar,
 } from "$lib/progresso.js";
+import { sessao } from "$lib/conta/Sessao.svelte.js";
 import { chaveSub as chaveDoSub } from "./subassuntos.js";
+import {
+  baixar,
+  limparTrilha,
+  salvarEstado,
+  salvarSub,
+  enviarTudo,
+} from "./sincronia.svelte.js";
 
 export const CICLO = ["pendente", "estudando", "feito", "pulado"];
 
@@ -31,10 +47,6 @@ export const MARCAS = {
   feito: "■",
   pulado: "×",
 };
-
-/* de antes das trilhas: só o ml a consulta, e só quando a chave nova
-   ainda não existe */
-const CHAVE_LEGADA = "roadmap-ml:progresso:v1";
 
 export class Progresso {
   estados = $state({});
@@ -54,17 +66,101 @@ export class Progresso {
     this.trilha = trilha;
   }
 
-  /* só no navegador: na pré-renderização não há localStorage, e o
-     roadmap nasce zerado até a hidratação */
+  /* quem já pode marcar. A tela pergunta antes de oferecer o gesto,
+     e os métodos de escrita perguntam de novo — a primeira é
+     cortesia, a segunda é a garantia. */
+  #recusar() {
+    this.recusas += 1;
+  }
+
+  get podeMarcar() {
+    return sessao.conectado;
+  }
+
+  /* quantas vezes um gesto foi recusado por falta de conta. A tela
+     observa o número e anuncia; a classe não sabe avisar ninguém, e
+     um gesto que não faz nada e não diz nada parece defeito. */
+  recusas = $state(0);
+
+  /* true enquanto o banco não respondeu: o mapa nasce vazio e não
+     deve parecer "nada marcado" para quem tem marcas */
+  carregando = $state(false);
+
+  /* só no navegador. A preferência de vista é local; o progresso vem
+     do banco, e só dele. */
   carregar() {
-    const chave = chaveProgresso(this.trilha);
-    this.estados =
-      ler(chave) ||
-      (this.trilha === "ml" ? ler(CHAVE_LEGADA) : null) ||
-      {};
-    this.sub = ler(chaveSub(this.trilha)) || {};
     this.fechadas = ler(chaveEtapas(this.trilha)) || {};
     this.revelarPulados = !!(ler(chaveVista(this.trilha)) || {}).revelarPulados;
+  }
+
+  /* A leitura do progresso, agora que o banco é o único dono.
+     Devolve o que aconteceu, porque a tela precisa saber:
+
+       "sem-conta"  deslogado: o mapa fica vazio e não se marca nada
+       "pronto"     o que está na conta passou a valer
+       "importar"   a conta está vazia e este navegador guarda marcas
+                    de antes do banco — a ponte de uma vez só, que
+                    some quando ninguém mais tiver localStorage antigo */
+  async sincronizar() {
+    if (!sessao.conectado) {
+      this.estados = {};
+      this.sub = {};
+      return "sem-conta";
+    }
+
+    this.carregando = true;
+    const remoto = await baixar(this.trilha);
+    this.carregando = false;
+    if (!remoto) return "sem-conta";
+
+    this.estados = remoto.estados;
+    this.sub = remoto.sub;
+
+    if (!Object.keys(remoto.estados).length && this.#temHeranca()) {
+      return "importar";
+    }
+    return "pronto";
+  }
+
+  /* o que ficou de quando o progresso morava aqui. Lido uma vez, para
+     oferecer a subida — nunca para desenhar o mapa. */
+  #heranca() {
+    const antigo =
+      ler(chaveProgressoLegado(this.trilha)) ||
+      (this.trilha === "ml" ? ler("roadmap-ml:progresso:v1") : null) ||
+      {};
+    const sub = ler(chaveSubLegado(this.trilha)) || {};
+    return { estados: antigo, sub };
+  }
+
+  #temHeranca() {
+    return Object.keys(this.#heranca().estados).length > 0;
+  }
+
+  /* "Levar": sobe a herança e passa a mostrá-la, já vinda da conta */
+  async importarHeranca() {
+    const { estados, sub } = this.#heranca();
+    await enviarTudo(this.trilha, estados, sub);
+    this.descartarHeranca();
+    const remoto = await baixar(this.trilha);
+    if (remoto) {
+      this.estados = remoto.estados;
+      this.sub = remoto.sub;
+    }
+  }
+
+  /* "Começar limpo": a herança é apagada, senão a pergunta volta em
+     toda visita e a recusa não teria efeito nenhum */
+  descartarHeranca() {
+    gravar(chaveProgressoLegado(this.trilha), null);
+    gravar(chaveSubLegado(this.trilha), null);
+    try {
+      localStorage.removeItem(chaveProgressoLegado(this.trilha));
+      localStorage.removeItem(chaveSubLegado(this.trilha));
+      if (this.trilha === "ml") localStorage.removeItem("roadmap-ml:progresso:v1");
+    } catch {
+      /* bloqueado: nada a remover que importe */
+    }
   }
 
   alternarPulados() {
@@ -79,11 +175,12 @@ export class Progresso {
   }
 
   definir(id, estado) {
+    if (!this.podeMarcar) return this.#recusar();
     const copia = { ...this.estados };
     if (estado === "pendente") delete copia[id];
     else copia[id] = estado;
     this.estados = copia;
-    gravar(chaveProgresso(this.trilha), this.estados);
+    salvarEstado(this.trilha, id, estado);
   }
 
   ciclar(id) {
@@ -96,11 +193,11 @@ export class Progresso {
   }
 
   zerar() {
+    if (!this.podeMarcar) return this.#recusar();
     this.estados = {};
     /* senão os subassuntos remarcariam tudo na primeira propagação */
     this.sub = {};
-    gravar(chaveProgresso(this.trilha), this.estados);
-    gravar(chaveSub(this.trilha), this.sub);
+    limparTrilha(this.trilha);
   }
 
   /* --------------------------- subassuntos --------------------------- */
@@ -114,12 +211,15 @@ export class Progresso {
   }
 
   alternarSub(topicoId, texto, subs) {
+    if (!this.podeMarcar) return this.#recusar();
     const chave = chaveDoSub(topicoId, texto);
     const copia = { ...this.sub };
     if (copia[chave]) delete copia[chave];
     else copia[chave] = 1;
     this.sub = copia;
-    gravar(chaveSub(this.trilha), this.sub);
+    salvarSub(this.trilha, topicoId, texto, !!copia[chave]);
+    /* propagar pode mudar o estado do tópico, e `definir` manda a sua
+       própria escrita: são duas idas ao banco porque são dois fatos */
     this.propagar(topicoId, subs);
   }
 

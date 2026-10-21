@@ -1,24 +1,32 @@
 /* ============================================================
-   O progresso salvo, lido do localStorage.
+   O que ainda mora no localStorage.
 
-   Uma chave por trilha, sem servidor nem conta. Toda leitura é
-   envolvida em try/catch: com cookies bloqueados o site funciona,
-   só não lembra — e a trilha aparece como intocada em vez de a
-   página quebrar.
+   O progresso saiu daqui: ele é do banco, e só dele. Dois donos do
+   mesmo dado foi o que fez a mesa contar de um lado e o mapa do
+   outro, divergindo sem ninguém estar errado.
 
-   Quando o Supabase entrar, é este arquivo que ganha a outra
-   fonte. Quem chama só pede o número.
+   O que ficou são as três coisas que não são progresso:
+
+   - as etapas fechadas e o `revelarPulados`, que descrevem como
+     esta pessoa olha a trilha NESTE aparelho — faz sentido a etapa
+     estar fechada no celular e aberta no computador;
+   - o tema, que o script inline do app.html lê antes de o bundle
+     existir: no banco, toda visita começaria com o tema errado;
+   - as chaves antigas do progresso, que ninguém escreve mais e
+     existem só para serem oferecidas à conta uma última vez.
+
+   Toda leitura é envolvida em try/catch: com cookies bloqueados o
+   site funciona, só não lembra da vista.
    ============================================================ */
 
-/* de antes das trilhas: o ml ainda lê esta chave como alternativa,
-   porque há quem tenha progresso gravado nela e nunca mais voltou */
-const CHAVE_LEGADA = "roadmap-ml:progresso:v1";
-
-export function chaveProgresso(trilha) {
+/* as chaves de quando o progresso morava aqui. Lidas uma vez, para
+   oferecer a subida à conta; nunca escritas. Somem quando não houver
+   mais quem tenha visitado o site antes do banco. */
+export function chaveProgressoLegado(trilha) {
   return "roadmap:" + trilha + ":progresso:v1";
 }
 
-export function chaveSub(trilha) {
+export function chaveSubLegado(trilha) {
   return "roadmap:" + trilha + ":sub:v1";
 }
 
@@ -50,21 +58,4 @@ export function gravar(chave, valor) {
   } catch {
     return false;
   }
-}
-
-/* quantos tópicos estão marcados como feito nesta trilha */
-export function feitosDe(trilha) {
-  const chaves = [chaveProgresso(trilha)];
-  if (trilha === "ml") chaves.push(CHAVE_LEGADA);
-
-  for (const chave of chaves) {
-    const mapa = ler(chave);
-    /* a primeira chave que existir responde: achar a nova e ignorá-la
-       porque está vazia faria o ml cair na legada e mostrar progresso
-       que a pessoa já apagou */
-    if (mapa) {
-      return Object.values(mapa).filter((e) => e === "feito").length;
-    }
-  }
-  return 0;
 }

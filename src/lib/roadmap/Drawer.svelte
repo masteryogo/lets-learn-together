@@ -12,6 +12,7 @@
      caneta: com mouse já existem o ✕, o clique fora e o Esc.
      ============================================================ -->
 <script>
+  import { base } from "$app/paths";
   import Texto from "./Texto.svelte";
   import Copiar from "./Copiar.svelte";
   import { MARCAS } from "./Progresso.svelte.js";
@@ -28,9 +29,16 @@
     etapas,
     dados, /* { PROJETOS, RECURSOS, ESTADOS, CRITERIOS } */
     progresso,
+    notas = [],
     aoFechar,
     aoAnunciar,
   } = $props();
+
+  /* só as deste tópico: o mural mostra todas, e repetir a lista
+     inteira aqui faria do drawer um segundo mural */
+  const notasDaqui = $derived(
+    aberto?.tipo === "topico" ? notas.filter((n) => n.topico === aberto.id) : []
+  );
 
   let painel = $state(null);
   let fechar = $state(null);
@@ -258,6 +266,23 @@
       </div>
 
       <!-- contexto do grupo, para o tópico não ficar solto -->
+      {#if notasDaqui.length}
+        <section class="drawer__secao">
+          <h3>Suas notas</h3>
+          <!-- leitura, não edição: quem escreve é o mural, e dois
+               lugares editando o mesmo texto é o problema que o
+               localStorage já nos deu hoje -->
+          {#each notasDaqui as nota (nota.id)}
+            <p class="drawer__post-it" data-cor={nota.cor}>{nota.texto}</p>
+          {/each}
+          <a
+            class="drawer__elo"
+            href="{base}/notas?trilha={dados.trilha}"
+            data-sveltekit-reload>Abrir o mural</a
+          >
+        </section>
+      {/if}
+
       {#if ref?.grupo.descricao}
         <section class="drawer__secao">
           <h3>{ref.grupo.titulo || "Sobre este bloco"}</h3>

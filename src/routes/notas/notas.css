@@ -136,6 +136,19 @@
   color: var(--tinta-bloco);
 }
 
+/* o seletor ocupa o lugar da âncora enquanto se escolhe: abrir um
+   painel para um campo só empurraria o mural inteiro */
+.nota__escolha {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: inherit;
+  font-size: var(--t-micro);
+  padding: 0.1rem 0.25rem;
+  border: 1px solid var(--linha);
+  background: var(--fundo);
+  color: var(--texto);
+}
+
 .nota__ancora--solta { opacity: 0.55; }
 
 .nota__acoes { display: flex; gap: 0.2rem; flex: 0 0 auto; }

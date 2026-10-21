@@ -16,10 +16,14 @@
   import { page } from "$app/state";
   import { goto } from "$app/navigation";
 
-  import { TRILHAS, resolverId } from "$lib/trilhas.js";
+  import { TRILHAS, carregarTrilha, resolverId } from "$lib/trilhas.js";
   import Canto from "$lib/Canto.svelte";
   import Nota from "$lib/notas/Nota.svelte";
   import { Mural } from "$lib/notas/Mural.svelte.js";
+  import { sessao } from "$lib/conta/Sessao.svelte.js";
+  import Convite from "$lib/conta/Convite.svelte";
+  import AvisoFalha from "$lib/conta/AvisoFalha.svelte";
+  import { estado as estadoDasNotas } from "$lib/notas/remoto.svelte.js";
 
   import "$lib/estilos/base.css";
   import "./notas.css";
@@ -27,6 +31,31 @@
   const mural = new Mural();
 
   const atual = $derived(resolverId(page.url.searchParams.get("trilha")));
+
+  /* os tópicos da trilha aberta, para prender uma nota a um deles. É
+     o mesmo import dinâmico do roadmap: o conteúdo é um chunk à
+     parte, e o mural só o baixa quando alguém vai usá-lo. */
+  let topicos = $state([]);
+
+  $effect(() => {
+    let vivo = true;
+    carregarTrilha(atual).then((dados) => {
+      if (!vivo) return;
+      const lista = [];
+      for (const etapa of dados.ROADMAP.etapas ?? []) {
+        for (const grupo of etapa.grupos ?? []) {
+          for (const t of grupo.topicos ?? []) lista.push({ id: t.id, titulo: t.titulo });
+        }
+      }
+      topicos = lista;
+    });
+    return () => (vivo = false);
+  });
+
+  /* o id é o que se guarda (ele é estável); o título é o que se lê */
+  const tituloDoTopico = $derived(
+    Object.fromEntries(topicos.map((t) => [t.id, t.titulo]))
+  );
   const lista = $derived(mural.daTrilha(atual));
   const rotulo = $derived(TRILHAS[atual].rotulo);
 
@@ -54,9 +83,34 @@
     return () => document.body.classList.remove("notas-pagina");
   });
 
-  function nova() {
-    mural.criar(atual);
-    foco = mural.daTrilha(atual)[0].id;
+  /* as notas vêm da conta; sem ela, os exemplos. O efeito observa
+     `conectado` porque a sessão pode chegar depois da tela, e porque
+     entrar pelo convite tem que encher o mural sem recarregar. */
+  $effect(() => {
+    sessao.conectado;
+    mural.carregar();
+  });
+
+  /* o que estava sendo digitado quando a aba fecha. O navegador não
+     espera promessa aqui, mas deixa a requisição sair. */
+  $effect(() => {
+    const salvar = () => mural.descarregar();
+    addEventListener("pagehide", salvar);
+    return () => {
+      removeEventListener("pagehide", salvar);
+      mural.descarregar();
+    };
+  });
+
+  /* recusa vira convite, como no mapa do roadmap */
+  let convite = $state(false);
+  $effect(() => {
+    if (mural.recusas > 0) convite = true;
+  });
+
+  async function nova() {
+    const id = await mural.criar(atual);
+    if (id) foco = id;
   }
 </script>
 
@@ -65,6 +119,9 @@
 </svelte:head>
 
 <Canto />
+
+<Convite aberto={convite} aoFechar={() => (convite = false)} />
+<AvisoFalha falha={estadoDasNotas.falha} />
 
 <header class="cabecalho-notas">
   <h1 class="cabecalho-notas__titulo">Notas</h1>
@@ -115,7 +172,13 @@
 >
   {#if lista.length === 0}
     <p class="mural__vazio">
-      O mural de {rotulo} está limpo. Escreva a primeira.
+      {#if mural.carregando}
+        Buscando suas notas…
+      {:else if !sessao.conectado}
+        Entre na conta para escrever notas — elas ficam salvas nela.
+      {:else}
+        O mural de {rotulo} está limpo. Escreva a primeira.
+      {/if}
     </p>
   {:else}
     {#each lista as nota, i (nota.id)}
@@ -124,6 +187,8 @@
         indice={i}
         {mural}
         {muralEl}
+        {topicos}
+        {tituloDoTopico}
         arrastavel={largo.current}
         focar={foco === nota.id}
         aoFocar={() => (foco = null)}
