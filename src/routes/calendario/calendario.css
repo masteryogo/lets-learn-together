@@ -188,6 +188,11 @@
    impedir que se escreva à mão */
 .dia--off { background: color-mix(in srgb, var(--cinza) 50%, transparent); }
 
+/* hoje tem contorno, não cor: a cor da célula já diz outra coisa
+   (domingo, fora do mês), e empilhar dois significados na mesma
+   propriedade é como se perde a leitura da grade */
+.dia--hoje { outline: 2px solid var(--linha-dura); outline-offset: -2px; }
+
 .dia--hoje .dia__n {
   background: var(--texto);
   color: var(--fundo);
@@ -213,16 +218,29 @@
   line-height: 1.35;
   padding: 0.2rem 0.3rem;
   border: 1px solid var(--linha);
-  color: var(--tinta-bloco);
-  white-space: nowrap;
+  /* --tinta-bloco é escura nos dois temas, porque nasceu para os
+     pastéis do tema claro. No escuro, os mesmos tokens de cor viram
+     fundos escuros, e tinta escura sobre eles some — que foi o que
+     deixou a sessão ilegível. --texto vira com o tema. */
+  color: var(--texto);
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.dia__bloco[data-trilha="ml"] { background: var(--trilha-ml); }
-.dia__bloco[data-trilha="cv"] { background: var(--trilha-cv); }
-.dia__bloco[data-trilha="pr"] { background: var(--trilha-pr); }
-.dia__bloco[data-estado="feito"] { background: var(--verde); }
+/* a hora é referência e cabe sempre; o assunto é o que muda e pode
+   ocupar duas linhas antes de cortar */
+.dia__hora { display: block; opacity: 0.75; }
+.dia__assunto {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+/* a cor vem no próprio bloco (--cor-assunto): com assunto em texto
+   livre não há como escrever uma regra por valor possível */
+.dia__bloco { background: var(--cor-assunto, var(--cinza)); }
 
 /* perdida: passou e ficou em branco. Traço em vez de cor — o estado
    não pode depender só de cor, e "ausência" não tem cor própria. */
@@ -308,14 +326,38 @@
   border: 1px solid var(--linha);
   font-size: 9px;
   line-height: 1.2;
-  color: var(--tinta-bloco);
+  color: var(--texto);
   overflow: hidden;
 }
 
-.regua__faixa[data-trilha="ml"] { background: var(--trilha-ml); }
-.regua__faixa[data-trilha="cv"] { background: var(--trilha-cv); }
-.regua__faixa[data-trilha="pr"] { background: var(--trilha-pr); }
-.regua__faixa[data-estado="feito"] { background: var(--verde); }
+.regua__faixa { background: var(--cor-assunto, var(--cinza)); }
+
+/* o assunto da fatia é escrito, não escolhido — mesma decisão do
+   formulário do dia */
+.fatia__assunto {
+  min-width: 0;
+  width: 100%;
+  font-size: var(--t-base);
+  padding: 0.25rem 0.35rem;
+}
+
+/* tirar uma fatia é discreto: o gesto frequente é ajustar a
+   porcentagem, não remover */
+.fatia__fora {
+  border: 0;
+  background: none;
+  color: var(--texto-suave);
+  font: inherit;
+  cursor: pointer;
+  padding: 0 0.25rem;
+}
+.fatia__fora:hover { color: var(--vermelho); }
+
+.modelo__aviso {
+  margin: 0.5rem 0 0;
+  color: var(--texto-suave);
+  font-size: var(--t-micro);
+}
 
 /* ----------------------------- sessão ----------------------------- */
 .sessao {
@@ -327,10 +369,9 @@
   gap: 0.15rem;
 }
 
-.sessao[data-trilha="ml"] { border-left-color: var(--trilha-ml-forte); }
-.sessao[data-trilha="cv"] { border-left-color: var(--trilha-cv-forte); }
-.sessao[data-trilha="pr"] { border-left-color: var(--trilha-pr-forte); }
-.sessao[data-estado="feito"] { border-left-color: var(--verde-forte); }
+/* a faixa da esquerda usa a mesma cor do bloco na grade: é o que
+   liga o cartão da ficha ao dia no mês */
+.sessao { border-left-color: var(--cor-assunto, var(--linha)); }
 
 .sessao__topo {
   display: flex;
@@ -344,7 +385,29 @@
   text-transform: uppercase;
 }
 
-.sessao__nota { margin: 0; }
+.sessao__nota { margin: 0.25rem 0 0; }
+
+/* apagar fica dentro da sessão e discreto: é destrutivo, mas de uma
+   linha só — pedir confirmação para isso seria atrito maior que o
+   erro que ele evita */
+.sessao__apagar {
+  margin-top: 0.5rem;
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--texto-suave);
+  font: inherit;
+  font-size: var(--t-micro);
+  cursor: pointer;
+}
+.sessao__apagar:hover { color: var(--vermelho); }
+
+.ficha-dia__vazio {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-base);
+}
 
 .sessao__estado {
   margin: 0;
@@ -632,7 +695,7 @@
 
   /* no celular a célula encolhe e o bloco passa a mostrar só a hora:
      o assunto continua na ficha, a um toque */
-  .dia { min-height: 4.6rem; padding: 0.3rem 0.25rem 0.35rem; }
+  .dia { min-height: 5.2rem; padding: 0.3rem 0.25rem 0.35rem; }
   .dia__bloco { font-size: 9px; padding: 0.1rem 0.2rem; }
 
   .fatia { grid-template-columns: 1fr 4rem; }
