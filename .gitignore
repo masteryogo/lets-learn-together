@@ -8,3 +8,10 @@ node_modules/
 .svelte-kit/
 build/
 page.html
+
+# estado local da CLI do Supabase — vínculo é da máquina, não do repo
+supabase/.temp/
+
+# credenciais locais — só o .env.example é versionado
+.env
+.env.local
