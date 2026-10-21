@@ -3,7 +3,7 @@
 <img src="static/logo/icon-512.png" alt="" width="110">
 
 Roadmaps de estudo em português, com prioridade, critério de conclusão e
-progresso salvo no navegador.
+progresso salvo na conta.
 
 **→ [Abrir o roadmap](https://masteryogo.github.io/lets-learn-together/)**
 
@@ -21,8 +21,10 @@ progresso salvo no navegador.
   quando o vídeo acabar.
 - **Recursos e projetos sugeridos**, porque fundamento sem prática evapora.
 
-Seu progresso fica salvo no próprio navegador, via `localStorage`. Sem conta,
-sem servidor, sem ninguém medindo o seu ritmo.
+Seu progresso fica salvo na sua conta, via Supabase. Sem conta, ainda dá para
+explorar os roadmaps; marcar o que estudou, escrever notas e planejar no
+calendário pede entrar. Tema e preferências de leitura continuam neste
+navegador.
 
 ## Rodando
 
@@ -57,8 +59,10 @@ repassa para o roadmap.
 
 ## Usando o mapa
 
-- **Clique** (ou toque) em um tópico cicla o estado dele:
-  Pendente → Estudando → Feito → Pulado → Pendente.
+- No computador, **clique** abre o detalhe do tópico e **Shift + clique**
+  cicla o estado: Pendente → Estudando → Feito → Pulado → Pendente.
+- No celular ou tablet, o **toque** cicla o estado e o botão **[i]** abre o
+  detalhe.
 - A marca à esquerda do tópico mostra o estado sem depender da cor:
   `□` pendente, `►` estudando, `■` feito, `×` pulado. A barra colorida na
   margem é a prioridade.

@@ -12,6 +12,7 @@ import { supabase } from "$lib/supabase.js";
 import { sessao } from "$lib/conta/Sessao.svelte.js";
 
 export const estado = $state({ falha: null });
+export const estadoSugestoes = $state({ falha: null });
 
 /* aqui o cliente não depende de sessão: o select é público */
 function cliente() {
@@ -71,12 +72,16 @@ export async function sugerir({ titulo, corpo, raia }) {
    por usuário, e é de propósito: o filtro está no banco. */
 export async function minhasSugestoes() {
   const sb = cliente();
-  if (!sb || !sessao.conectado) return [];
+  if (!sb || !sessao.conectado) {
+    estadoSugestoes.falha = null;
+    return [];
+  }
 
   const { data, error } = await sb
     .from("sugestao")
     .select("id, titulo, corpo, raia, estado, resposta, card_id, criado_em")
     .order("criado_em", { ascending: false });
 
-  return error ? [] : data;
+  estadoSugestoes.falha = error ? error.message : null;
+  return error ? null : data;
 }
