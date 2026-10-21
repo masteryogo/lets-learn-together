@@ -27,6 +27,7 @@
   import Drawer from "$lib/roadmap/Drawer.svelte";
   import { sessao } from "$lib/conta/Sessao.svelte.js";
   import Convite from "$lib/conta/Convite.svelte";
+  import Espiada from "$lib/roadmap/Espiada.svelte";
   import AvisoFalha from "$lib/conta/AvisoFalha.svelte";
   import { sincronia } from "$lib/roadmap/sincronia.svelte.js";
   import { listar as listarNotas } from "$lib/notas/remoto.svelte.js";
@@ -73,6 +74,14 @@
      novo dispara o efeito uma vez — e o aviso continua existindo
      porque o leitor de tela não vê diálogo que abre sozinho. */
   let convite = $state(false);
+
+  /* "notas" | "calendario" | null — qual tela está sendo espiada */
+  let espiando = $state(null);
+
+  const ESPIADAS = {
+    notas: { rota: "/notas?trilha=" },
+    calendario: { rota: "/calendario?trilha=" },
+  };
 
   $effect(() => {
     if (progresso.recusas > 0) {
@@ -383,12 +392,15 @@
     <!-- as outras duas telas da trilha: o mural e a grade do mês. A
          trilha vai junto na URL, senão elas abrem na trilha padrão e
          a pessoa perde o lugar. -->
-    <a
+    <!-- espiada em vez de travessia: conferir uma nota não deveria
+         custar sair do mapa e voltar ao topo dele. A tela inteira
+         continua a um clique, dentro da espiada. -->
+    <button
       class="botao botao--icone"
-      href="{base}/notas?trilha={data.trilha}"
-      data-sveltekit-reload
+      type="button"
       title="Notas desta trilha"
       aria-label="Notas desta trilha"
+      onclick={() => (espiando = "notas")}
     >
       <!-- post-it: folha com o canto dobrado -->
       <svg viewBox="0 0 16 16" aria-hidden="true">
@@ -399,14 +411,14 @@
         <rect x="10" y="10" width="4" height="2" />
         <rect x="10" y="12" width="2" height="2" />
       </svg>
-    </a>
+    </button>
 
-    <a
+    <button
       class="botao botao--icone"
-      href="{base}/calendario?trilha={data.trilha}"
-      data-sveltekit-reload
+      type="button"
       title="Calendário de estudos"
       aria-label="Calendário de estudos"
+      onclick={() => (espiando = "calendario")}
     >
       <!-- calendário: dois pregos, a moldura e a grade dos dias -->
       <svg viewBox="0 0 16 16" aria-hidden="true">
@@ -421,7 +433,7 @@
         <rect x="5" y="10" width="2" height="2" />
         <rect x="9" y="10" width="2" height="2" />
       </svg>
-    </a>
+    </button>
 
     <button
       class="botao botao--icone"
@@ -750,6 +762,13 @@
 </div>
 
 <Convite aberto={convite} aoFechar={() => (convite = false)} />
+
+<Espiada
+  aberto={!!espiando}
+  titulo={espiando ? ESPIADAS[espiando].titulo : ""}
+  url={espiando ? `${base}${ESPIADAS[espiando].rota}${data.trilha}` : ""}
+  aoFechar={() => (espiando = null)}
+/>
 <AvisoFalha falha={sincronia.ultimaFalha} />
 
 <!-- região viva: o leitor de tela não percebe a troca do ícone de

@@ -517,6 +517,69 @@ body {
 /* o texto cru é prova, não mensagem: fica menor e apagado */
 .aviso-falha__cru { color: var(--texto-suave); word-break: break-word; }
 
+/* ----------------------------- espiada -----------------------------
+   Outra tela do site vista daqui, num iframe. Dois tamanhos: a
+   espiada confere algo sem perder o lugar no mapa, e a ampliada vira
+   a tela de trabalho até fechar. */
+.espiada { position: fixed; inset: 0; z-index: 70; }
+.espiada__veu { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.55); }
+
+.espiada__caixa {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  width: min(56rem, calc(100vw - 2rem));
+  height: min(40rem, calc(100dvh - 4rem));
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--linha);
+  background: var(--fundo-elevado);
+  box-shadow: var(--sombra-dura);
+  /* o tamanho muda com transição: aumentar é um gesto, e gesto sem
+     movimento lê como a tela ter trocado sozinha */
+  transition: width 0.18s ease, height 0.18s ease;
+}
+.espiada[data-amplo] .espiada__caixa {
+  width: calc(100vw - 1.5rem);
+  height: calc(100dvh - 1.5rem);
+}
+
+.espiada__barra {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.4rem 0.5rem 0.4rem 0.75rem;
+  border-bottom: 2px solid var(--linha);
+}
+.espiada__titulo {
+  font-size: var(--t-micro);
+  letter-spacing: var(--tracking-rotulo);
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+.espiada__acoes { display: flex; gap: 0.35rem; }
+/* ampliada, a seta aponta para dentro: o mesmo desenho serve aos dois
+   sentidos */
+.espiada[data-amplo] .espiada__acoes svg { transform: rotate(180deg); }
+
+/* o quadro ocupa o resto. border: 0 porque o iframe traz uma moldura
+   que não combina com nada aqui */
+.espiada__quadro { flex: 1 1 auto; width: 100%; border: 0; background: var(--fundo); }
+
+@media (max-width: 40rem) {
+  /* na tela estreita não existe "espiar": a caixa já ocupa tudo */
+  .espiada__caixa,
+  .espiada[data-amplo] .espiada__caixa {
+    width: 100vw;
+    height: 100dvh;
+    inset: 0 auto auto 0;
+    transform: none;
+    border: 0;
+  }
+}
+
 /* o menu da conta: abre para o lado no rail e para baixo na quina.
    Ancorado no botão, e não na tela, para não virar modal — isto é
    uma escolha curta, não uma decisão. */
@@ -1729,6 +1792,7 @@ body:has(.drawer--ajustando) .sobreposicao {
 
 @media (prefers-reduced-motion: reduce) {
   .drawer, .migrar { animation: none; }
+  .espiada__caixa { transition: none; }
   .espera i { animation: none; opacity: 0.6; }
   .ninho .obi__corpo,
   .logo__olho { animation: none; }

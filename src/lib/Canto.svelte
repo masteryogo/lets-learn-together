@@ -10,8 +10,21 @@
   import { base } from "$app/paths";
   import { alternarTema } from "$lib/tema.js";
   import Atalho from "$lib/conta/Atalho.svelte";
+
+  /* dentro da espiada do roadmap esta tela vive num iframe, e a quina
+     ali não serve: a conta e o tema já estão na tela de trás, e a
+     casa levaria para a mesa dentro do quadrinho. Quem fecha e quem
+     amplia é a barra da espiada.
+
+     window.top só é diferente de window.self em iframe — e, como é a
+     mesma origem, a comparação não lança. */
+  let embutido = $state(false);
+  $effect(() => {
+    embutido = window.self !== window.top;
+  });
 </script>
 
+{#if !embutido}
 <div class="canto">
   <Atalho />
 
@@ -71,3 +84,4 @@
     </svg>
   </button>
 </div>
+{/if}
