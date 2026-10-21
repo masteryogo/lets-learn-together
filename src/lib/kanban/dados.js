@@ -51,7 +51,21 @@ export const KANBAN_CARDS = [
     porque: "Vinha antes ou junto do Supabase, não depois — senão a camada de leitura seria escrita duas vezes."
   },
   { id: "supabase", titulo: "Supabase DB + Auth", raia: "arquitetura", coluna: "fazer",
-    resumo: "Persistência de verdade.",
+    resumo: "Persistência de verdade. Esquema de pé em 19/10/2026; o site ainda não fala com ele.",
+    blocos: [
+      { tipo: "p", texto: "Sete tabelas no Postgres, em cinco migrations versionadas em supabase/migrations/: perfil e progresso_topico; progresso_subassunto e nota; rota_grupo; o gatilho que cria o perfil no cadastro; sessao_estudo e modelo_mes. Todas com RLS e policy auth.uid() = usuario_id." },
+      { tipo: "p", texto: "A regra que organizou o modelo: o banco guarda o que não se refaz; o localStorage segue dono do que se refaz num clique. Ficaram de fora as etapas fechadas e o revelarPulados — e o tema, que ainda tem um motivo extra: o script inline do app.html o lê antes de o bundle existir." },
+      { tipo: "p", texto: "O catálogo das trilhas não está no banco, e isso foi decidido. A estrutura de uma trilha é documento, não relação, e a única consulta feita a ela é \"me dá a trilha inteira\". Um dia vira jsonb no mesmo Postgres — o Painel criativo de roadmaps exige isso. Enquanto não vai, nenhuma tabela tem foreign key para o catálogo: trilha e topico_id são text validados pelo app, e o id estável continua contrato do repositório." },
+      { tipo: "p", texto: "No primeiro login, se houver progresso no localStorage do aparelho, o site pergunta antes de trazer, e o banco vence em empate. Merge automático está fora: o localStorage não guarda quando cada caixa foi marcada, então juntar sozinho seria chute." },
+      { tipo: "p", texto: "Verificado no remoto em 20/10/2026: as sete tabelas com RLS ligada, uma policy cada e GRANT completo para anon e authenticated. Nada faltando no banco." },
+      { tipo: "p", texto: "Cliente de pé em 20/10/2026: src/lib/supabase.js, com @supabase/supabase-js e o .env fora do versionamento. Lê de $env/dynamic/public porque o estático falha o build quando a variável não existe — e o site precisa continuar publicável sem conta configurada. É preguiçoso, para não instanciar durante a pré-renderização, e guarda a sessão com try/catch, como o progresso.js faz: em janela anônima a sessão dura só a aba, em vez de a página cair." },
+      { tipo: "p", texto: "Ligado em 20/10/2026: a conta funciona de ponta a ponta, e o progresso mora no banco. A confirmação de e-mail é por link e não por código, porque o plano gratuito não deixa editar o modelo de e-mail — o passo do código ficou dormente no fluxo, esperando SMTP próprio." },
+      { tipo: "p", texto: "O localStorage deixou de guardar progresso, e essa foi a decisão que resolveu a divergência: com dois donos do mesmo dado, a mesa contava de um e o mapa do outro, sem ninguém estar errado. Agora sem conta não se marca nada — tentar abre o convite a entrar. Ficaram no navegador só as preferências de leitura por aparelho (etapas fechadas, revelar pulados) e o tema, que o script inline do app.html lê antes do bundle existir." },
+      { tipo: "p", texto: "O mural de notas e o calendário entraram em 20/10/2026. As notas gravam com uma pausa de 700ms por nota, porque arrastar dispara escrita a cada movimento do ponteiro e digitar a cada tecla — uma ida ao banco por evento seria insustentável." },
+      { tipo: "p", texto: "O calendário deixou de ser maquete: a grade é calculada do mês de verdade, as sessões vêm do banco e o modelo do mês distribui os dias por déficit proporcional ao ponto do mês. O assunto virou texto livre, porque o que se estuda numa noite raramente tem o nome de uma trilha inteira — e por isso as abas de filtro e a legenda saem do que foi escrito, não de uma lista fixa." },
+      { tipo: "p", texto: "Uma regra saiu desta sessão, depois de três defeitos iguais: erro nunca vira vazio. Devolver lista vazia quando a consulta falha faz a tela mostrar um mês sem nada que parece verdade — agora cada camada guarda a última falha e o rodapé a mostra." },
+      { tipo: "p", texto: "Falta: a rota condicional (tabela pronta, sem tela), o modo Google do calendário com OAuth, e prender nota em tópico — o mural sabe soltar, e nada prende." }
+    ],
     porque: "Pré-requisito das anotações e da rota condicional." },
   { id: "login", titulo: "Tela de login e cadastro", raia: "arquitetura", coluna: "fazer",
     resumo: "Validação por e-mail ou telefone, com token gerado localmente.",

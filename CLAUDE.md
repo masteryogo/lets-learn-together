@@ -70,22 +70,62 @@ não tivesse sido carregado antes. Hoje exporta só os grupos, e quem os junta
 
 ### Estado e persistência
 
-Tudo em `localStorage`, por trilha, sem servidor nem conta. As chaves e os
-acessos ficam em `src/lib/progresso.js`; o estado reativo em
-`src/lib/roadmap/Progresso.svelte.js`.
+**O progresso é do banco, e só dele.** Supabase (projeto
+`atmotqhqvhfaeoirdnzo`), com RLS por usuário. Sem conta não se marca nada:
+tentar abre o convite a entrar. Isso substituiu o arranjo antigo, em que o
+`localStorage` guardava o progresso — com dois donos do mesmo dado, a mesa
+contava de um e o mapa do outro, e divergiam sem ninguém estar errado.
 
-- `roadmap:<trilha>:progresso:v1` — `{ idDoTopico: estado }`
-- `roadmap:<trilha>:sub:v1` — subassuntos marcados
+O caminho é `src/lib/roadmap/Progresso.svelte.js` (estado reativo) →
+`src/lib/roadmap/sincronia.svelte.js` (as idas ao banco) →
+`src/lib/supabase.js` (o cliente, que pode não existir).
+
+| Tabela | O que guarda |
+|---|---|
+| `perfil` | nome e modo de calendário; nasce por gatilho no cadastro |
+| `progresso_topico` | `(usuario, trilha, topico_id) → estado` |
+| `progresso_subassunto` | o mesmo, por subassunto, com o texto na chave |
+| `rota_grupo` | a rota condicional (ainda sem tela) |
+| `nota` | o mural de post-its, uma linha por nota |
+| `sessao_estudo` | um bloco de estudo num dia; `origem` diz se veio do modelo ou da mão |
+| `modelo_mes` | a janela e a mistura que geram o mês, uma linha por pessoa |
+
+Linha só existe quando sai do padrão: ausência é `pendente`, no banco como
+em memória. As migrations vivem em `supabase/migrations/` e sobem com
+`npx supabase db push`.
+
+O que **continua** no `localStorage`, em `src/lib/progresso.js`:
+
 - `roadmap:<trilha>:etapas:v1` — etapas **fechadas** (o padrão é aberta)
 - `roadmap:<trilha>:vista:v1` — como a trilha é olhada, não o que foi feito
   nela; hoje só `revelarPulados`
 - `roadmap:tema:v1` — tema, comum a todas as trilhas, gravado como string
   crua porque o script inline do `app.html` o lê antes do bundle existir
-- `roadmap-ml:progresso:v1` — chave legada, de antes das trilhas; ainda lida
-  como alternativa do `ml`
 
-Toda leitura e escrita é envolvida em `try/catch`: com cookies bloqueados o
-site funciona, só não lembra.
+Os dois primeiros são preferência de leitura **por aparelho** — faz sentido
+a etapa estar fechada no celular e aberta no computador. O tema não pode
+sair daqui: no banco, toda visita começaria com o tema errado, porque a
+resposta chega depois do primeiro desenho.
+
+As chaves `roadmap:<trilha>:progresso:v1` e `:sub:v1` ainda são **lidas uma
+vez**, para oferecer à conta o que ficou de antes do banco (`importarHeranca`).
+Ninguém mais escreve nelas, e elas somem quando não houver mais quem tenha
+visitado o site antes da conta existir.
+
+Toda leitura e escrita local é envolvida em `try/catch`: com cookies
+bloqueados o site funciona, só não lembra da vista.
+
+### Conta
+
+`src/lib/conta/Sessao.svelte.js` é a sessão como estado reativo: `usuario`,
+`nome`, `conectado`, mais os verbos (`entrar`, `cadastrar`, `sair`, …). Cada
+verbo devolve `null` quando dá certo e uma **string em português** quando
+não — a tela não vê erro do Supabase.
+
+A confirmação de e-mail é por **link**, não por código: o plano gratuito não
+deixa editar o modelo de e-mail, e o padrão manda `{{ .ConfirmationURL }}`.
+O passo do código continua escrito em `fluxo.js`, dormente, porque ele volta
+a valer no dia em que houver SMTP próprio.
 
 Os estados ciclam em `pendente → estudando → feito → pulado`. As marcas
 `□ ► ■ ×` existem porque a Departure Mono não tem `◔` nem `✓` — e porque o
@@ -102,9 +142,55 @@ explica a ausência — sem ele, o tópico pareceria inexistente, que é
 exatamente o argumento pelo qual a rota condicional vai **atenuar** em vez
 de esconder.
 
-As **notas não persistem**, de propósito: texto escrito não se refaz, e o
-Safari apaga o `localStorage` de site sem visita em 7 dias. É o primeiro
-lugar que o Supabase assume — ver o cabeçalho de `src/lib/notas/Mural.svelte.js`.
+### O mural de notas
+
+As notas persistem na tabela `nota`, e o caminho é o mesmo do progresso:
+`Mural.svelte.js` (estado) → `notas/remoto.svelte.js` (o banco). O que muda
+é o **ritmo**: arrastar dispara escrita a cada `pointermove` e digitar, a
+cada tecla, então toda mudança é agrupada por nota e desce ao banco depois
+de 700ms de pausa — e no `pagehide`, para quem fecha a aba no meio da frase.
+
+Não há mais notas de exemplo. Elas ensinavam o gesto a quem chegava, e
+saíram quando o mural passou a guardar de verdade: nota de mentira é
+indistinguível de nota real até alguém tentar arrastá-la.
+
+### O calendário
+
+Deixou de ser maquete. A grade é calculada do mês de verdade, as sessões
+vêm de `sessao_estudo` e o formulário escreve nelas. O **assunto é texto
+livre**, não uma lista de trilhas: o que se estuda numa noite raramente tem
+o nome de uma trilha inteira. Por isso as abas de filtro e a legenda saem
+dos assuntos escritos no mês, e a cor de cada um é derivada do próprio
+texto — não há como escrever uma regra CSS por valor possível.
+
+O modelo do mês (`src/lib/calendario/distribuir.js`) é lógica pura, sem
+banco nem DOM, porque é a única parte que erra em silêncio: um mês mal
+distribuído parece um mês. Três decisões vivem nela:
+
+1. A porcentagem é de **dias**, não de horas — é o que se confere olhando a
+   grade.
+2. Aplicar **nunca reescreve o passado**: começa em hoje, e o que já foi
+   estudado conta na cota. O `ignoreDuplicates` do upsert é o que protege a
+   sessão escrita à mão, apoiado na `unique (usuario, dia, inicio)`.
+3. O déficit é **proporcional ao ponto do mês**, não absoluto. Pelo
+   absoluto, o assunto de 10% só é escolhido quando os grandes se saciam, e
+   cai todo no fim do mês.
+
+O que ainda não existe: o modo Google (OAuth com escopo `calendar.events`),
+lembrete que chega no celular, e qualquer noção de sessão *cumprida* — a
+tabela guarda o plano, não o que aconteceu.
+
+### Erro nunca vira vazio
+
+Três defeitos iguais apareceram no mesmo dia: `return error ? [] : data`
+transforma falha em "não há nada", e a tela mostra um mês vazio que parece
+verdade. Hoje cada camada guarda a última falha (`sincronia.ultimaFalha`,
+`notas/remoto.svelte.js`, `calendario/remoto.svelte.js`) e o componente
+`AvisoFalha` a mostra no rodapé das três telas.
+
+Vale como regra: **escrita que muda a tela antes da resposta precisa de um
+lugar para dizer que não chegou**. O pior desfecho aqui nunca foi o erro —
+é a tela dizer que salvou.
 
 ### O CSS ainda é global, e isso tem consequência
 
@@ -221,5 +307,6 @@ Dois lugares, e eles não são o mesmo:
 - `/kanban` — a tela pública, com dados em `src/lib/kanban/dados.js`.
 
 Vale ler o `.kanban` antes de propor mudança grande: ideias já recusadas
-estão lá com o porquê (quiz por tópico). Com os componentes feitos, o
-próximo da raia Arquitetura é o Supabase.
+estão lá com o porquê (quiz por tópico). Supabase, conta, progresso, notas
+e calendário saíram em 19–20/10/2026; o que resta na raia Arquitetura é a
+rota condicional e o modo Google do calendário.

@@ -1,0 +1,48 @@
+/* ============================================================
+   As duas páginas de texto corrido: privacidade e termos.
+
+   Folha própria, como toda tela — e, como as outras, global. A
+   travessia para cá é documento novo (data-sveltekit-reload).
+
+   O desenho é o mínimo: uma coluna estreita e a mesma grade
+   tipográfica do resto. Texto que ninguém lê por prazer merece ser
+   fácil de varrer, não bonito.
+   ============================================================ */
+.documento {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 3rem var(--pad-lateral) 5rem;
+}
+
+.documento__titulo {
+  margin: 0 0 0.5rem;
+  font-size: var(--t-pagina);
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+/* a data importa: política sem data é política que ninguém sabe se
+   mudou */
+.documento__data {
+  margin: 0 0 2.5rem;
+  color: var(--texto-suave);
+  font-size: var(--t-micro);
+  letter-spacing: var(--tracking-rotulo);
+}
+
+.documento h2 {
+  margin: 2rem 0 0.75rem;
+  font-size: var(--t-secao, var(--t-leitura));
+  font-weight: 400;
+}
+
+.documento p,
+.documento li {
+  font-size: var(--t-leitura);
+  line-height: 1.65;
+}
+
+.documento ul { padding-left: 1.2rem; }
+.documento li { margin-bottom: 0.4rem; }
+
+.documento a { color: var(--texto); text-underline-offset: 3px; }

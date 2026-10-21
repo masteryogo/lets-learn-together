@@ -46,6 +46,15 @@ jobs:
         # /lets-learn-together/ — é daqui que sai o kit.paths.base
         env:
           BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          # sem isto o site publicado sai sem conta: o cliente do
+          # Supabase não nasce, `temSupabase` é falso e o site vira o
+          # que era antes do banco.
+          #
+          # Em "Variables" e não em "Secrets": a chave publicável viaja
+          # no bundle de qualquer forma, e quem protege os dados é a
+          # RLS. Mascarada no log, ela só atrapalharia o diagnóstico.
+          PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
         run: npm run build
 
       - uses: actions/upload-pages-artifact@v3
