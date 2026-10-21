@@ -16,7 +16,7 @@
   import { MediaQuery } from "svelte/reactivity";
   import { goto } from "$app/navigation";
 
-  import { TRILHAS } from "$lib/trilhas.js";
+  import { listarTrilhas } from "$lib/trilhas.js";
   import { alternarTema } from "$lib/tema.js";
   import Atalho from "$lib/conta/Atalho.svelte";
   import Obi from "$lib/obi/Obi.svelte";
@@ -50,6 +50,14 @@
       }
     }
     return mapa;
+  });
+
+  /* as outras trilhas, para o seletor do cabeçalho. Vazio até o banco
+     responder: um seletor com uma opção só, por um instante, é melhor
+     que um seletor com opções que não existem mais. */
+  let trilhas = $state({});
+  $effect(() => {
+    listarTrilhas().then((lista) => (trilhas = lista));
   });
 
   const progresso = $derived(new Progresso(data.trilha));
@@ -501,7 +509,7 @@
             value={data.trilha}
             onchange={trocarTrilha}
           >
-            {#each Object.entries(TRILHAS) as [id, t]}
+            {#each Object.entries(trilhas) as [id, t]}
               <option value={id}>{t.rotulo}</option>
             {/each}
           </select>

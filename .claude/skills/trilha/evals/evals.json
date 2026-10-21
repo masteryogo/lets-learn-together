@@ -1,0 +1,56 @@
+{
+  "skill_name": "trilha",
+  "evals": [
+    {
+      "id": 0,
+      "name": "trilha-nova",
+      "prompt": "quero uma trilha nova sobre Rust pra quem já programa em outra linguagem, umas 4 etapas",
+      "expected_output": "Uma migration SQL com insert into public.trilha, conteudo jsonb completo (ROADMAP/PROJETOS/RECURSOS/LEGENDA/ESTADOS/CRITERIOS), 4 etapas, sem colunas de contagem.",
+      "assertions": [
+        "O conteudo jsonb tem exatamente as seis chaves de topo: ROADMAP, PROJETOS, RECURSOS, LEGENDA, ESTADOS, CRITERIOS",
+        "O insert NÃO escreve as colunas etapas, grupos ou topicos (elas são do gatilho trilha_contagem)",
+        "LEGENDA tem as três chaves fundamental/importante/opcional e ESTADOS as quatro pendente/estudando/feito/pulado",
+        "Toda prioridade de tópico é um dos três valores da LEGENDA, e a trilha usa mais de um nível",
+        "Todo tópico tem id, titulo, prioridade, desc e detalhe preenchidos",
+        "Os ids de tópico são únicos dentro da trilha",
+        "A coluna rota é um array de 5 pares [x,y] com x<=300 e y<=240",
+        "O JSON embutido no SQL tem aspas simples internas escapadas como '' (a migration é sintaticamente válida)",
+        "O texto está em português do Brasil com acentuação correta",
+        "Nenhum detalhe é apenas uma reformulação do titulo — todos trazem motivo, erro típico ou sinal de progresso",
+        "A resposta final não aplica a migration e mostra o comando npx supabase db push"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "edicao-topico",
+      "prompt": "acrescenta um tópico sobre vector databases na etapa de LangGraph da trilha de langchain",
+      "expected_output": "Uma migration que acrescenta UM tópico ao ramo certo via jsonb_set, sem reescrever o documento inteiro e sem tocar em id existente.",
+      "assertions": [
+        "A migration é um update em public.trilha where id = 'langchain', não um insert ou um delete+insert",
+        "A edição é cirúrgica (jsonb_set / #> no caminho do grupo), não a substituição do conteudo inteiro",
+        "O caminho jsonb aponta para a etapa de LangGraph de fato, conferido contra o conteúdo atual",
+        "Nenhum id de tópico pré-existente é renomeado ou removido",
+        "O tópico novo tem id inédito seguindo o padrão de prefixo da etapa",
+        "O tópico novo tem os cinco campos (id, titulo, prioridade, desc, detalhe) e prioridade válida",
+        "A migration não escreve as colunas de contagem",
+        "A resposta final não aplica a migration"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "melhorar-detalhe",
+      "prompt": "a trilha de cv tá com os detalhes muito rasos na etapa 1, melhora",
+      "expected_output": "Uma migration que reescreve apenas o campo detalhe dos tópicos da etapa 1 de cv, preservando todos os ids.",
+      "assertions": [
+        "TODOS os ids de tópico da etapa 1 continuam idênticos aos atuais (nenhum renomeado, nenhum sumido)",
+        "A estrutura de etapas e grupos da trilha permanece a mesma; só texto muda",
+        "O campo detalhe foi de fato ampliado em relação ao atual (mais contexto, não paráfrase)",
+        "Os novos detalhes nomeiam erro típico ou sinal de progresso, no registro em segunda pessoa do resto da trilha",
+        "A edição é um update where id = 'cv', não um insert",
+        "A migration não escreve as colunas de contagem",
+        "A resposta final menciona explicitamente que os ids foram preservados e por quê",
+        "A resposta final não aplica a migration"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "eval_id": 2,
+  "eval_name": "melhorar-detalhe",
+  "prompt": "a trilha de cv tá com os detalhes muito rasos na etapa 1, melhora",
+  "assertions": [
+    "TODOS os ids de tópico da etapa 1 continuam idênticos aos atuais (nenhum renomeado, nenhum sumido)",
+    "A estrutura de etapas e grupos da trilha permanece a mesma; só texto muda",
+    "O campo detalhe foi de fato ampliado em relação ao atual (mais contexto, não paráfrase)",
+    "Os novos detalhes nomeiam erro típico ou sinal de progresso, no registro em segunda pessoa do resto da trilha",
+    "A edição é um update where id = 'cv', não um insert",
+    "A migration não escreve as colunas de contagem",
+    "A resposta final menciona explicitamente que os ids foram preservados e por quê",
+    "A resposta final não aplica a migration"
+  ]
+}

@@ -22,6 +22,10 @@
   --borda:      #b9b0a0;
   --regua:      #ddd5c6;
   --malha:      #cddbe4;
+  /* a mesma malha, diluída no papel: a célula de 11px da tira de busca
+     tem quase três vezes mais linhas por centímetro que a do mapa, e no
+     tom cheio o quadriculado fino vira ponto-cruz */
+  --malha-fina: #e2e9ee;
   --relevo:     #cdbfa4;
   --tinta:      #2b3a45;
   --tinta-fraca:#6b6558;
@@ -138,6 +142,113 @@ body {
   white-space: nowrap;
 }
 .conta:focus-visible { outline: 3px solid var(--roxo); outline-offset: 4px; }
+
+/* ----------------------------- busca ----------------------------- */
+/* Uma tira da mesma folha quadriculada em que os mapas são desenhados:
+   a malha de 30px do .carta__quadro continua atrás do que se digita, e
+   o traço de tinta embaixo é a linha em que se escreve.
+
+   Sem caixa fechada, de propósito: borda de input é a única gramática
+   desta mesa que não seria de papel. O contorno fino é o do papel; o de
+   baixo é o da escrita. */
+.busca {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  /* A medida vem do conteúdo: cabe a etiqueta mais o nome de trilha mais
+     comprido que existe ("LangChain e LangGraph"). Uma coluna inteira de
+     largura abria um vão que fazia a tira parecer campo quebrado — o
+     alinhamento que importa é o da borda esquerda, e esse a coluna da
+     grade já garante. */
+  width: min(100%, 272px);
+  margin-bottom: clamp(10px, 1.6vh, 18px);
+  padding: 6px 12px 5px;
+  background-color: var(--papel);
+  /* A malha é de 11px, e não os 30px do .carta__quadro: numa tira desta
+     altura a célula grande só cabe uma vez, e aí as linhas verticais
+     leem como régua segmentada em vez de papel. 11px é a grade
+     tipográfica do site (2 × 5,5px), então o quadriculado fino cai
+     alinhado ao texto — é o verso da folha, não o mapa. */
+  background-image:
+    repeating-linear-gradient(0deg,  var(--malha-fina) 0 1px, transparent 1px 11px),
+    repeating-linear-gradient(90deg, var(--malha-fina) 0 1px, transparent 1px 11px);
+  background-position: 0 -1px;
+  border: 1px solid var(--borda);
+  border-bottom: 1px solid var(--linha-dura);
+  /* papel sobre feltro, mais raso que o da folha inteira: a tira pesa
+     menos que uma carta */
+  box-shadow: 0 3px 8px rgba(21, 20, 26, 0.12);
+}
+
+/* o foco mora na tira, não no campo: um contorno em volta de um input
+   sem borda fica solto no meio do papel */
+.busca:has(:focus-visible) { outline: 3px solid var(--roxo); outline-offset: 2px; }
+
+/* caixa baixa, ao contrário do resto da mesa: maiúscula aqui é de
+   cartucho impresso, e isto é anotação a lápis sobre a quadriculada */
+.busca__rotulo {
+  flex: none;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--tinta-fraca);
+}
+
+.busca__campo {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: inherit;
+  letter-spacing: 0.04em;
+  color: #15141a;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  appearance: none;
+}
+
+.busca__campo:focus-visible { outline: none; }
+.busca__campo:disabled { color: var(--tinta-fraca); }
+
+/* o X próprio do Chrome no type=search vem com curva e fora da grade de
+   11px; Esc já limpa o campo */
+.busca__campo::-webkit-search-cancel-button { appearance: none; }
+
+/* ---------------------- a etiqueta da gaveta ---------------------- */
+/* Nome à esquerda, quantas folhas à direita, e o traço que separa a
+   etiqueta do que está arquivado sob ela — a mesma linguagem da tira de
+   busca, que é o outro objeto de arquivo desta coluna.
+
+   Caixa baixa, como a tira: a maiúscula desta mesa é de bloco impresso
+   (a tampa do estojo, o rodapé da carta), e a coluna da grade tem o
+   registro de quem anotou à mão. A hierarquia vem do tamanho e da cor,
+   nunca do peso — a Departure Mono tem um só. */
+.secao {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  padding: 0 2px 5px;
+  border-bottom: 1px solid rgba(94, 100, 72, 0.3);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: var(--tinta-tampo);
+}
+
+/* a primeira etiqueta encosta na tira de busca; as seguintes precisam de
+   ar, senão a gaveta nova parece rodapé da anterior */
+.secao:not(:first-child) { margin-top: clamp(16px, 2.6vh, 30px); }
+
+.secao__nome { flex: 1 1 auto; }
+
+.cartas__vazio {
+  grid-column: 1 / -1;
+  padding: 26px 2px;
+  max-width: 44ch;
+}
+
+.cartas__vazio-texto { margin: 0 0 14px; color: var(--tinta-tampo); }
 
 /* ----------------------------- mesa ----------------------------- */
 .mesa {
@@ -261,20 +372,30 @@ body {
 /* três por linha: mais do que isso e a carta fica estreita demais
    para a rota caber; menos, e a mesa fica vazia. A grade é o que
    permite a quarta trilha descer em vez de espremer as outras. */
+/* a coluna da grade: a tira de busca parada em cima, as cartas rolando
+   embaixo. A largura da grade vive aqui agora, e não na própria grade,
+   para a tira dividir a borda esquerda com as cartas. */
+.grade {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  align-self: stretch;
+  min-height: 0;
+  /* a largura da fileira antiga vira a largura da coluna inteira, para
+     a carta no clamp() de sempre */
+  max-width: calc(404px * 3 + 32px * 2);
+}
+
 .cartas {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: start;
   gap: clamp(14px, 2vw, 32px);
   padding-top: 6px;
-  /* a largura da fileira antiga vira a largura da grade inteira,
-     para a carta no clamp() de sempre */
-  max-width: calc(404px * 3 + 32px * 2);
   flex: 1 1 auto;
-  /* a única área rolável da página. O estojo é irmão daqui, então
+  /* a única área rolável da página. O estojo é irmão da coluna, então
      fica parado por mais trilhas que deçam. */
   min-height: 0;
-  align-self: stretch;
   overflow-y: auto;
   /* só na vertical: a grade já cabe na largura, e um trilho deitado
      sob as cartas seria ruído puro */
@@ -826,6 +947,10 @@ body {
 
   .cartas { grid-template-columns: 1fr; gap: 14px; max-width: none; }
   .carta { width: auto; }
+  /* a coluna da grade ocupa a tela, e a tira com ela: uma folha de
+     largura, aqui, é a largura inteira */
+  .grade { max-width: none; }
+  .busca { width: auto; }
 
   /* sem largura para duas colunas, o estojo desce para baixo da
      grade — mas inteira, com a etiqueta e as duas juntas: é o grupo

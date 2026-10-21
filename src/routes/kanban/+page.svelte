@@ -17,8 +17,8 @@
   import {
     KANBAN_COLUNAS,
     KANBAN_RAIAS,
-    KANBAN_NUMEROS,
   } from "$lib/kanban/dados.js";
+  import { listarTrilhas } from "$lib/trilhas.js";
   import {
     estado as estadoDoQuadro,
     listarCards,
@@ -40,6 +40,18 @@
     listarCards().then((cards) => {
       KANBAN_CARDS = cards ?? [];
       carregando = false;
+    });
+  });
+
+  /* a ficha de cada trilha, sem o conteúdo: é só dela que vêm as
+     contagens, e é a mesma consulta leve que a mesa faz */
+  let fichas = $state({});
+  let contando = $state(true);
+
+  $effect(() => {
+    listarTrilhas().then((f) => {
+      fichas = f;
+      contando = false;
     });
   });
 
@@ -98,17 +110,22 @@
   }
 
   /* os números não são enfeite: quase todo argumento do quadro
-     ("50 marcações contra 353") se apoia neles */
+     ("50 marcações contra 353") se apoia neles — por isso eles vêm
+     do banco, que os reconta a cada escrita, e não de uma contagem
+     à mão que envelhece em silêncio */
   const numeros = $derived.by(() => {
-    const partes = KANBAN_NUMEROS.trilhas.map(
+    const lista = Object.values(fichas);
+    /* sem banco não há trilha, e meia frase é pior que nenhuma */
+    if (!lista.length) return "";
+
+    const partes = lista.map(
       (t) => `${t.rotulo} ${t.grupos}/${t.topicos}`
     );
-    const grupos = KANBAN_NUMEROS.trilhas.reduce((a, t) => a + t.grupos, 0);
-    const topicos = KANBAN_NUMEROS.trilhas.reduce((a, t) => a + t.topicos, 0);
+    const grupos = lista.reduce((a, t) => a + t.grupos, 0);
+    const topicos = lista.reduce((a, t) => a + t.topicos, 0);
     return (
       "Grupos/tópicos por trilha: " + partes.join(" · ") +
-      " — total " + grupos + "/" + topicos +
-      ". Contados em " + KANBAN_NUMEROS.medidoEm + "."
+      " — total " + grupos + "/" + topicos + "."
     );
   });
 
@@ -182,7 +199,15 @@
     O que vem por aí, e o porquê de cada coisa estar onde está. Clique num
     card para ler o motivo inteiro.
   </p>
-  <p class="topo__numeros">{numeros}</p>
+  {#if numeros}
+    <p class="topo__numeros">{numeros}</p>
+  {:else if contando}
+    <!-- o skeleton reserva a linha: sem ele o topo pula e empurra o
+         quadro para baixo no meio da leitura. aria-hidden porque
+         "ainda não sei" não é informação para quem ouve a página —
+         a frase será lida quando existir. -->
+    <div class="topo__espera" aria-hidden="true"></div>
+  {/if}
 </header>
 
 <!-- filtro por raia: o quadro inteiro cabe na tela, mas ler só

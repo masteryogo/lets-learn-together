@@ -73,6 +73,28 @@ body {
 }
 .topo__numeros { font-size: 11px; color: var(--borda-tampo); margin-top: 5.5px; }
 
+/* A espera dos números: uma barra da altura exata da linha que vem,
+   para o topo não mudar de tamanho quando a resposta chega. Pulsa em
+   opacidade e não em cor — a folha tem uma régua só (--regua), e
+   gradiente deslizante não combina com uma tela sem curva nem
+   degradê em lugar nenhum. */
+.topo__espera {
+  height: 11px;
+  width: min(46ch, 100%);
+  margin-top: 5.5px;
+  background: var(--regua);
+  animation: espera-pulso 1.4s ease-in-out infinite;
+}
+
+@keyframes espera-pulso {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topo__espera { animation: none; }
+}
+
 .botao {
   font: inherit; font-size: 11px;
   padding: 5.5px 11px;

@@ -1,0 +1,18 @@
+{
+  "eval_id": 0,
+  "eval_name": "trilha-nova",
+  "prompt": "quero uma trilha nova sobre Rust pra quem já programa em outra linguagem, umas 4 etapas",
+  "assertions": [
+    "O conteudo jsonb tem exatamente as seis chaves de topo: ROADMAP, PROJETOS, RECURSOS, LEGENDA, ESTADOS, CRITERIOS",
+    "O insert NÃO escreve as colunas etapas, grupos ou topicos (elas são do gatilho trilha_contagem)",
+    "LEGENDA tem as três chaves fundamental/importante/opcional e ESTADOS as quatro pendente/estudando/feito/pulado",
+    "Toda prioridade de tópico é um dos três valores da LEGENDA, e a trilha usa mais de um nível",
+    "Todo tópico tem id, titulo, prioridade, desc e detalhe preenchidos",
+    "Os ids de tópico são únicos dentro da trilha",
+    "A coluna rota é um array de 5 pares [x,y] com x<=300 e y<=240",
+    "O JSON embutido no SQL tem aspas simples internas escapadas como '' (a migration é sintaticamente válida)",
+    "O texto está em português do Brasil com acentuação correta",
+    "Nenhum detalhe é apenas uma reformulação do titulo — todos trazem motivo, erro típico ou sinal de progresso",
+    "A resposta final não aplica a migration e mostra o comando npx supabase db push"
+  ]
+}

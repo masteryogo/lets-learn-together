@@ -1,0 +1,443 @@
+{
+  "metadata": {
+    "skill_name": "trilha",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-10-21T12:19:43Z",
+    "evals_run": [
+      0,
+      1,
+      2
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 87.1,
+        "tokens": 72493,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A migration tem SQL e todo literal JSON embutido faz parse",
+          "passed": true,
+          "evidence": "1/1 literais parseados, 2528 chars de SQL"
+        },
+        {
+          "text": "Nao escreve as colunas de contagem (gatilho trilha_contagem)",
+          "passed": true,
+          "evidence": "colunas do insert: (sem insert)"
+        },
+        {
+          "text": "E um update na trilha certa, nao insert/delete",
+          "passed": true,
+          "evidence": "update=True delete=False"
+        },
+        {
+          "text": "Edicao cirurgica (jsonb_set no ramo), nao troca do documento",
+          "passed": true,
+          "evidence": "usa jsonb_set"
+        },
+        {
+          "text": "Localiza o alvo pelo id, nao por indice fixo",
+          "passed": true,
+          "evidence": "busca por id"
+        },
+        {
+          "text": "Topico novo tem id inedito",
+          "passed": true,
+          "evidence": "ids novos=['lc-f4-11']"
+        },
+        {
+          "text": "Nenhum id existente redefinido no SQL",
+          "passed": true,
+          "evidence": "ids existentes reescritos: []"
+        },
+        {
+          "text": "Resumo final existe e mostra npx supabase db push",
+          "passed": true,
+          "evidence": "resumo.md menciona db push"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.889,
+        "passed": 8,
+        "failed": 0,
+        "total": 9,
+        "time_seconds": 337.2,
+        "tokens": 102271,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A migration tem SQL e todo literal JSON embutido faz parse",
+          "passed": true,
+          "evidence": "0/0 literais parseados, 20903 chars de SQL (escreve campo por campo, sem literal jsonb)"
+        },
+        {
+          "text": "Nao escreve as colunas de contagem (gatilho trilha_contagem)",
+          "passed": true,
+          "evidence": "colunas do insert: (sem insert)"
+        },
+        {
+          "text": "E um update na trilha certa, nao insert/delete",
+          "passed": true,
+          "evidence": "update=True delete=False"
+        },
+        {
+          "text": "Edicao cirurgica (jsonb_set no ramo), nao troca do documento",
+          "passed": true,
+          "evidence": "usa jsonb_set"
+        },
+        {
+          "text": "Localiza o alvo pelo id, nao por indice fixo",
+          "passed": false,
+          "evidence": "caminho posicional"
+        },
+        {
+          "text": "Todos os ids da etapa 1 de cv preservados no SQL",
+          "passed": true,
+          "evidence": "12 ids esperados, ausentes: []"
+        },
+        {
+          "text": "desc/titulo/prioridade inalterados em valor (chaves de progresso)",
+          "passed": true,
+          "evidence": "0 topicos reemitidos, 0 com valor alterado []"
+        },
+        {
+          "text": "Detalhes de fato ampliados",
+          "passed": true,
+          "evidence": "sql=20903 chars vs detalhe original=4675"
+        },
+        {
+          "text": "Resumo final existe e mostra npx supabase db push",
+          "passed": true,
+          "evidence": "resumo.md menciona db push"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 0,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 10,
+        "failed": 0,
+        "total": 10,
+        "time_seconds": 336.9,
+        "tokens": 89427,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A migration tem SQL e todo literal JSON embutido faz parse",
+          "passed": true,
+          "evidence": "1/1 literais parseados, 39465 chars de SQL"
+        },
+        {
+          "text": "Nao escreve as colunas de contagem (gatilho trilha_contagem)",
+          "passed": true,
+          "evidence": "colunas do insert: id, rotulo, cor, rota, ordem, publicada, conteudo"
+        },
+        {
+          "text": "conteudo tem as seis chaves de topo",
+          "passed": true,
+          "evidence": "['CRITERIOS', 'ESTADOS', 'LEGENDA', 'PROJETOS', 'RECURSOS', 'ROADMAP']"
+        },
+        {
+          "text": "Ids de topico unicos",
+          "passed": true,
+          "evidence": "48 topicos, 48 ids distintos"
+        },
+        {
+          "text": "Todo topico tem id/titulo/prioridade/desc/detalhe",
+          "passed": true,
+          "evidence": "incompletos: []"
+        },
+        {
+          "text": "Prioridades validas e com mais de um nivel",
+          "passed": true,
+          "evidence": "{'fundamental': 29, 'importante': 14, 'opcional': 5}"
+        },
+        {
+          "text": "LEGENDA e ESTADOS canonicos",
+          "passed": true,
+          "evidence": "legenda=['fundamental', 'importante', 'opcional'] estados=['pendente', 'estudando', 'feito', 'pulado']"
+        },
+        {
+          "text": "rota: 5 pares dentro do quadro 300x240",
+          "passed": true,
+          "evidence": "[[28, 206], [92, 182], [138, 128], [204, 104], [274, 48]]"
+        },
+        {
+          "text": "Nenhum campo fora do esquema (dado morto)",
+          "passed": true,
+          "evidence": "topico extra=[] etapa extra=[]"
+        },
+        {
+          "text": "Resumo final existe e mostra npx supabase db push",
+          "passed": true,
+          "evidence": "resumo.md menciona db push"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 108.0,
+        "tokens": 75565,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A migration tem SQL e todo literal JSON embutido faz parse",
+          "passed": true,
+          "evidence": "1/1 literais parseados, 3620 chars de SQL"
+        },
+        {
+          "text": "Nao escreve as colunas de contagem (gatilho trilha_contagem)",
+          "passed": true,
+          "evidence": "colunas do insert: (sem insert)"
+        },
+        {
+          "text": "E um update na trilha certa, nao insert/delete",
+          "passed": true,
+          "evidence": "update=True delete=False"
+        },
+        {
+          "text": "Edicao cirurgica (jsonb_set no ramo), nao troca do documento",
+          "passed": true,
+          "evidence": "usa jsonb_set"
+        },
+        {
+          "text": "Localiza o alvo pelo id, nao por indice fixo",
+          "passed": true,
+          "evidence": "busca por id"
+        },
+        {
+          "text": "Topico novo tem id inedito",
+          "passed": true,
+          "evidence": "ids novos=['lc-f4-11']"
+        },
+        {
+          "text": "Nenhum id existente redefinido no SQL",
+          "passed": true,
+          "evidence": "ids existentes reescritos: []"
+        },
+        {
+          "text": "Resumo final existe e mostra npx supabase db push",
+          "passed": true,
+          "evidence": "resumo.md menciona db push"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "time_seconds": 378.0,
+        "tokens": 103090,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A migration tem SQL e todo literal JSON embutido faz parse",
+          "passed": true,
+          "evidence": "1/1 literais parseados, 19281 chars de SQL"
+        },
+        {
+          "text": "Nao escreve as colunas de contagem (gatilho trilha_contagem)",
+          "passed": true,
+          "evidence": "colunas do insert: (sem insert)"
+        },
+        {
+          "text": "E um update na trilha certa, nao insert/delete",
+          "passed": true,
+          "evidence": "update=True delete=False"
+        },
+        {
+          "text": "Edicao cirurgica (jsonb_set no ramo), nao troca do documento",
+          "passed": true,
+          "evidence": "usa jsonb_set"
+        },
+        {
+          "text": "Localiza o alvo pelo id, nao por indice fixo",
+          "passed": true,
+          "evidence": "busca por id"
+        },
+        {
+          "text": "Todos os ids da etapa 1 de cv preservados no SQL",
+          "passed": true,
+          "evidence": "12 ids esperados, ausentes: []"
+        },
+        {
+          "text": "desc/titulo/prioridade inalterados em valor (chaves de progresso)",
+          "passed": true,
+          "evidence": "12 topicos reemitidos, 0 com valor alterado []"
+        },
+        {
+          "text": "Detalhes de fato ampliados",
+          "passed": true,
+          "evidence": "sql=19281 chars vs detalhe original=4675"
+        },
+        {
+          "text": "Resumo final existe e mostra npx supabase db push",
+          "passed": true,
+          "evidence": "resumo.md menciona db push"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 0,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.9,
+        "passed": 9,
+        "failed": 0,
+        "total": 10,
+        "time_seconds": 300.8,
+        "tokens": 91748,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A migration tem SQL e todo literal JSON embutido faz parse",
+          "passed": true,
+          "evidence": "1/1 literais parseados, 31852 chars de SQL"
+        },
+        {
+          "text": "Nao escreve as colunas de contagem (gatilho trilha_contagem)",
+          "passed": true,
+          "evidence": "colunas do insert: id, rotulo, cor, rota, ordem, publicada, conteudo"
+        },
+        {
+          "text": "conteudo tem as seis chaves de topo",
+          "passed": true,
+          "evidence": "['CRITERIOS', 'ESTADOS', 'LEGENDA', 'PROJETOS', 'RECURSOS', 'ROADMAP']"
+        },
+        {
+          "text": "Ids de topico unicos",
+          "passed": true,
+          "evidence": "40 topicos, 40 ids distintos"
+        },
+        {
+          "text": "Todo topico tem id/titulo/prioridade/desc/detalhe",
+          "passed": true,
+          "evidence": "incompletos: []"
+        },
+        {
+          "text": "Prioridades validas e com mais de um nivel",
+          "passed": true,
+          "evidence": "{'fundamental': 26, 'importante': 11, 'opcional': 3}"
+        },
+        {
+          "text": "LEGENDA e ESTADOS canonicos",
+          "passed": true,
+          "evidence": "legenda=['fundamental', 'importante', 'opcional'] estados=['pendente', 'estudando', 'feito', 'pulado']"
+        },
+        {
+          "text": "rota: 5 pares dentro do quadro 300x240",
+          "passed": true,
+          "evidence": "[[28, 206], [88, 160], [150, 132], [214, 80], [270, 42]]"
+        },
+        {
+          "text": "Nenhum campo fora do esquema (dado morto)",
+          "passed": false,
+          "evidence": "topico extra=[] etapa extra=['criterios']"
+        },
+        {
+          "text": "Resumo final existe e mostra npx supabase db push",
+          "passed": true,
+          "evidence": "resumo.md menciona db push"
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 0.963,
+        "stddev": 0.0641,
+        "min": 0.889,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 253.7333,
+        "stddev": 144.3088,
+        "min": 87.1,
+        "max": 337.2
+      },
+      "tokens": {
+        "mean": 88063.6667,
+        "stddev": 14935.74,
+        "min": 72493,
+        "max": 102271
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.9667,
+        "stddev": 0.0577,
+        "min": 0.9,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 262.2667,
+        "stddev": 139.0633,
+        "min": 108.0,
+        "max": 378.0
+      },
+      "tokens": {
+        "mean": 90134.3333,
+        "stddev": 13833.2695,
+        "min": 75565,
+        "max": 103090
+      }
+    },
+    "delta": {
+      "pass_rate": "-0.00",
+      "time_seconds": "-8.5",
+      "tokens": "-2071"
+    }
+  },
+  "notes": []
+}

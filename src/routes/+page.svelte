@@ -20,7 +20,7 @@
   import { base } from "$app/paths";
   import { MediaQuery } from "svelte/reactivity";
 
-  import { TRILHAS } from "$lib/trilhas.js";
+  import { listarTrilhas, CATEGORIAS } from "$lib/trilhas.js";
   import { sessao } from "$lib/conta/Sessao.svelte.js";
   import { contagens } from "$lib/roadmap/sincronia.svelte.js";
   import Obi from "$lib/obi/Obi.svelte";
@@ -53,14 +53,88 @@
   const ALTURA_OBI = 94;
   const FOLGA_SOMBRA = 10;
 
-  /* trilha sem rota ainda não vai à mesa */
-  const trilhas = Object.entries(TRILHAS).filter(([, t]) => t.rota);
+  /* As cartas vêm do banco desde 21/10/2026. Antes era o manifesto
+     escrito, e a mesa desenhava no primeiro quadro; agora ela espera
+     a resposta — por isso `carregando`, que distingue "ainda não
+     chegou" de "não há trilha nenhuma".
+
+     Trilha sem rota continua fora: a carta é a rota desenhada. */
+  let fichas = $state({});
+  let carregando = $state(true);
+
+  const ordemCategoria = new Map(CATEGORIAS.map((c, i) => [c.chave, i]));
+
+  /* Todas as cartas da mesa, antes do filtro, **na ordem em que a grade
+     as desenha** — categoria primeiro, e dentro dela a ordem do banco.
+
+     Essa ordem não é cosmética: `foco` e `escolhido` são índices neste
+     array, e o Obi encontra a carta correspondente pela posição dela no
+     DOM. Se o array e o DOM discordassem, ele andaria atrás da carta
+     errada. A ordenação é estável, então `order("ordem")` continua
+     valendo dentro de cada gaveta. */
+  const todas = $derived(
+    Object.entries(fichas)
+      .filter(([, t]) => t.rota?.length)
+      .sort(
+        ([, a], [, b]) =>
+          (ordemCategoria.get(a.categoria) ?? 99) -
+          (ordemCategoria.get(b.categoria) ?? 99)
+      )
+  );
+
+  /* o giro por id, e não pela posição na grade: filtrar reordena a
+     grade, e indexar por posição faria a carta que sobrou herdar o giro
+     de outra — as cartas girariam sozinhas durante a digitação. */
+  const giros = $derived(new Map(todas.map(([id], i) => [id, GIROS[i] ?? 0])));
+
+  let busca = $state("");
+
+  /* sem acento e sem caixa: quem digita "analise" não deve perder
+     "Análise". Comparar pelo rótulo é seguro — ele se edita à vontade,
+     diferente do id, que é chave do progresso salvo. */
+  const crua = (s) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+
+  const trilhas = $derived(
+    busca.trim() === ""
+      ? todas
+      : todas.filter(([, t]) => crua(t.rotulo).includes(crua(busca.trim())))
+  );
+
+  /* As gavetas com o que sobrou do filtro. Cada item carrega o índice
+     que tem no array achatado, porque é por ele que a carta fala com o
+     resto da mesa (progresso, foco, escolha).
+
+     Gaveta vazia não vira título: etiqueta sem carta embaixo anuncia uma
+     ausência que o filtro já explicou. */
+  const secoes = $derived(
+    CATEGORIAS.map((c) => ({
+      ...c,
+      itens: trilhas
+        .map((par, i) => ({ par, i }))
+        .filter(({ par }) => par[1].categoria === c.chave),
+    })).filter((s) => s.itens.length > 0)
+  );
+
+  $effect(() => {
+    listarTrilhas().then((lista) => {
+      fichas = lista;
+      carregando = false;
+    });
+  });
 
   const estreito = new MediaQuery("max-width: 900px");
 
   /* o progresso só existe no navegador: na pré-renderização toda
      carta nasce zerada e o número certo chega na hidratação */
-  let feitos = $state(trilhas.map(() => 0));
+  /* a contagem do banco: { trilha: feitos }. Null enquanto não
+     chegou. Guardá-la crua, e derivar o array da ordem das cartas, é
+     o que mantém os dois em dia — a lista de trilhas e a contagem
+     chegam em momentos diferentes, e quem as junta é o $derived. */
+  let contagem = $state(null);
+
+  const feitos = $derived(
+    trilhas.map(([id, t]) => Math.min(contagem?.[id] ?? 0, t.topicos))
+  );
 
   let foco = $state(null);      /* índice sob o ponteiro */
   let escolhido = $state(null); /* índice clicado */
@@ -110,13 +184,12 @@
      progresso salvo em lugar nenhum. */
   $effect(() => {
     if (!sessao.conectado) {
-      feitos = trilhas.map(() => 0);
+      contagem = {};
       return;
     }
     let vivo = true;
     contagens().then((mapa) => {
-      if (!vivo || !mapa) return;
-      feitos = trilhas.map(([id, t]) => Math.min(mapa[id] ?? 0, t.topicos));
+      if (vivo) contagem = mapa ?? {};
     });
     return () => (vivo = false);
   });
@@ -127,12 +200,22 @@
     return () => o.destroy();
   });
 
+  /* As cartas da grade, e não os filhos dela: desde que as etiquetas de
+     gaveta passaram a ocupar uma fileira da própria grade, `children`
+     devolve etiqueta junto com carta — e o Obi andaria atrás do item
+     errado, porque a posição no array deixaria de bater com a posição no
+     DOM. Vale também para o aviso de "nenhuma trilha", que é filho daqui
+     pelo mesmo motivo. */
+  function cartas() {
+    return cartasEl ? [...cartasEl.querySelectorAll(".carta")] : [];
+  }
+
   /* as posições são medidas no DOM, não calculadas: a largura das
      cartas é clamp() e muda com a janela */
   function centros() {
     if (!mesa || !cartasEl) return [];
     const base = mesa.getBoundingClientRect();
-    return [...cartasEl.children].map((el) => {
+    return cartas().map((el) => {
       const r = el.getBoundingClientRect();
       return r.left + r.width / 2 - base.left;
     });
@@ -145,9 +228,7 @@
   function pes() {
     if (!mesa || !cartasEl) return [];
     const base = mesa.getBoundingClientRect();
-    return [...cartasEl.children].map(
-      (el) => el.getBoundingClientRect().bottom - base.top
-    );
+    return cartas().map((el) => el.getBoundingClientRect().bottom - base.top);
   }
 
   /* a posição de descanso: o canto direito da mesa, debaixo do
@@ -190,10 +271,13 @@
     topo = Math.round(Math.min(pe + FOLGA_SOMBRA, limite));
   }
 
-  /* reposiciona quando a escolha muda ou a janela reflui */
+  /* reposiciona quando a escolha muda, a janela reflui ou o filtro muda
+     o tamanho da grade — o Obi anda em pixels medidos no DOM, e a
+     medida de antes do filtro é de uma grade que já não existe */
   $effect(() => {
     escolhido;
     estreito.current;
+    busca;
     posicionarObi();
   });
 
@@ -298,21 +382,71 @@
        a lado, e não em fila: a grade cresce para baixo, então a coluna
        da direita fica onde está por mais trilhas que haja. -->
   <div class="tampo">
-    <div class="cartas" bind:this={cartasEl}>
-      {#each trilhas as [id, dados], i}
-        <Carta
-          trilha={id}
-          {dados}
-          feitos={feitos[i]}
-          deitado={estreito.current}
-          giro={GIROS[i] ?? 0}
-          focada={escolhido === null && foco === i}
-          aberta={escolhido === i}
-          apagada={escolhido !== null && escolhido !== i}
-          aoEscolher={() => escolher(i)}
-          aoFocar={() => focar(i)}
-        />
-      {/each}
+    <!-- a coluna da grade: a tira de busca parada em cima, as cartas
+         rolando embaixo. A tira precisa estar aqui dentro, e não acima
+         da mesa, para encostar na mesma borda esquerda da grade — que é
+         posição calculada pelo centro do tampo, não um valor que se
+         possa escrever de fora. -->
+    <div class="grade">
+      <!-- Uma tira da mesma quadriculada dos mapas: aqui se anota qual
+           folha puxar. Desabilitada depois da escolha, pelo mesmo motivo
+           do `podeMexer` do Obi — dali em diante a página está saindo, e
+           filtrar trocaria as cartas de lugar no meio da animação da
+           rota. -->
+      {#if todas.length > 1}
+        <form class="busca" role="search" onsubmit={(ev) => ev.preventDefault()}>
+          <label class="busca__rotulo" for="busca">buscar</label>
+          <input
+            class="busca__campo"
+            id="busca"
+            type="search"
+            autocomplete="off"
+            bind:value={busca}
+            oninput={() => (foco = null)}
+            disabled={escolhido !== null}
+          />
+        </form>
+      {/if}
+
+      <div class="cartas" bind:this={cartasEl}>
+        <!-- As etiquetas moram dentro da própria grade, numa fileira
+             inteira, e não em grades separadas por gaveta: é o que mantém
+             as colunas alinhadas de um grupo para o outro. A carta de
+             baixo encosta na mesma vertical da carta de cima. -->
+        {#each secoes as secao (secao.chave)}
+          <h2 class="secao">
+            <span class="secao__nome">{secao.rotulo}</span>
+            <span class="secao__conta">{secao.itens.length}</span>
+          </h2>
+
+          {#each secao.itens as { par: [id, dados], i } (id)}
+            <Carta
+              trilha={id}
+              {dados}
+              feitos={feitos[i]}
+              deitado={estreito.current}
+              giro={giros.get(id) ?? 0}
+              focada={escolhido === null && foco === i}
+              aberta={escolhido === i}
+              apagada={escolhido !== null && escolhido !== i}
+              aoEscolher={() => escolher(i)}
+              aoFocar={() => focar(i)}
+            />
+          {/each}
+        {/each}
+
+        <!-- a ausência precisa ser dita: grade vazia depois de digitar é
+             indistinguível de grade que ainda não carregou. E tela vazia
+             é convite, não lamento: diz o que houve e oferece a saída. -->
+        {#if !carregando && todas.length > 0 && trilhas.length === 0}
+          <div class="cartas__vazio">
+            <p class="cartas__vazio-texto">Nenhuma trilha com esse nome.</p>
+            <button class="botao" type="button" onclick={() => (busca = "")}>
+              Ver todas as trilhas
+            </button>
+          </div>
+        {/if}
+      </div>
     </div>
 
     <Estojo />
