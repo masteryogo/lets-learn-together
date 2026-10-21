@@ -18,12 +18,18 @@
 
   import { TRILHAS } from "$lib/trilhas.js";
   import { alternarTema } from "$lib/tema.js";
+  import Atalho from "$lib/conta/Atalho.svelte";
   import Obi from "$lib/obi/Obi.svelte";
   import { ControleObi } from "$lib/obi/ControleObi.svelte.js";
   import { Progresso } from "$lib/roadmap/Progresso.svelte.js";
   import Etapa from "$lib/roadmap/Etapa.svelte";
   import Indice from "$lib/roadmap/Indice.svelte";
   import Drawer from "$lib/roadmap/Drawer.svelte";
+  import { sessao } from "$lib/conta/Sessao.svelte.js";
+  import Convite from "$lib/conta/Convite.svelte";
+  import AvisoFalha from "$lib/conta/AvisoFalha.svelte";
+  import { sincronia } from "$lib/roadmap/sincronia.svelte.js";
+  import { listar as listarNotas } from "$lib/notas/remoto.svelte.js";
 
   import "$lib/obi/obi.css";
   import "$lib/estilos/base.css";
@@ -47,6 +53,64 @@
 
   const progresso = $derived(new Progresso(data.trilha));
   $effect(() => progresso.carregar());
+
+  /* a conta pode chegar depois do mapa — o getSession é assíncrono, e
+     quem entra em outra aba chega sem recarregar esta. Por isso o
+     efeito observa `conectado` em vez de rodar uma vez só. */
+  let migrar = $state(false);
+  let migrando = $state(false);
+
+  $effect(() => {
+    sessao.conectado;
+    let vivo = true;
+    progresso.sincronizar().then((r) => {
+      if (vivo) migrar = r === "importar";
+    });
+    return () => (vivo = false);
+  });
+
+  /* a recusa abre o convite. O número só cresce, então cada gesto
+     novo dispara o efeito uma vez — e o aviso continua existindo
+     porque o leitor de tela não vê diálogo que abre sozinho. */
+  let convite = $state(false);
+
+  $effect(() => {
+    if (progresso.recusas > 0) {
+      convite = true;
+      aviso = "Entre na conta para marcar o que já estudou.";
+    }
+  });
+
+  /* as notas presas a um tópico aparecem no drawer dele. A nota é uma
+     entidade com dois pontos de entrada — mural e tópico —, e este é
+     o segundo. Carrega-se uma vez por visita: o mural é que edita. */
+  let notas = $state([]);
+
+  $effect(() => {
+    if (!sessao.conectado) {
+      notas = [];
+      return;
+    }
+    let vivo = true;
+    listarNotas().then((linhas) => {
+      if (vivo && linhas) notas = linhas.filter((n) => n.trilha === data.trilha);
+    });
+    return () => (vivo = false);
+  });
+
+  async function levarParaAConta() {
+    migrando = true;
+    await progresso.importarHeranca();
+    migrando = false;
+    migrar = false;
+    aviso = "Progresso deste navegador enviado para a conta.";
+  }
+
+  function deixarNoNavegador() {
+    progresso.descartarHeranca();
+    migrar = false;
+    aviso = "A conta começa do zero. O que estava no navegador foi descartado.";
+  }
 
   /* o gesto de ler o detalhe tem que ser o gesto que o aparelho tem.
      `pointer: coarse` descreve o ponteiro primário, que é o dedo em
@@ -316,6 +380,49 @@
       </svg>
     </a>
 
+    <!-- as outras duas telas da trilha: o mural e a grade do mês. A
+         trilha vai junto na URL, senão elas abrem na trilha padrão e
+         a pessoa perde o lugar. -->
+    <a
+      class="botao botao--icone"
+      href="{base}/notas?trilha={data.trilha}"
+      data-sveltekit-reload
+      title="Notas desta trilha"
+      aria-label="Notas desta trilha"
+    >
+      <!-- post-it: folha com o canto dobrado -->
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <rect x="2" y="2" width="12" height="2" />
+        <rect x="2" y="4" width="2" height="10" />
+        <rect x="12" y="4" width="2" height="6" />
+        <rect x="2" y="12" width="8" height="2" />
+        <rect x="10" y="10" width="4" height="2" />
+        <rect x="10" y="12" width="2" height="2" />
+      </svg>
+    </a>
+
+    <a
+      class="botao botao--icone"
+      href="{base}/calendario?trilha={data.trilha}"
+      data-sveltekit-reload
+      title="Calendário de estudos"
+      aria-label="Calendário de estudos"
+    >
+      <!-- calendário: dois pregos, a moldura e a grade dos dias -->
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <rect x="4" y="1" width="2" height="2" />
+        <rect x="10" y="1" width="2" height="2" />
+        <rect x="1" y="3" width="14" height="2" />
+        <rect x="1" y="5" width="2" height="9" />
+        <rect x="13" y="5" width="2" height="9" />
+        <rect x="1" y="13" width="14" height="2" />
+        <rect x="5" y="7" width="2" height="2" />
+        <rect x="9" y="7" width="2" height="2" />
+        <rect x="5" y="10" width="2" height="2" />
+        <rect x="9" y="10" width="2" height="2" />
+      </svg>
+    </a>
+
     <button
       class="botao botao--icone"
       type="button"
@@ -349,27 +456,11 @@
       </svg>
     </button>
 
-    <!-- sem nada marcado a lixeira não tem o que apagar, e precisa dizer
-         isso de si mesma: sozinha na ponta do rail, um clique que só
-         anuncia numa região viva invisível lê como botão quebrado -->
-    <button
-      class="botao botao--icone rail__zerar"
-      type="button"
-      disabled={progresso.marcados === 0}
-      title={progresso.marcados ? "Zerar progresso" : "Nada marcado para zerar"}
-      aria-label={progresso.marcados ? "Zerar progresso" : "Nada marcado para zerar"}
-      onclick={() => (confirmandoReset = true)}
-    >
-      <!-- lixeira: alça, tampa, duas paredes, fundo e uma ranhura -->
-      <svg viewBox="0 0 16 16" aria-hidden="true">
-        <rect x="6" y="1" width="4" height="2" />
-        <rect x="1" y="3" width="14" height="2" />
-        <rect x="3" y="6" width="2" height="9" />
-        <rect x="11" y="6" width="2" height="9" />
-        <rect x="3" y="13" width="10" height="2" />
-        <rect x="7" y="7" width="2" height="5" />
-      </svg>
-    </button>
+    <!-- a conta fica na ponta, onde estava a lixeira: é o botão que
+         abre menu, e menu precisa de espaço embaixo. Zerar foi para
+         dentro dele — é ação sobre o que a conta guarda, não sobre o
+         mapa que está na frente. -->
+    <Atalho aoZerar={() => (confirmandoReset = true)} marcados={progresso.marcados} />
   </nav>
 
   <!-- aba de reabrir: existe só com a lateral fechada -->
@@ -658,9 +749,56 @@
   </div>
 </div>
 
+<Convite aberto={convite} aoFechar={() => (convite = false)} />
+<AvisoFalha falha={sincronia.ultimaFalha} />
+
 <!-- região viva: o leitor de tela não percebe a troca do ícone de
      copiar, então o resultado é narrado por aqui -->
 <p class="oculto-visual" role="status" aria-live="polite">{aviso}</p>
+
+<!-- sem conta o mapa é só leitura: marcar sem ter onde salvar
+     prometeria memória que não existe -->
+{#if !sessao.carregando && !sessao.conectado}
+  <div class="migrar">
+    <p class="migrar__texto">
+      Entre na sua conta para marcar o que já estudou. O progresso fica salvo na
+      conta, não neste navegador (o Obi agradece rsrs).
+    </p>
+    <div class="migrar__acoes">
+      <!-- vai direto: abrir o convite aqui seria um diálogo para
+           oferecer o mesmo link que este botão já é -->
+      <a class="botao botao--destaque" href="{base}/conta" data-sveltekit-reload>
+        Entrar
+      </a>
+    </div>
+  </div>
+{/if}
+
+<!-- a pergunta do primeiro login. Fica no rodapé e não bloqueia o
+     mapa: é uma decisão sobre o que já existe, não um pedágio para
+     usar a tela. -->
+{#if migrar}
+  <div class="migrar" role="dialog" aria-labelledby="migrar-titulo">
+    <p class="migrar__texto" id="migrar-titulo">
+      Este navegador guarda marcas de antes da conta existir. Levar para a
+      conta? Elas não são mostradas até você decidir.
+    </p>
+    <div class="migrar__acoes">
+      <button
+        class="botao botao--destaque"
+        type="button"
+        disabled={migrando}
+        onclick={levarParaAConta}>Levar</button
+      >
+      <button
+        class="botao"
+        type="button"
+        disabled={migrando}
+        onclick={deixarNoNavegador}>Descartar</button
+      >
+    </div>
+  </div>
+{/if}
 
 <Drawer
   {aberto}
@@ -668,6 +806,7 @@
   {etapas}
   dados={data}
   {progresso}
+  {notas}
   aoFechar={() => (aberto = null)}
   aoAnunciar={(t) => (aviso = t)}
 />
