@@ -141,7 +141,9 @@
     const b = ultimo;
     let vivo = true;
     sessoesDoMes(a, b).then((linhas) => {
-      if (vivo) sessoes = linhas;
+      /* erro não vira mês vazio: mantém o que já estava na tela e o
+         AvisoFalha explica que a leitura nova não chegou */
+      if (vivo && linhas !== null) sessoes = linhas;
     });
     modeloDoMes().then((m) => {
       if (vivo) modelo = m;
@@ -224,13 +226,22 @@
       mistura: previa.mistura,
       aplicado_ate: modelo?.aplicado_ate ?? null,
     });
-    eco = falha ?? "Modelo salvo.";
-    if (!falha) modelo = await modeloDoMes();
+    if (falha) {
+      eco = falha;
+      return falha;
+    }
+    modelo = await modeloDoMes();
+    eco = "Modelo salvo.";
+    return null;
   }
 
   async function aplicar() {
     aplicando = true;
-    await salvarModelo();
+    const falhaDoModelo = await salvarModelo();
+    if (falhaDoModelo) {
+      aplicando = false;
+      return;
+    }
 
     const dias = diasElegiveis(
       ancora.getFullYear(), ancora.getMonth(), rascunho.dias, inicioDaAplicacao()
@@ -254,7 +265,8 @@
       }))
     );
 
-    sessoes = await sessoesDoMes(primeiro, ultimo);
+    const linhas = await sessoesDoMes(primeiro, ultimo);
+    if (linhas !== null) sessoes = linhas;
     aplicando = false;
     eco = falha ?? `${plano.length} sessões escritas.`;
     if (!falha) dlg?.close();
@@ -262,8 +274,14 @@
 
   async function limparFuturo() {
     aplicando = true;
-    await limparFuturoDoModelo(diaISO(inicioDaAplicacao()));
-    sessoes = await sessoesDoMes(primeiro, ultimo);
+    const falha = await limparFuturoDoModelo(diaISO(inicioDaAplicacao()));
+    if (falha) {
+      aplicando = false;
+      eco = falha;
+      return;
+    }
+    const linhas = await sessoesDoMes(primeiro, ultimo);
+    if (linhas !== null) sessoes = linhas;
     aplicando = false;
     eco = "O que o modelo tinha escrito daqui em diante saiu.";
   }
@@ -343,8 +361,13 @@
   }
 
   async function apagar(id) {
-    await apagarSessao(id);
+    const falha = await apagarSessao(id);
+    if (falha) {
+      eco = falha;
+      return;
+    }
     sessoes = sessoes.filter((s) => s.id !== id);
+    eco = "Sessão apagada.";
   }
 </script>
 
