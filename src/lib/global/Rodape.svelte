@@ -126,4 +126,15 @@
     .rodape__fim span { display: block; }
     .rodape__fim span + span { margin-top: 6px; }
   }
+
+  @media (min-width: 761px) and (max-width: 980px) {
+    .rodape__principal { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .rodape__marca { grid-column: 1 / -1; }
+  }
+
+  @media (max-width: 520px) {
+    .rodape { padding-inline: 16px; }
+    .rodape__principal { grid-template-columns: 1fr; }
+    .rodape__marca { grid-column: auto; }
+  }
 </style>

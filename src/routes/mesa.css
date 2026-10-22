@@ -1016,6 +1016,25 @@ body {
   .caminha { display: none; }
 }
 
+/* Em tablet, três folhas e o estojo disputavam menos largura do que uma
+   carta precisa para a rota caber. Duas preservam o desenho; uma só fica
+   para o celular, onde a leitura já é vertical. */
+@media (min-width: 901px) and (max-width: 1200px) {
+  .cartas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .carta { width: auto; }
+  .grade { max-width: 840px; }
+  .estojo { width: 150px; }
+}
+
+@media (max-width: 34rem) {
+  body { padding-inline: 16px; }
+  .busca { flex-wrap: wrap; gap: 4px 10px; }
+  .busca__campo { flex-basis: 100%; min-height: 2.25rem; }
+  .estojo { align-items: flex-start; }
+  .estojo__miniaturas { width: 108px; }
+  .conta { min-height: 44px; }
+}
+
 /* abaixo disto o nome inteiro não cabe nem em linha própria */
 @media (max-width: 26rem) {
   .conta__nome { max-width: 12ch; }
