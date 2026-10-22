@@ -43,7 +43,7 @@ export async function sessoesDoMes(primeiroDia, ultimoDia) {
     .order("inicio");
 
   leitura.falha = error ? error.message : null;
-  return error ? [] : data;
+  return error ? null : data;
 }
 
 export async function escrever({ dia, trilha, inicio, duracao_min, anotacao }) {
@@ -71,8 +71,9 @@ export async function escrever({ dia, trilha, inicio, duracao_min, anotacao }) {
 
 export async function apagarSessao(id) {
   const sb = cliente();
-  if (!sb) return;
-  await sb.from("sessao_estudo").delete().eq("id", id);
+  if (!sb) return "Entre na conta para apagar uma sessão.";
+  const { error } = await sb.from("sessao_estudo").delete().eq("id", id);
+  return error ? "Não consegui apagar a sessão. Tente de novo." : null;
 }
 
 /* uma linha por pessoa: o modelo é "o que vale de agora em diante".
@@ -120,13 +121,14 @@ export async function aplicarPlano(linhas) {
    escrita à mão não é do modelo, e o passado não se reescreve */
 export async function limparFuturoDoModelo(deISO) {
   const sb = cliente();
-  if (!sb) return;
-  await sb
+  if (!sb) return "Entre na conta para limpar o plano.";
+  const { error } = await sb
     .from("sessao_estudo")
     .delete()
     .eq("usuario_id", sessao.usuario.id)
     .eq("origem", "modelo")
     .gte("dia", deISO);
+  return error ? "Não consegui limpar o plano. Tente de novo." : null;
 }
 
 export async function modeloDoMes() {

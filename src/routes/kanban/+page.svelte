@@ -21,6 +21,7 @@
   import { listarTrilhas } from "$lib/trilhas.js";
   import {
     estado as estadoDoQuadro,
+    estadoSugestoes,
     listarCards,
     minhasSugestoes,
     sugerir,
@@ -71,7 +72,12 @@
   let sugerindo = $state(false);
 
   $effect(() => {
-    if (sessao.conectado) minhasSugestoes().then((l) => (minhas = l));
+    if (sessao.conectado) {
+      minhasSugestoes().then((l) => {
+        /* erro não apaga a lista que a pessoa já tinha conseguido ler */
+        if (l !== null) minhas = l;
+      });
+    }
     else minhas = [];
   });
 
@@ -356,7 +362,7 @@
      justamente ser uma lista de decisões tomadas. -->
 <div class="veu" hidden={!sugerindo} onclick={() => (sugerindo = false)} aria-hidden="true"></div>
 
-<aside
+<div
   class="painel sugerir"
   role="dialog"
   aria-modal="true"
@@ -428,6 +434,12 @@
     {#if eco}
       <p class="sugerir__eco" data-tom={eco.tom} role="status">{eco.texto}</p>
     {/if}
+
+    {#if estadoSugestoes.falha}
+      <p class="sugerir__eco" data-tom="ruim" role="status">
+        Não consegui ler suas sugestões: {estadoSugestoes.falha}
+      </p>
+    {/if}
   </form>
 
   {#if minhas.length}
@@ -449,4 +461,4 @@
       </div>
     {/if}
   </div>
-</aside>
+</div>
