@@ -26,6 +26,15 @@
 :root {
   color-scheme: light;
   --fundo:            #f8f7f4;
+  /* O quanto o rodapé precisa recuar para alcançar a borda da janela:
+     o padding deste body, de volta em negativo. O carimbo é o fim da
+     folha, não um cartão pousado sobre ela — e, vivendo no layout,
+     ele não tem como saber o padding de cada tela. Cada folha declara
+     o seu; o componente só desconta. */
+  --sangria-x: 0px;
+  --sangria-t: 0px;
+  --sangria-b: 4rem;
+
   --fundo-elevado:    #ffffff;
   --texto:            #15141a;
   --texto-suave:      #65636d;
@@ -1702,46 +1711,6 @@ body {
   overflow-wrap: anywhere;      /* o caminho do arquivo não estoura a caixa */
 }
 
-/* ---------------------------- rodapé ---------------------------- */
-.rodape {
-  margin-top: 3rem;
-  padding: var(--pad-painel);
-  border: 2px solid var(--borda-sutil);
-  font-size: var(--t-micro);
-  color: var(--texto-suave);
-  text-align: center;
-}
-
-.rodape__linha {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.rodape__credito {
-  margin: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: var(--t-micro);
-}
-
-.rodape__label { color: var(--texto-suave); }
-
-.rodape__chip {
-  padding: 0.2rem 0.6rem;
-  background: var(--roxo-forte);
-  color: var(--tinta-roxo);
-  border: 2px solid var(--linha);
-  border-radius: var(--raio);
-  box-shadow: var(--sombra-dura-sm);
-  text-decoration: none;
-}
-
-.rodape__chip:hover { transform: translate(2px, 2px); box-shadow: none; }
-
 .botao--destaque {
   padding: 0.45rem 1.1rem;
   background: var(--amarelo-forte);
@@ -2316,6 +2285,4 @@ body:has(.drawer:not([hidden])) { overflow: hidden; }
   /* alvo de toque: os chips são o controle mais usado do painel */
   .subassunto { font-size: var(--t-leitura); padding: 0.55rem 0.8rem; }
   .subassunto__copiar { width: 2.9rem; }
-
-  .rodape { margin-top: 2rem; }
 }

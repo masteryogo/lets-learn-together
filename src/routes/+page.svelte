@@ -40,6 +40,31 @@
      endereço de qualquer forma, para quem tem duas contas. */
   const apelido = $derived(sessao.nome);
 
+  /* o menu da quina. Fechado por padrão, e fechado de novo a cada
+     saída — deixar aberto ao voltar faria a mesa abrir com um painel
+     que ninguém pediu. */
+  let menuAberto = $state(false);
+  let quinaEl = $state(null);
+
+  /* clique fora e Escape: as duas saídas que um menu precisa ter.
+     `pointerdown` e não `click` porque o clique de fechar não deve
+     também acionar o que estava embaixo. */
+  function fecharSeFora(e) {
+    if (menuAberto && quinaEl && !quinaEl.contains(e.target)) menuAberto = false;
+  }
+
+  function teclaDoMenu(e) {
+    if (e.key === "Escape" && menuAberto) {
+      menuAberto = false;
+      quinaEl?.querySelector(".conta")?.focus();
+    }
+  }
+
+  async function sair() {
+    menuAberto = false;
+    await sessao.sair();
+  }
+
   /* inclinação leve e fixa por carta: mapas largados numa mesa não
      ficam alinhados. Fixa, e não aleatória, para não dançar a cada
      repintura. */
@@ -340,11 +365,11 @@
   <title>Lets learn together — escolha um território</title>
   <meta
     name="description"
-    content="Roadmaps de estudo em português, com prioridade, critério de conclusão e progresso salvo no navegador."
+    content="Mapas de estudo para quem aprende por conta própria: em que ordem estudar, o que dá para deixar passar e quando um assunto já pode ser dado por encerrado."
   />
 </svelte:head>
 
-<svelte:window onresize={posicionarObi} />
+<svelte:window onresize={posicionarObi} onpointerdown={fecharSeFora} onkeydown={teclaDoMenu} />
 
 <h1 class="marca">Lets learn together</h1>
 
@@ -356,19 +381,63 @@
      quem já está conectado. Vazio por um instante é mais honesto que
      o convite errado. -->
 {#if !sessao.carregando}
-  <a
-    class="conta"
-    href="{base}/conta"
-    data-sveltekit-reload
-    title={sessao.conectado ? sessao.usuario.email : "Entrar na conta"}
-  >
+  <div class="quina" bind:this={quinaEl}>
     {#if sessao.conectado}
-      <span class="conta__marca" aria-hidden="true">■</span>
-      <span class="conta__nome">{apelido}</span>
+      <!-- conectado a quina é um menu: além de ir ao perfil, daqui se
+           sai da conta — e vão entrar as configurações. Botão, e não
+           link, porque o que ele faz é abrir algo nesta mesma página. -->
+      <button
+        class="conta"
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={menuAberto}
+        title={sessao.usuario.email}
+        onclick={() => (menuAberto = !menuAberto)}
+      >
+        <!-- "Conta", e não o nome: a quina é a porta, e o rótulo dela
+             não pode mudar de largura conforme quem entrou. O nome diz
+             quem você é e mora dentro do menu, que é onde a pergunta
+             "sou eu mesmo?" aparece. -->
+        Conta
+        <!-- a seta vira para cima quando o menu está aberto: a direção
+             diz para onde o gesto leva, não só que há um gesto -->
+        <span class="conta__seta" aria-hidden="true">{menuAberto ? "▲" : "▼"}</span>
+      </button>
+
+      {#if menuAberto}
+        <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
+        <div class="conta__menu" role="menu">
+          <!-- quem está conectado: o cabeçalho do menu, não um item.
+               Trunca em vez de esticar a folha. -->
+          <p class="conta__quem">
+            <span class="conta__nome">{apelido}</span>
+          </p>
+          <a
+            class="conta__item"
+            role="menuitem"
+            href="{base}/conta"
+            data-sveltekit-reload>Perfil</a
+          >
+          <!-- a seção de configurações nasce na tela de perfil no passo
+               seguinte; a âncora já é a daquela seção -->
+          <a
+            class="conta__item"
+            role="menuitem"
+            href="{base}/conta#configuracoes"
+            data-sveltekit-reload>Configurações</a
+          >
+          <button class="conta__item" role="menuitem" type="button" onclick={sair}>
+            Sair
+          </button>
+        </div>
+      {/if}
     {:else}
-      Entrar
+      <!-- sem conta não há menu: só a porta de entrada -->
+      <a class="conta" href="{base}/conta" data-sveltekit-reload title="Entrar na conta">
+        Entrar
+      </a>
     {/if}
-  </a>
+  </div>
 {/if}
 
 <!-- a mesa: as cartas em cima, o Obi de pé na frente delas -->
@@ -466,29 +535,3 @@
 
   <Caminha parte="frente" />
 </main>
-
-<!-- mesmo conteúdo do rodapé do roadmap, na linguagem da mesa: o
-     cartucho de uma folha de levantamento, que é onde vão o autor e as
-     observações da carta -->
-<footer class="rodape">
-  <div class="rodape__linha">
-    <p class="rodape__credito">
-      <span class="rodape__label">Feito por</span>
-      <a
-        class="rodape__chip"
-        href="https://github.com/masteryogo"
-        target="_blank"
-        rel="noopener noreferrer">@masteryogo</a
-      >
-    </p>
-    <!-- o quadro é leitura, não ação: fica no botão simples, e o
-         destaque continua só no Contribuir -->
-    <a
-      class="botao botao--destaque"
-      href="{base}/kanban"
-      data-sveltekit-reload
-      target="_blank"
-      rel="noopener noreferrer">Contribuir</a
-    >
-  </div>
-</footer>

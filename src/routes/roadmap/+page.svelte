@@ -716,26 +716,6 @@
         </div>
       </div>
     </section>
-
-    <footer class="rodape">
-      <div class="rodape__linha">
-        <p class="rodape__credito">
-          <span class="rodape__label">Feito por</span>
-          <a
-            class="rodape__chip"
-            href="https://github.com/masteryogo"
-            target="_blank"
-            rel="noopener noreferrer">@masteryogo</a
-          >
-        </p>
-        <a
-          class="botao botao--destaque"
-          href="https://github.com/masteryogo/lets-learn-together/fork"
-          target="_blank"
-          rel="noopener noreferrer">Contribuir</a
-        >
-      </div>
-    </footer>
   </div>
 </div>
 
