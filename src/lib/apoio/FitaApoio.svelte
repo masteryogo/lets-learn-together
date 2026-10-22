@@ -23,6 +23,51 @@
   import { listarApoiadores, estado } from "$lib/apoio/apoiadores.svelte.js";
 
   let apoiadores = $state([]);
+  let elemento = $state(null);
+
+  /* Quanto da fita ainda ocupa o topo da JANELA, publicado em
+     `--fita-visivel` no <html>.
+
+     Existe porque a barra lateral e a rail são `sticky` no topo e
+     precisam medir o que sobra da janela abaixo da fita — e isso
+     muda com a rolagem. Descontar `--fita-altura` sempre, como
+     antes, deixava as duas 66px curtas depois que a fita saia de
+     cena: encolhiam ao rolar. Não descontar nada as fazia
+     transbordar antes de rolar, levando o fim delas (onde mora o
+     ícone da conta) para fora da janela.
+
+     Como no rodapé, a medida é publicada e não corrigida aqui: quem
+     decide o que fazer com ela é cada peça. */
+  $effect(() => {
+    if (!elemento) return;
+
+    const raiz = document.documentElement;
+    let pedido = 0;
+
+    const medir = () => {
+      pedido = 0;
+      const r = elemento.getBoundingClientRect();
+      /* o quanto dela ainda está abaixo do alto da janela; 0 depois
+         de a fita ter rolado para fora */
+      const sobra = Math.max(0, Math.min(r.bottom, r.height));
+      raiz.style.setProperty("--fita-visivel", sobra + "px");
+    };
+
+    const agendar = () => {
+      if (!pedido) pedido = requestAnimationFrame(medir);
+    };
+
+    window.addEventListener("scroll", agendar, { passive: true });
+    window.addEventListener("resize", agendar);
+    medir();
+
+    return () => {
+      window.removeEventListener("scroll", agendar);
+      window.removeEventListener("resize", agendar);
+      if (pedido) cancelAnimationFrame(pedido);
+      raiz.style.removeProperty("--fita-visivel");
+    };
+  });
 
   onMount(async () => {
     const lidos = await listarApoiadores();
@@ -82,7 +127,7 @@
   );
 </script>
 
-<aside class="fita" aria-label="Quem sustenta o site">
+<aside class="fita" aria-label="Quem sustenta o site" bind:this={elemento}>
   <!-- a cabeça da impressora: parada, e por isso é ela que leva à
        planta. O rótulo é o nome do campo, como no carimbo do rodapé. -->
   <div class="fita__cabeca">

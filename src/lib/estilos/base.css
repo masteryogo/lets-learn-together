@@ -101,6 +101,11 @@
                                    19 fazia metade dos tópicos quebrarem
                                    em duas linhas. */
   --pad-lateral:      1.5rem;   /* encolhe no celular, via media query */
+  --barra-altura:     3.9rem;   /* o rail deitado, no celular. Medida que
+                                   um elemento fixo impõe ao resto da
+                                   página é token: quem a reserva (o
+                                   carimbo) e quem a ocupa (a barra)
+                                   precisam concordar no mesmo número. */
   --pad-painel:       1.25rem;  /* respiro interno dos blocos moldurados */
   --medida:           58ch;     /* medida de leitura do painel */
 
@@ -212,7 +217,13 @@ body {
 .aplicacao {
   display: grid;
   grid-template-columns: var(--rail-w) var(--lateral-w) minmax(0, 1fr);
-  align-items: start;
+  /* `stretch` (o padrão) de propósito: a célula do grid é o containing
+     block do `sticky`, e com `start` ela encolhia à altura do item
+     (100dvh). A rail e a lateral acompanhavam só a primeira tela e
+     ficavam para trás, deixando um vão escuro acima do rodapé. Esticada
+     a célula, as duas grudam até o fim do conteúdo — a altura visível
+     delas continua vindo do `height` que cada uma declara. */
+  align-items: stretch;
   transition: grid-template-columns 0.2s ease;
 }
 
@@ -257,7 +268,8 @@ body {
   position: sticky;
   top: 0;
   width: var(--lateral-w);
-  height: 100dvh;
+  /* mesma conta da rail: o que sobra da janela abaixo da fita, agora */
+  height: calc(100dvh - var(--fita-visivel, var(--fita-altura, 0px)));
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -669,7 +681,15 @@ body {
    bloquear a tela para isso seria cobrar pedágio por entrar. */
 .migrar {
   position: fixed;
-  left: 50%;
+  /* centrada por margem automática, e nao por `left: 50%` + translate:
+     em elemento fixo, `left: 50%` com `right: auto` deixa como largura
+     disponível só a metade direita da janela — e o shrink-to-fit
+     entrega 196px no celular, com o texto em seis linhas. Com os dois
+     lados presos, quem manda na largura volta a ser o `max-width`. */
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  width: fit-content;
   /* sobe quando o carimbo entra em cena: fixa no pé da janela, ela
      pousava em cima do rodapé e comia pedaços dele. A medida vem de
      `--rodape-visivel`, publicada por src/lib/global/Rodape.svelte.
@@ -679,7 +699,6 @@ body {
      limite e para, e aí cobrir um pedaço do rodapé é melhor que
      sumir: esta peça é funcional, o rodapé é assinatura. */
   bottom: min(calc(1rem + var(--rodape-visivel, 0px)), calc(100dvh - 20rem));
-  transform: translateX(-50%);
   z-index: 45;
   max-width: min(42rem, calc(100vw - 2rem));
   display: flex;
@@ -695,8 +714,34 @@ body {
 .migrar__texto { margin: 0; flex: 1 1 18rem; font-size: var(--t-base); }
 .migrar__acoes { display: flex; gap: 0.5rem; }
 @keyframes migrar-entra {
-  from { opacity: 0; transform: translate(-50%, 8px); }
-  to   { opacity: 1; transform: translate(-50%, 0); }
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* no celular a peça ocupa a largura toda e se empilha: lado a lado, o
+   texto fica preso a uma coluna de 18rem que não existe e o botão cai
+   sozinho num canto. Centrada, ela lê como aviso, não como cartão
+   torto. */
+@media (max-width: 640px) {
+  .migrar {
+    /* para no pé da janela em vez de seguir o carimbo: no celular,
+       subir o tanto que ele mede levava a tarja para o alto da tela,
+       pelo mesmo motivo que levava a barra. */
+    bottom: calc(0.75rem + env(safe-area-inset-bottom));
+    width: auto;
+    max-width: none;
+    inset-inline: 1rem;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 0.6rem;
+  }
+  .migrar__texto { flex: 0 1 auto; font-size: var(--t-micro); }
+  .migrar__acoes { justify-content: center; }
+  /* onde há barra de ações, a tarja pousa em cima dela */
+  body:has(.rail) .migrar {
+    bottom: calc(var(--barra-altura) + 0.5rem + env(safe-area-inset-bottom));
+  }
 }
 
 .conta-atalho { position: relative; }
@@ -719,12 +764,15 @@ body {
   position: sticky;
   top: 0;
   z-index: 30;
-  /* desconta a fita: grudada no topo a barra mede a janela inteira,
-     mas ANTES de rolar ela começa abaixo da fita, e o fim dela — onde
-     mora o ícone da conta, posto lá por `margin-top: auto` — caía
-     fora da janela. O ícone só aparecia depois de rolar 66px, que é
-     pior do que não existir: um controle que pisca não se procura. */
-  height: calc(100dvh - var(--fita-altura, 0px));
+  /* desconta a fita, e só o tanto dela que ainda está na janela.
+     Fixo em `--fita-altura` a barra ficava 66px curta depois de a
+     fita sair de cena — encolhia ao rolar. Sem desconto nenhum ela
+     transbordava antes de rolar, e o fim dela — onde mora o ícone da
+     conta, posto lá por `margin-top: auto` — caía fora da janela: um
+     controle que pisca não se procura. A medida viva vem de
+     `--fita-visivel`, publicada por src/lib/apoio/FitaApoio.svelte;
+     `--fita-altura` é o valor certo antes de o script medir. */
+  height: calc(100dvh - var(--fita-visivel, var(--fita-altura, 0px)));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2123,6 +2171,15 @@ body:has(.drawer--ajustando) .sobreposicao {
    ocupa a tela toda e um scroll invisivel por baixo desorienta */
 body:has(.drawer:not([hidden])) { overflow: hidden; }
 
+/* a barra deitada cobre o fim do carimbo, então o carimbo abre espaço
+   para ela. O `:has` limita a reserva às telas que têm rail — nas
+   outras, o mesmo rodapé terminaria com um vão sem dono. */
+@media (max-width: 900px) {
+  body:has(.rail) .cartucho {
+    padding-bottom: calc(var(--barra-altura) + env(safe-area-inset-bottom));
+  }
+}
+
 /* --------------------- lateral vira gaveta --------------------- */
 /* abaixo de 900px não há largura para três colunas: a lateral sai do
    fluxo e vira gaveta sobre o mapa, chamada pela maçaneta que mora no
@@ -2150,11 +2207,14 @@ body:has(.drawer:not([hidden])) { overflow: hidden; }
      deixa de ser barra de ações. */
   .rail {
     position: fixed;
-    /* o `bottom` sai do `inset` para poder subir junto com as outras
-       peças do pé quando o carimbo aparece. O teto é mais baixo que o
-       das outras porque esta é uma barra de uma linha só. */
-    inset: auto 0 auto;
-    bottom: min(var(--rodape-visivel, 0px), calc(100dvh - 7rem));
+    /* a barra NÃO sobe com o carimbo, ao contrário das outras peças do
+       pé. Subir dava certo enquanto o rodapé era uma faixa; no celular
+       ele passa de 85% da janela, a subida batia no teto e a barra de
+       ações terminava no alto da tela, com o rodapé embaixo dela — a
+       ordem invertida. Ela fica no pé da janela, e quem cede espaço é o
+       carimbo, logo abaixo. */
+    inset: auto 0 0;
+    min-height: var(--barra-altura);
     z-index: 30;
     height: auto;
     flex-direction: row;
