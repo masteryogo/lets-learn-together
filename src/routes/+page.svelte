@@ -12,12 +12,12 @@
 
 <style>
   @media (prefers-reduced-motion: no-preference) {
-    .carta, .plano { transition: transform .18s ease-out, box-shadow .18s ease-out; }
-    .carta:hover, .plano:hover { box-shadow: 0 15px 22px #15141a2b; }
+    .carta:not(.carta--fantasma), .plano { transition: transform .18s ease-out, box-shadow .18s ease-out; }
+    .carta:not(.carta--fantasma):hover, .plano:hover { box-shadow: 0 15px 22px #15141a2b; }
     .carta--ml:hover { transform: translateY(-8px) rotate(-1deg); }
     .carta--cv:hover { transform: translateY(3px) rotate(.7deg); }
     .carta--dados:hover { transform: translateY(-6px) rotate(.45deg); }
-    .carta--lc:hover { transform: translateY(-8px) rotate(-.5deg); }
+    .carta--python:hover { transform: translateY(-8px) rotate(-.5deg); }
     .plano:hover { transform: translateY(-8px); }
     .plano--destaque:hover { transform: translateY(-15px); }
   }
@@ -89,7 +89,11 @@
       <article class="carta carta--ml"><span class="carta__faixa">Trilha</span><h3>Aprendizado<br />de Máquina</h3><svg viewBox="0 0 280 138" aria-hidden="true"><path d="M25 115 L73 87 126 98 174 56 252 23" /><circle cx="25" cy="115" r="5" /><circle cx="73" cy="87" r="5" /><circle cx="126" cy="98" r="5" /><circle cx="174" cy="56" r="5" /><circle cx="252" cy="23" r="7" /></svg><footer><span>5 etapas</span><span>156 tópicos</span></footer></article>
       <article class="carta carta--cv"><span class="carta__faixa">Trilha</span><h3>Visão<br />Computacional</h3><svg viewBox="0 0 280 138" aria-hidden="true"><path d="M24 108 L64 80 55 50 106 62 144 29 188 64 251 36" /><circle cx="24" cy="108" r="5" /><circle cx="64" cy="80" r="5" /><circle cx="55" cy="50" r="5" /><circle cx="106" cy="62" r="5" /><circle cx="144" cy="29" r="5" /><circle cx="188" cy="64" r="5" /><circle cx="251" cy="36" r="7" /></svg><footer><span>14 etapas</span><span>141 tópicos</span></footer></article>
       <article class="carta carta--dados"><span class="carta__faixa">Trilha</span><h3>Engenharia<br />de Dados</h3><svg viewBox="0 0 280 138" aria-hidden="true"><path d="M24 108 L68 84 114 96 156 57 204 70 252 26" /><circle cx="24" cy="108" r="5" /><circle cx="68" cy="84" r="5" /><circle cx="114" cy="96" r="5" /><circle cx="156" cy="57" r="5" /><circle cx="204" cy="70" r="5" /><circle cx="252" cy="26" r="7" /></svg><footer><span>5 etapas</span><span>84 tópicos</span></footer></article>
-      <article class="carta carta--lc"><span class="carta__faixa">Trilha</span><h3>LangChain<br />e LangGraph</h3><svg viewBox="0 0 280 138" aria-hidden="true"><path d="M23 48 L70 85 119 80 154 43 188 70 250 25" /><circle cx="23" cy="48" r="5" /><circle cx="70" cy="85" r="5" /><circle cx="119" cy="80" r="5" /><circle cx="154" cy="43" r="5" /><circle cx="188" cy="70" r="5" /><circle cx="250" cy="25" r="7" /></svg><footer><span>8 etapas</span><span>55 tópicos</span></footer></article>
+      <article class="carta carta--python"><span class="carta__faixa">Trilha</span><h3>Python<br />do Zero</h3><svg viewBox="0 0 280 138" aria-hidden="true"><path d="M24 120 L70 106 116 88 160 74 206 50 252 22" /><circle cx="24" cy="120" r="5" /><circle cx="70" cy="106" r="5" /><circle cx="116" cy="88" r="5" /><circle cx="160" cy="74" r="5" /><circle cx="206" cy="50" r="5" /><circle cx="252" cy="22" r="7" /></svg><footer><span>7 etapas</span><span>70 tópicos</span></footer></article>
+      <article class="carta carta--fantasma">
+        <span class="carta__mais" aria-hidden="true">+</span>
+        <p>E<br />muito mais!</p>
+      </article>
     </div>
   </section>
 
