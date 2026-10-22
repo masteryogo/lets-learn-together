@@ -160,7 +160,7 @@
 </script>
 
 <svelte:head>
-  <title>Lets learn together — quadro de trabalho</title>
+  <title>Let's Learn Together — quadro de trabalho</title>
   <meta
     name="description"
     content="O que está em andamento, o que está em análise, o que foi descartado e o que já saiu — sempre com o motivo."

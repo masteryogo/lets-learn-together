@@ -17,10 +17,10 @@
 </script>
 
 <svelte:head>
-  <title>Privacidade — Lets learn together</title>
+  <title>Privacidade — Let's Learn Together</title>
   <meta
     name="description"
-    content="O que o Lets learn together guarda, por quê, e o que você pode pedir."
+    content="O que o Let's Learn Together guarda, por quê, e o que você pode pedir."
   />
 </svelte:head>
 
@@ -31,7 +31,7 @@
   <p class="documento__data">Atualizada em 20 de outubro de 2026</p>
 
   <p>
-    O <strong>Lets learn together</strong> é um site de roadmaps de estudo. Ele
+    O <strong>Let's Learn Together</strong> é um site de roadmaps de estudo. Ele
     guarda o mínimo necessário para lembrar o que você já estudou — e nada
     além disso.
   </p>
