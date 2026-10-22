@@ -86,6 +86,7 @@
      Trilha sem rota continua fora: a carta é a rota desenhada. */
   let fichas = $state({});
   let carregando = $state(true);
+  let falhaDasTrilhas = $state(null);
 
   const ordemCategoria = new Map(CATEGORIAS.map((c, i) => [c.chave, i]));
 
@@ -141,10 +142,22 @@
   );
 
   $effect(() => {
-    listarTrilhas().then((lista) => {
-      fichas = lista;
-      carregando = false;
-    });
+    let vivo = true;
+
+    listarTrilhas()
+      .then((lista) => {
+        if (!vivo) return;
+        fichas = lista;
+      })
+      .catch((erro) => {
+        if (!vivo) return;
+        falhaDasTrilhas = erro.message;
+      })
+      .finally(() => {
+        if (vivo) carregando = false;
+      });
+
+    return () => (vivo = false);
   });
 
   const estreito = new MediaQuery("max-width: 900px");
@@ -507,7 +520,12 @@
         <!-- a ausência precisa ser dita: grade vazia depois de digitar é
              indistinguível de grade que ainda não carregou. E tela vazia
              é convite, não lamento: diz o que houve e oferece a saída. -->
-        {#if !carregando && todas.length > 0 && trilhas.length === 0}
+        {#if falhaDasTrilhas}
+          <div class="cartas__vazio" role="status" aria-live="polite">
+            <p class="cartas__vazio-texto">Não consegui carregar as trilhas.</p>
+            <p class="cartas__vazio-texto">{falhaDasTrilhas}</p>
+          </div>
+        {:else if !carregando && todas.length > 0 && trilhas.length === 0}
           <div class="cartas__vazio">
             <p class="cartas__vazio-texto">Nenhuma trilha com esse nome.</p>
             <button class="botao" type="button" onclick={() => (busca = "")}>
