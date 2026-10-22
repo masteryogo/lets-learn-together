@@ -70,17 +70,6 @@
           decoding="async"
         />
       </figure>
-      <div class="bilhete" aria-hidden="true">
-        <svg viewBox="40 60 420 260">
-          <path class="mapa__rota" d="M67 295 C116 252 111 178 185 180 S256 277 307 228 S345 107 432 92" />
-          <path class="mapa__rota-pontilhada" d="M67 295 C116 252 111 178 185 180 S256 277 307 228 S345 107 432 92" />
-          <circle cx="67" cy="295" r="10" class="mapa__marco mapa__marco--inicio" />
-          <circle cx="185" cy="180" r="10" class="mapa__marco" />
-          <circle cx="307" cy="228" r="10" class="mapa__marco" />
-          <circle cx="432" cy="92" r="13" class="mapa__marco mapa__marco--fim" />
-        </svg>
-        <span>1 passo por vez</span>
-      </div>
     </div>
   </section>
 
