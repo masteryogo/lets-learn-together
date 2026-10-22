@@ -16,9 +16,75 @@
      ============================================================ -->
 <script>
   import { base } from "$app/paths";
+
+  let elemento = $state(null);
+
+  /* Quanto do carimbo já entrou na janela, publicado em
+     `--rodape-visivel` no <html>.
+
+     Existe porque três peças do site moram no pé da JANELA e não da
+     página — a tarja de "entre na sua conta", o aviso de escrita que
+     não chegou ao banco, e a barra do roadmap no celular. Enquanto o
+     fim do documento não tinha nada, elas pousavam sobre o vazio;
+     agora pousam sobre o carimbo e comem pedaços dele.
+
+     A medida é publicada, e não corrigida aqui, porque quem decide o
+     que fazer com ela é cada peça: a tarja sobe, e amanhã outra pode
+     querer sumir. O rodapé só informa onde está. */
+  $effect(() => {
+    if (!elemento) return;
+
+    const raiz = document.documentElement;
+    let pedido = 0;
+
+    const medir = () => {
+      pedido = 0;
+      const r = elemento.getBoundingClientRect();
+      /* o quanto o carimbo invade a janela a partir de baixo; 0
+         enquanto ele ainda está além da dobra */
+      const invade = Math.max(0, window.innerHeight - r.top);
+      raiz.style.setProperty("--rodape-visivel", invade + "px");
+    };
+
+    const agendar = () => {
+      if (!pedido) pedido = requestAnimationFrame(medir);
+    };
+
+    /* o listener de rolagem só existe enquanto o carimbo está em
+       cena: medir a cada scroll da página inteira para uma peça que
+       quase nunca aparece é trabalho jogado fora */
+    let rolando = false;
+    const ligar = () => {
+      if (rolando) return;
+      rolando = true;
+      window.addEventListener("scroll", agendar, { passive: true });
+    };
+    const desligar = () => {
+      if (!rolando) return;
+      rolando = false;
+      window.removeEventListener("scroll", agendar);
+      raiz.style.setProperty("--rodape-visivel", "0px");
+    };
+
+    const olho = new IntersectionObserver(
+      ([entrada]) => (entrada.isIntersecting ? (ligar(), medir()) : desligar()),
+      { threshold: 0 }
+    );
+    olho.observe(elemento);
+    window.addEventListener("resize", agendar);
+    medir();
+
+    return () => {
+      olho.disconnect();
+      desligar();
+      window.removeEventListener("resize", agendar);
+      if (pedido) cancelAnimationFrame(pedido);
+      raiz.style.removeProperty("--rodape-visivel");
+    };
+  });
 </script>
 
-<footer class="cartucho">
+<footer class="cartucho" bind:this={elemento}>
   <section class="cartucho__campo cartucho__campo--larga">
     <h2 class="cartucho__rotulo">Let's Learn Together</h2>
     <p class="cartucho__valor">

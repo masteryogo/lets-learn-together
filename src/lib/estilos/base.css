@@ -510,7 +510,10 @@ body {
 .aviso-falha {
   position: fixed;
   left: 1rem;
-  bottom: 1rem;
+  /* sobe quando o carimbo entra em cena, com teto para não sair pelo
+     alto da janela — o mesmo arranjo de `.migrar`, e o mesmo motivo:
+     um aviso de escrita que não chegou não pode ser o que some. */
+  bottom: min(calc(1rem + var(--rodape-visivel, 0px)), calc(100dvh - 12rem));
   z-index: 55;
   max-width: min(32rem, calc(100vw - 2rem));
   display: flex;
@@ -667,7 +670,15 @@ body {
 .migrar {
   position: fixed;
   left: 50%;
-  bottom: 1rem;
+  /* sobe quando o carimbo entra em cena: fixa no pé da janela, ela
+     pousava em cima do rodapé e comia pedaços dele. A medida vem de
+     `--rodape-visivel`, publicada por src/lib/global/Rodape.svelte.
+     O `min` é o teto: onde o carimbo ocupa quase a janela inteira —
+     no celular ele passa de 85%% —, subir o tanto que ele mede jogava
+     a peça para fora da tela por cima. Com o teto ela encosta no
+     limite e para, e aí cobrir um pedaço do rodapé é melhor que
+     sumir: esta peça é funcional, o rodapé é assinatura. */
+  bottom: min(calc(1rem + var(--rodape-visivel, 0px)), calc(100dvh - 20rem));
   transform: translateX(-50%);
   z-index: 45;
   max-width: min(42rem, calc(100vw - 2rem));
@@ -708,7 +719,12 @@ body {
   position: sticky;
   top: 0;
   z-index: 30;
-  height: 100dvh;
+  /* desconta a fita: grudada no topo a barra mede a janela inteira,
+     mas ANTES de rolar ela começa abaixo da fita, e o fim dela — onde
+     mora o ícone da conta, posto lá por `margin-top: auto` — caía
+     fora da janela. O ícone só aparecia depois de rolar 66px, que é
+     pior do que não existir: um controle que pisca não se procura. */
+  height: calc(100dvh - var(--fita-altura, 0px));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2134,7 +2150,11 @@ body:has(.drawer:not([hidden])) { overflow: hidden; }
      deixa de ser barra de ações. */
   .rail {
     position: fixed;
-    inset: auto 0 0;
+    /* o `bottom` sai do `inset` para poder subir junto com as outras
+       peças do pé quando o carimbo aparece. O teto é mais baixo que o
+       das outras porque esta é uma barra de uma linha só. */
+    inset: auto 0 auto;
+    bottom: min(var(--rodape-visivel, 0px), calc(100dvh - 7rem));
     z-index: 30;
     height: auto;
     flex-direction: row;
