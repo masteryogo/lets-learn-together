@@ -14,10 +14,10 @@
 </script>
 
 <svelte:head>
-  <title>Termos de uso — Lets learn together</title>
+  <title>Termos de uso — Let's Learn Together</title>
   <meta
     name="description"
-    content="As regras de uso do Lets learn together: o que ele oferece e o que não promete."
+    content="As regras de uso do Let's Learn Together: o que ele oferece e o que não promete."
   />
 </svelte:head>
 
@@ -28,7 +28,7 @@
   <p class="documento__data">Atualizados em 20 de outubro de 2026</p>
 
   <p>
-    Ao usar o <strong>Lets learn together</strong>, você concorda com o que
+    Ao usar o <strong>Let's Learn Together</strong>, você concorda com o que
     está escrito aqui. É curto porque o site é simples.
   </p>
 

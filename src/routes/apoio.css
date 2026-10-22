@@ -117,6 +117,8 @@
   .topo__marca { color: var(--giz); text-decoration: none; }
   .topo__saida { color: var(--giz-fraco); text-decoration: none; border-bottom: 1px solid transparent; }
   .topo__saida:hover { color: var(--giz); border-bottom-color: var(--linha); }
+  .topo__links { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: clamp(14px, 2.5vw, 30px); font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+  .topo__saida--ativo { color: var(--giz); border-bottom-color: var(--marca); }
 
   /* ------------------------------------------------------- hero --- */
   .hero { padding: clamp(44px, 9vh, 99px) 0 clamp(55px, 9vh, 99px); }
@@ -351,6 +353,7 @@
   }
 
   @media (max-width: 46rem) {
+    .topo__links .topo__saida:not(.topo__saida--ativo) { display: none; }
     .hero__passos { grid-template-columns: 1fr; gap: 14px; }
     .hero__rota { display: none; }
     /* a tabela vira lista: em 390px os três cabeçalhos de nível não
@@ -385,4 +388,21 @@
     }
 
     .comparacao td::before { content: attr(data-nivel); }
+  }
+
+  @media (min-width: 46.01rem) and (max-width: 62rem) {
+    .topo { align-items: center; }
+    .topo__links { gap: 15px; }
+    .hero { padding-top: 68px; }
+    .niveis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .nivel--fundador { grid-column: 1 / -1; max-width: calc(50% - 11px); justify-self: center; width: 100%; }
+    .selo-area { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 32rem) {
+    .topo { align-items: center; padding: 16px 0; }
+    .topo__marca { font-size: 14px; letter-spacing: .05em; }
+    .hero__acoes .botao { width: 100%; text-align: center; }
+    .ficha__pe { align-items: flex-start; flex-direction: column; }
+    .selo { padding: 16px; }
   }

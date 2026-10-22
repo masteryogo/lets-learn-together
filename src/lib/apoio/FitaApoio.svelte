@@ -14,7 +14,7 @@
      "Quem estuda" antes de cada nome: são os lotes da planta de
      expansão, e lá significam alguma coisa. Aqui não — quem chega à
      mesa nunca viu a planta, e lia um rótulo interno colado a um
-     nome de empresa. Quem sustenta o quê é assunto de /apoio.
+     nome de empresa. Quem sustenta o quê é assunto de /parcerias.
      ============================================================ -->
 <script>
   import { onMount } from "svelte";
@@ -132,16 +132,16 @@
        planta. O rótulo é o nome do campo, como no carimbo do rodapé. -->
   <div class="fita__cabeca">
     <span class="fita__rotulo">Quem confia</span>
-    <a class="fita__porta" href="{base}/apoio" data-sveltekit-reload>apoiar</a>
+    <a class="fita__porta" href="{base}/parcerias" data-sveltekit-reload>apoiar</a>
   </div>
 
   <svelte:element
     this={soConvite ? "a" : "div"}
     class="fita__janela"
     class:fita__janela--alvo={soConvite}
-    href={soConvite ? `${base}/apoio` : undefined}
+    href={soConvite ? `${base}/parcerias` : undefined}
     data-sveltekit-reload={soConvite ? "" : undefined}
-    aria-label={soConvite ? "Apoiar o Lets learn together" : undefined}
+    aria-label={soConvite ? "Apoiar o Let's Learn Together" : undefined}
   >
     <!-- escondida do leitor de tela: o que ele recebe é a frase escrita
          abaixo, uma vez só, em vez das seis voltas do papel -->

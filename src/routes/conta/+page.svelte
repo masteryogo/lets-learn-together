@@ -282,7 +282,7 @@
 </script>
 
 <svelte:head>
-  <title>Conta — Lets learn together</title>
+  <title>Conta — Let's Learn Together</title>
   <meta
     name="description"
     content="Entrar ou criar conta para levar o progresso das trilhas entre aparelhos."
