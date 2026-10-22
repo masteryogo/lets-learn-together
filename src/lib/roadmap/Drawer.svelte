@@ -28,6 +28,7 @@
     indice,
     etapas,
     dados, /* { PROJETOS, RECURSOS, ESTADOS, CRITERIOS } */
+    trilha,
     progresso,
     notas = [],
     aoFechar,
@@ -291,6 +292,16 @@
       {/if}
 
       {#if ref}
+        <section class="drawer__secao">
+          <h3>Praticar</h3>
+          <p class="drawer__nota">Resolva atividades ligadas a este assunto e receba uma explicação da resposta.</p>
+          <a
+            class="drawer__elo"
+            href="{base}/atividades?trilha={trilha}&topico={ref.topico.id}"
+            data-sveltekit-reload>Ir para a prática</a
+          >
+        </section>
+
         <section class="drawer__secao">
           <h3>Marcar como</h3>
           <div class="drawer__estados">

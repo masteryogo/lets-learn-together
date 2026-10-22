@@ -812,6 +812,7 @@
   {indice}
   {etapas}
   dados={data}
+  trilha={data.trilha}
   {progresso}
   {notas}
   aoFechar={() => (aberto = null)}

@@ -1,0 +1,88 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const cabecalhosCors = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+function responder(corpo: unknown, status = 200) {
+  return new Response(JSON.stringify(corpo), {
+    status,
+    headers: { ...cabecalhosCors, "Content-Type": "application/json" },
+  });
+}
+
+function texto(valor: unknown) {
+  return String(valor ?? "").trim().replace(/\s+/g, " ");
+}
+
+function corrigir(tipo: string, resposta: Record<string, unknown>, gabarito: Record<string, unknown>) {
+  if (tipo === "completar") {
+    const esperadas = gabarito.lacunas as Record<string, string[]>;
+    const dadas = (resposta.lacunas ?? {}) as Record<string, unknown>;
+    const correta = Object.entries(esperadas).every(([chave, opcoes]) =>
+      opcoes.map(texto).includes(texto(dadas[chave]))
+    );
+    return { correta, detalhes: { lacunas: Object.keys(esperadas) } };
+  }
+
+  if (tipo === "saida") {
+    const aceita = (gabarito.aceitas as string[]).map(texto);
+    return { correta: aceita.includes(texto(resposta.texto)), detalhes: {} };
+  }
+
+  const corretas = new Set((gabarito.corretas as string[]).map(texto));
+  const marcadas = new Set((Array.isArray(resposta.alternativas) ? resposta.alternativas : []).map(texto));
+  const correta = corretas.size === marcadas.size && [...corretas].every((id) => marcadas.has(id));
+  return { correta, detalhes: { marcadas: [...marcadas] } };
+}
+
+Deno.serve(async (requisicao) => {
+  if (requisicao.method === "OPTIONS") return new Response("ok", { headers: cabecalhosCors });
+  if (requisicao.method !== "POST") return responder({ erro: "Método não permitido." }, 405);
+
+  const url = Deno.env.get("SUPABASE_URL");
+  const anon = Deno.env.get("SUPABASE_ANON_KEY");
+  const servico = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !anon || !servico) return responder({ erro: "Função sem configuração do Supabase." }, 500);
+
+  const autorizacao = requisicao.headers.get("Authorization") ?? "";
+  const cliente = createClient(url, anon, { global: { headers: { Authorization: autorizacao } } });
+  const { data: { user }, error: falhaSessao } = await cliente.auth.getUser();
+  if (falhaSessao || !user) return responder({ erro: "Entre na conta para enviar uma resposta." }, 401);
+
+  const corpo = await requisicao.json().catch(() => null);
+  const atividadeId = texto(corpo?.atividadeId);
+  if (!atividadeId || !corpo?.resposta || typeof corpo.resposta !== "object") {
+    return responder({ erro: "Resposta de atividade inválida." }, 400);
+  }
+
+  const administrador = createClient(url, servico);
+  const { data: atividade, error: falhaAtividade } = await administrador
+    .from("atividade")
+    .select("id, tipo, publicada")
+    .eq("id", atividadeId)
+    .eq("publicada", true)
+    .maybeSingle();
+  if (falhaAtividade || !atividade) return responder({ erro: "Atividade não encontrada." }, 404);
+
+  const { data: chave, error: falhaChave } = await administrador
+    .from("atividade_gabarito")
+    .select("configuracao")
+    .eq("atividade_id", atividadeId)
+    .maybeSingle();
+  if (falhaChave || !chave) return responder({ erro: "Não consegui corrigir esta atividade." }, 500);
+
+  const resultado = corrigir(atividade.tipo, corpo.resposta, chave.configuracao as Record<string, unknown>);
+  const explicacao = texto((chave.configuracao as Record<string, unknown>).explicacao);
+  const feedback = resultado.correta
+    ? `Correto. ${explicacao}`
+    : `Ainda não. ${explicacao}`;
+  const { data: tentativa, error: falhaTentativa } = await administrador
+    .from("tentativa_atividade")
+    .insert({ usuario_id: user.id, atividade_id: atividadeId, resposta: corpo.resposta, correta: resultado.correta, pontuacao: resultado.correta ? 100 : 0, feedback, detalhes: resultado.detalhes })
+    .select("id, correta, pontuacao, feedback, detalhes, criada_em")
+    .single();
+  if (falhaTentativa) return responder({ erro: "Não consegui registrar sua tentativa." }, 500);
+  return responder({ tentativa });
+});
