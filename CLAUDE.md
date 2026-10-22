@@ -13,6 +13,22 @@ build. A migração para Svelte está no histórico da branch
 `refatoracao-svelte`, e o porquê dela está no quadro: componente com estado
 reativo é a peça que falta para ler dado que chega depois (Supabase).
 
+## Branches
+
+**`develop` é onde se trabalha. `main` é produção.**
+
+Todo trabalho novo sai da `develop` e volta para ela. A `main` só recebe o
+que já está pronto para o ar — é dela que o deploy sai, então um commit lá
+é uma publicação, não um ponto de salvamento.
+
+Antes de levar trabalho para a `main`, atualize-a contra a `develop`: as
+duas divergem com facilidade, porque correção urgente às vezes entra
+direto na produção e precisa voltar.
+
+A regra de commit continua valendo acima desta: Claude prepara o commit e
+mostra os comandos, mas não executa — nem `commit`, nem `push`, nem `tag`,
+nem PR. A exceção é dita caso a caso, e vale só para aquela vez.
+
 ## Rodar
 
 ```bash
@@ -33,7 +49,7 @@ continua, por causa de cookies desabilitados e janela anônima.
 
 ## Arquitetura
 
-Cinco rotas, cada uma uma tela:
+As telas:
 
 | Rota | Arquivo | O que é |
 |---|---|---|
@@ -42,6 +58,14 @@ Cinco rotas, cada uma uma tela:
 | `/calendario` | `src/routes/calendario/` | o calendário de estudos |
 | `/notas?trilha=` | `src/routes/notas/` | o mural de post-its |
 | `/kanban` | `src/routes/kanban/` | o quadro de trabalho |
+| `/apoio` | `src/routes/apoio/` | a proposta de parceria, para empresas |
+| `/conta` | `src/routes/conta/` | entrar, cadastrar, o perfil |
+| `/privacidade`, `/termos` | — | os documentos obrigatórios |
+
+**Duas peças aparecem em todas elas**, montadas no `+layout.svelte`: a fita
+de parceria no alto (`src/lib/apoio/FitaApoio.svelte`) e o carimbo no pé
+(`src/lib/global/Rodape.svelte`). Veja a seção do CSS — elas são a exceção
+que a regra das folhas globais exigiu.
 
 ### Os dados de uma trilha
 
@@ -89,6 +113,8 @@ O caminho é `src/lib/roadmap/Progresso.svelte.js` (estado reativo) →
 | `nota` | o mural de post-its, uma linha por nota |
 | `sessao_estudo` | um bloco de estudo num dia; `origem` diz se veio do modelo ou da mão |
 | `modelo_mes` | a janela e a mistura que geram o mês, uma linha por pessoa |
+| `contato_apoio` | quem escreveu pela `/apoio`; ninguém lê além de quem administra |
+| `apoiador` | quem já apoia, e em que nível; leitura pública, é o que a fita mostra |
 
 Linha só existe quando sai do padrão: ausência é `pendente`, no banco como
 em memória. As migrations vivem em `supabase/migrations/` e sobem com
@@ -204,12 +230,42 @@ Vale como regra: **escrita que muda a tela antes da resposta precisa de um
 lugar para dizer que não chegou**. O pior desfecho aqui nunca foi o erro —
 é a tela dizer que salvou.
 
+### A página de apoio
+
+`/apoio` fala com empresa, e é a única tela que não é feita para quem
+estuda. Por isso a casca própria — cianótipo, a cópia azul de uma planta —
+e por isso a **segunda família tipográfica**: Departure Mono é bitmap e de
+um peso só, ótima em rótulo e número e cansativa em página longa de texto
+corrido. Ela assina (títulos, tabela, selo) e a IBM Plex Sans carrega o
+texto. As duas são auto-hospedadas em `static/fonts/`, pelo mesmo motivo
+de sempre: fonte de terceiro é o site dependendo de outro servidor para
+desenhar letra.
+
+A estrutura é a de uma proposta de parceria: três **níveis** nomeados
+(`src/lib/apoio/niveis.js`), uma tabela que compara os três, o selo que o
+parceiro leva para o próprio site, e a conversa. Níveis, e não os lotes
+que havia antes: lote era escolha múltipla, nível inclui o anterior — foi
+isso que tirou o array de `contato_apoio` e deixou uma coluna.
+
+Duas decisões de conteúdo que não se desfazem sem pensar:
+
+1. **Não há depoimento.** Ninguém apoia o site ainda, e prova social
+   inventada é a única coisa ali que seria mentira.
+2. **Há um bloco dizendo o que a parceria não promete** — que não medimos
+   audiência e não vendemos alcance. É ele que torna o resto crível, e
+   está embaixo da tabela de propósito: é a linha que define quanto valem
+   aqueles `■`.
+
+O nível *fundador* conta vaga (`3 de 3 abertas`) e o número é verdade, não
+escassez de vitrine: ele some sozinho quando alguém entrar.
+
 ### O CSS ainda é global, e isso tem consequência
 
 Cada tela importa a própria folha, e elas são globais: a mesa
-(`src/routes/mesa.css`) e a casca escura das outras três
-(`src/lib/estilos/base.css`) definem `body`, `:root`, `.botao` e `.rodape`
-com valores diferentes.
+(`src/routes/mesa.css`), a casca escura das demais
+(`src/lib/estilos/base.css`) e o cianótipo do apoio
+(`src/routes/apoio.css`) definem `body`, `:root` e `.botao` com valores
+diferentes.
 
 Daí a regra: **a travessia entre telas é um documento novo**
 (`data-sveltekit-reload` nos links, `location.href` nos atalhos com
@@ -218,8 +274,35 @@ injetada pelo Vite não é removida ao navegar. Tirar o
 `data-sveltekit-preload-data` do `app.html` é parte disso: pré-carregar uma
 rota no hover já injeta o CSS dela.
 
-Isso sai quando cada componente levar o próprio estilo. Até lá, link novo
-entre telas precisa de `data-sveltekit-reload`.
+#### As duas exceções, e o que elas ensinam
+
+`FitaApoio.svelte` e `Rodape.svelte` são os **únicos componentes com
+`<style>` próprio**. Não é preferência: eles vivem no `+layout.svelte` e
+são desenhados dentro das três folhas, que dão valores diferentes aos
+mesmos nomes. Herdar faria a mesma peça mudar de cor conforme a tela em
+que caiu — e, na prática, mudou: o rodapé saía em Departure Mono em cinco
+telas e em Plex Sans no apoio, até a família virar token próprio também.
+
+Então a regra para peça que aparece em mais de uma tela: **estilo
+escopado, e todo token declarado no próprio componente** — cor, fonte,
+sombra. Nada de `var()` que dependa da folha.
+
+Com uma exceção deliberada, que é o caminho inverso: **a folha informa o
+componente do que só ela sabe**. `--sangria-x` e `--sangria-t` são o
+padding daquele `body`, e a fita e o rodapé os descontam para alcançar a
+borda da janela. Sem isso, os dois nasciam recuados, e papel que termina
+antes da janela não é fita nem carimbo — é cartão.
+
+**A fita não é fixa, e isso foi decidido depois de tentar.** Fixa, ela
+acompanhava a rolagem em todas as telas e virava poluição: um anúncio
+permanente por cima de quem veio estudar. O custo escondido era maior —
+sete lugares (três folhas, `.rail`, `.canto`, `.conta-volta`, `.quina`)
+precisaram concordar com os mesmos 66px, e cada um que discordava era um
+defeito visível. **Medida que um elemento fixo impõe ao resto da página
+não é número, é token**: sobrou `--fita-altura`, em `src/app.css`.
+
+Quando cada componente levar o próprio estilo, a regra das folhas sai. Até
+lá, link novo entre telas precisa de `data-sveltekit-reload`.
 
 ### O Obi
 
