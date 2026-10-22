@@ -18,10 +18,23 @@
 
 :root {
   --tampo:      #b9bfa0;
+  /* O quanto o rodapé precisa recuar para alcançar a borda da janela:
+     o padding deste body, de volta em negativo. O carimbo é o fim da
+     folha, não um cartão pousado sobre ela — e, vivendo no layout,
+     ele não tem como saber o padding de cada tela. Cada folha declara
+     o seu; o componente só desconta. */
+  --sangria-x: clamp(16px, 2.4vw, 32px);
+  --sangria-t: clamp(22px, 3vh, 44px);
+  --sangria-b: clamp(22px, 3vh, 44px);
+
   --papel:      #faf8f2;
   --borda:      #b9b0a0;
   --regua:      #ddd5c6;
   --malha:      #cddbe4;
+  /* a mesma malha, diluída no papel: a célula de 11px da tira de busca
+     tem quase três vezes mais linhas por centímetro que a do mapa, e no
+     tom cheio o quadriculado fino vira ponto-cruz */
+  --malha-fina: #e2e9ee;
   --relevo:     #cdbfa4;
   --tinta:      #2b3a45;
   --tinta-fraca:#6b6558;
@@ -64,11 +77,11 @@
 
 body {
   margin: 0;
-  /* altura travada, não mínima: o rodapé é pé de página fixo, e quem
-     rola é a grade de cartas lá dentro. Com min-height o body crescia
-     junto com as trilhas e empurrava o rodapé para fora da tela. */
-  height: 100dvh;
-  overflow: hidden;
+  /* altura mínima, não travada: o rodapé é pé de página de verdade e
+     mora no fim do documento. Quem rola é a página — rolagem interna
+     custava o esconde-barra do celular e o encadeamento do gesto, e
+     dava ao rodapé um teto de altura que ele não pode mais ter. */
+  min-height: 100dvh;
   padding: clamp(22px, 3vh, 44px) clamp(16px, 2.4vw, 32px);
   /* luz caindo de cima no tampo: a queda nas bordas é o que dá
      profundidade sem virar lavagem decorativa */
@@ -85,7 +98,13 @@ body {
 }
 
 .marca {
-  margin: 0;
+  /* o respiro abaixo da fita. Ele vive aqui, e não no `.fita`, porque
+     a fita gruda no topo: margem embaixo dela andaria junto ao rolar
+     e empurraria a mesa inteira um degrau para baixo.
+
+     Em degraus da grade de 5,5 — 44px na tela estreita, 88 na larga —,
+     que é a mesma folga entre a mesa e o carimbo do rodapé. */
+  margin: clamp(44px, 7vh, 88px) 0 0;
   flex: none;
   text-align: center;
   font-size: clamp(21px, 3.4vw, 34px);
@@ -95,27 +114,90 @@ body {
   text-transform: uppercase;
 }
 
-/* O atalho da conta: fixo no alto à direita, fora do fluxo, porque a
-   marca é centrada e qualquer coisa ao lado dela a tiraria do meio.
+/* O atalho da conta: no alto à direita, fora do fluxo, porque a marca
+   é centrada e qualquer coisa ao lado dela a tiraria do meio. Absoluto
+   e não fixo: com a página rolando, fixo o deixaria pairando sobre as
+   cartas — uma quina que acompanha a leitura vira obstáculo dela.
    Discreto de propósito — entrar não é o que se vem fazer aqui, e o
    site inteiro funciona sem conta. */
-.conta {
-  position: fixed;
-  top: clamp(22px, 3vh, 44px);
+
+/* absoluta de novo: a fita rola com a página, então a quina não
+   precisa mais escapar dela — e fixa ela pairava sobre as cartas, que
+   é o que o comentário acima sempre disse para não fazer. O `top`
+   conta a fita, que agora ocupa lugar no fluxo. */
+.quina {
+  position: absolute;
+  top: calc(var(--fita-altura) + clamp(11px, 1.5vh, 22px));
   right: clamp(16px, 2.4vw, 32px);
-  z-index: 5;
-  padding: 0.3rem 0.65rem;
-  border: 1px dashed var(--borda);
-  color: inherit;
-  font-size: 13.75px;
-  letter-spacing: 0.14em;
-  text-decoration: none;
-  text-transform: uppercase;
-  background: #15141a0b;
-  transition: background 0.16s, border-color 0.16s;
+  z-index: 7;
 }
 
-.conta:hover { background: #15141a13; border-color: var(--linha-dura); }
+/* O roxo e a sombra dura são os do chip do rodapé: a marca atravessa
+   as páginas, e a quina é o único lugar da mesa que não é papel. Sem
+   curva — `--raio: 0` vale aqui como em todo o resto. */
+.conta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.3rem 0.65rem;
+  font: inherit;
+  font-size: 13.75px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  color: var(--tinta-roxo);
+  background: var(--roxo);
+  border: 2px solid var(--linha-dura);
+  box-shadow: var(--sombra-dura-sm);
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+/* o mesmo afundar do chip: a quina é botão de papel pregado, e
+   pressionar empurra a folha contra a mesa */
+.conta:hover { transform: translate(2px, 2px); box-shadow: none; }
+.conta[aria-expanded="true"] { transform: translate(2px, 2px); box-shadow: none; }
+
+.conta__seta { font-size: 10px; }
+
+/* o menu: a folha que a quina levanta. Encostada na borda direita
+   dela, e não centrada, porque a quina vive na quina — centrar abriria
+   a folha para fora da tela. */
+.conta__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--papel);
+  border: 2px solid var(--linha-dura);
+  box-shadow: var(--sombra-dura);
+}
+
+.conta__item {
+  padding: 0.4rem 0.8rem;
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-align: left;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  color: var(--linha-dura);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+/* a inversão como realce, e não um cinza: a mesa tem uma cor de tinta
+   só, e hierarquia aqui se faz trocando fundo por tinta */
+.conta__item:hover,
+.conta__item:focus-visible {
+  background: var(--linha-dura);
+  color: var(--papel);
+  outline: none;
+}
 
 /* ele só aparece quando a sessão responde, e aparecer de estalo faz
    a quina parecer defeito de carregamento. Curto: é um canto, não um
@@ -124,11 +206,28 @@ body {
   from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: none; }
 }
-.conta { animation: conta-entra 0.2s ease-out both; }
+/* na quina e não no botão: o botão usa transform no hover, e duas
+   regras disputando a mesma propriedade fazem o afundar sumir */
+.quina { animation: conta-entra 0.2s ease-out both; }
 
-/* conectado: a marca do feito antes do nome, como no mapa — estado
-   com forma além de cor. O nome trunca em vez de empurrar a quina. */
-.conta__marca { margin-right: 0.4em; }
+/* conectado: a marca do feito antes do rótulo, como no mapa — estado
+   com forma além de cor, e aqui a única coisa que distingue a quina de
+   quem entrou da de quem não entrou. */
+.conta__marca { margin-right: 0.1em; }
+
+/* o nome de quem entrou, no alto do menu: rótulo da folha, não item
+   dela — por isso a linha embaixo, que separa quem você é do que se
+   pode fazer. */
+.conta__quem {
+  margin: 0;
+  padding: 0.4rem 0.8rem;
+  border-bottom: 2px solid var(--linha-dura);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--tinta-fraca);
+  text-transform: uppercase;
+}
+
 .conta__nome {
   display: inline-block;
   max-width: 22ch;
@@ -137,13 +236,118 @@ body {
   vertical-align: bottom;
   white-space: nowrap;
 }
-.conta:focus-visible { outline: 3px solid var(--roxo); outline-offset: 4px; }
+.conta:focus-visible { outline: 3px solid var(--linha-dura); outline-offset: 4px; }
+
+/* ----------------------------- busca ----------------------------- */
+/* Uma tira da mesma folha quadriculada em que os mapas são desenhados:
+   a malha de 30px do .carta__quadro continua atrás do que se digita, e
+   o traço de tinta embaixo é a linha em que se escreve.
+
+   Sem caixa fechada, de propósito: borda de input é a única gramática
+   desta mesa que não seria de papel. O contorno fino é o do papel; o de
+   baixo é o da escrita. */
+.busca {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  /* A medida vem do conteúdo: cabe a etiqueta mais o nome de trilha mais
+     comprido que existe ("LangChain e LangGraph"). Uma coluna inteira de
+     largura abria um vão que fazia a tira parecer campo quebrado — o
+     alinhamento que importa é o da borda esquerda, e esse a coluna da
+     grade já garante. */
+  width: min(100%, 272px);
+  margin-bottom: clamp(10px, 1.6vh, 18px);
+  padding: 6px 12px 5px;
+  background-color: var(--papel);
+  /* A malha é de 11px, e não os 30px do .carta__quadro: numa tira desta
+     altura a célula grande só cabe uma vez, e aí as linhas verticais
+     leem como régua segmentada em vez de papel. 11px é a grade
+     tipográfica do site (2 × 5,5px), então o quadriculado fino cai
+     alinhado ao texto — é o verso da folha, não o mapa. */
+  background-image:
+    repeating-linear-gradient(0deg,  var(--malha-fina) 0 1px, transparent 1px 11px),
+    repeating-linear-gradient(90deg, var(--malha-fina) 0 1px, transparent 1px 11px);
+  background-position: 0 -1px;
+  border: 1px solid var(--borda);
+  border-bottom: 1px solid var(--linha-dura);
+  /* papel sobre feltro, mais raso que o da folha inteira: a tira pesa
+     menos que uma carta */
+  box-shadow: 0 3px 8px rgba(21, 20, 26, 0.12);
+}
+
+/* o foco mora na tira, não no campo: um contorno em volta de um input
+   sem borda fica solto no meio do papel */
+.busca:has(:focus-visible) { outline: 3px solid var(--roxo); outline-offset: 2px; }
+
+/* caixa baixa, ao contrário do resto da mesa: maiúscula aqui é de
+   cartucho impresso, e isto é anotação a lápis sobre a quadriculada */
+.busca__rotulo {
+  flex: none;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--tinta-fraca);
+}
+
+.busca__campo {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: inherit;
+  letter-spacing: 0.04em;
+  color: #15141a;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  appearance: none;
+}
+
+.busca__campo:focus-visible { outline: none; }
+.busca__campo:disabled { color: var(--tinta-fraca); }
+
+/* o X próprio do Chrome no type=search vem com curva e fora da grade de
+   11px; Esc já limpa o campo */
+.busca__campo::-webkit-search-cancel-button { appearance: none; }
+
+/* ---------------------- a etiqueta da gaveta ---------------------- */
+/* Nome à esquerda, quantas folhas à direita, e o traço que separa a
+   etiqueta do que está arquivado sob ela — a mesma linguagem da tira de
+   busca, que é o outro objeto de arquivo desta coluna.
+
+   Caixa baixa, como a tira: a maiúscula desta mesa é de bloco impresso
+   (a tampa do estojo, o rodapé da carta), e a coluna da grade tem o
+   registro de quem anotou à mão. A hierarquia vem do tamanho e da cor,
+   nunca do peso — a Departure Mono tem um só. */
+.secao {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  padding: 0 2px 5px;
+  border-bottom: 1px solid rgba(94, 100, 72, 0.3);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: var(--tinta-tampo);
+}
+
+/* a primeira etiqueta encosta na tira de busca; as seguintes precisam de
+   ar, senão a gaveta nova parece rodapé da anterior */
+.secao:not(:first-child) { margin-top: clamp(16px, 2.6vh, 30px); }
+
+.secao__nome { flex: 1 1 auto; }
+
+.cartas__vazio {
+  grid-column: 1 / -1;
+  padding: 26px 2px;
+  max-width: 44ch;
+}
+
+.cartas__vazio-texto { margin: 0 0 14px; color: var(--tinta-tampo); }
 
 /* ----------------------------- mesa ----------------------------- */
 .mesa {
   position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
   margin-top: clamp(16px, 3vh, 40px);
   /* o mascote não mora mais no pé da mesa: a faixa que era dele vira
      altura de grade, que é o que falta quando há muitas trilhas */
@@ -166,10 +370,6 @@ body {
   align-items: flex-start;
   justify-content: center;
   gap: clamp(18px, 2.6vw, 44px);
-  /* a coluna da esquerda rola; para isso o tampo precisa caber na
-     mesa em vez de esticar com a grade */
-  min-height: 0;
-  flex: 1 1 auto;
 }
 
 /* ------------------------ o estojo ------------------------ */
@@ -261,45 +461,28 @@ body {
 /* três por linha: mais do que isso e a carta fica estreita demais
    para a rota caber; menos, e a mesa fica vazia. A grade é o que
    permite a quarta trilha descer em vez de espremer as outras. */
+/* a coluna da grade: a tira de busca parada em cima, as cartas rolando
+   embaixo. A largura da grade vive aqui agora, e não na própria grade,
+   para a tira dividir a borda esquerda com as cartas. */
+.grade {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;          /* largura na fileira do tampo, não altura */
+  align-self: stretch;
+  /* a largura da fileira antiga vira a largura da coluna inteira, para
+     a carta no clamp() de sempre */
+  max-width: calc(404px * 3 + 32px * 2);
+}
+
 .cartas {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: start;
   gap: clamp(14px, 2vw, 32px);
   padding-top: 6px;
-  /* a largura da fileira antiga vira a largura da grade inteira,
-     para a carta no clamp() de sempre */
-  max-width: calc(404px * 3 + 32px * 2);
-  flex: 1 1 auto;
-  /* a única área rolável da página. O estojo é irmão daqui, então
-     fica parado por mais trilhas que deçam. */
-  min-height: 0;
-  align-self: stretch;
-  overflow-y: auto;
-  /* só na vertical: a grade já cabe na largura, e um trilho deitado
-     sob as cartas seria ruído puro */
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  /* folga embaixo: a última fileira não encosta na borda do corte */
+  /* folga embaixo: a última fileira não encosta no rodapé */
   padding-bottom: 8px;
-  /* um trilho fino no tom do tampo: existe para dizer que há mais
-     cartas abaixo, não para ser olhado. Sem o trilho a grade cortada
-     no meio de uma fileira era a única pista de que havia mais. */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(94, 100, 72, 0.3) transparent;
 }
-
-/* o mesmo no WebKit, que ignora as duas de cima */
-.cartas::-webkit-scrollbar { width: 6px; }
-.cartas::-webkit-scrollbar:horizontal { height: 0; }
-.cartas::-webkit-scrollbar-track { background: transparent; }
-
-.cartas::-webkit-scrollbar-thumb {
-  /* --raio: 0 vale aqui também: pixel não tem curva */
-  background: rgba(94, 100, 72, 0.3);
-}
-
-.cartas:hover::-webkit-scrollbar-thumb { background: rgba(94, 100, 72, 0.5); }
 
 /* dentro da grade quem dita a largura é a coluna, não a carta */
 .cartas > * { width: auto; }
@@ -726,51 +909,13 @@ body {
 
 .ator__cara { transition: transform 0.24s ease; }
 
-/* --------------------------- rodapé --------------------------- */
-/* mesma receita do rodapé do roadmap, para as duas páginas terem o
-   mesmo pé: moldura de 2px, chip roxo e botão amarelo de borda dura.
-   O roxo e o amarelo são da marca, não da paleta desta página — por
-   isso atravessam as duas. */
-.rodape {
-  flex: none;
-  width: min(760px, 100%);
-  margin: clamp(16px, 2.5vh, 32px) auto 0;
-  padding: 1.25rem;
-  border: 2px solid var(--borda-tampo);
-  font-size: 11px;
-  color: var(--tinta-tampo);
-  text-align: center;
-}
+/* O carimbo da folha de levantamento: a grade de campos no canto de
+   baixo de toda planta. Papel, e não moldura vazia — numa mesa inteira
+   feita de folhas, o rodapé era o único objeto que não tinha material.
 
-.rodape__linha {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.rodape__credito {
-  margin: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 11px;
-}
-
-.rodape__label { color: var(--tinta-tampo); }
-
-.rodape__chip {
-  padding: 0.2rem 0.6rem;
-  background: var(--roxo);
-  color: var(--tinta-roxo);
-  border: 2px solid var(--linha-dura);
-  box-shadow: var(--sombra-dura-sm);
-  text-decoration: none;
-  transition: transform 0.08s, box-shadow 0.08s;
-}
-
-.rodape__chip:hover { transform: translate(2px, 2px); box-shadow: none; }
+   Sem traço entre as células: o que separa um campo do outro é o
+   espaço em volta do texto, não uma régua. A grade de 12 colunas
+   continua mandando no alinhamento — ela só deixou de ser desenhada. */
 
 .botao {
   display: inline-block;
@@ -786,7 +931,8 @@ body {
 }
 
 .botao--destaque {
-  padding: 0.45rem 1.1rem;
+  padding: 0.5rem 1.2rem;
+  font-size: 16.5px;
   background: var(--amarelo);
   color: var(--tinta-bloco);
   box-shadow: var(--sombra-dura);
@@ -794,7 +940,6 @@ body {
 
 .botao--destaque:hover { transform: translate(4px, 4px); box-shadow: none; }
 
-.rodape__chip:focus-visible,
 .botao:focus-visible { outline: 3px solid var(--roxo); outline-offset: 3px; }
 
 
@@ -810,8 +955,14 @@ body {
      ela montava em cima da marca — e o nome de quem está conectado é
      justamente o que cresce sem teto. Aqui a ordem é a da leitura:
      quem é você, e então onde você está. */
-  .conta {
-    position: static;
+  .quina {
+    /* relativa e não estática: o menu é absoluto e precisa de uma
+       âncora — sem ela, ele se penduraria na mesa inteira */
+    position: relative;
+    /* e sem deslocamento: em `relative`, o `top` que afasta a quina da
+       fita no desktop vira empurrão sobre a tira de busca, porque aqui
+       ela está no fluxo e não pendurada no canto */
+    top: 0;
     display: block;
     width: max-content;
     max-width: 100%;
@@ -826,6 +977,10 @@ body {
 
   .cartas { grid-template-columns: 1fr; gap: 14px; max-width: none; }
   .carta { width: auto; }
+  /* a coluna da grade ocupa a tela, e a tira com ela: uma folha de
+     largura, aqui, é a largura inteira */
+  .grade { max-width: none; }
+  .busca { width: auto; }
 
   /* sem largura para duas colunas, o estojo desce para baixo da
      grade — mas inteira, com a etiqueta e as duas juntas: é o grupo

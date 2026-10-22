@@ -1,0 +1,59 @@
+{
+  "expectations": [
+    {
+      "text": "A migration tem SQL e todo literal JSON embutido faz parse",
+      "passed": true,
+      "evidence": "1/1 literais parseados, 31852 chars de SQL"
+    },
+    {
+      "text": "Nao escreve as colunas de contagem (gatilho trilha_contagem)",
+      "passed": true,
+      "evidence": "colunas do insert: id, rotulo, cor, rota, ordem, publicada, conteudo"
+    },
+    {
+      "text": "conteudo tem as seis chaves de topo",
+      "passed": true,
+      "evidence": "['CRITERIOS', 'ESTADOS', 'LEGENDA', 'PROJETOS', 'RECURSOS', 'ROADMAP']"
+    },
+    {
+      "text": "Ids de topico unicos",
+      "passed": true,
+      "evidence": "40 topicos, 40 ids distintos"
+    },
+    {
+      "text": "Todo topico tem id/titulo/prioridade/desc/detalhe",
+      "passed": true,
+      "evidence": "incompletos: []"
+    },
+    {
+      "text": "Prioridades validas e com mais de um nivel",
+      "passed": true,
+      "evidence": "{'fundamental': 26, 'importante': 11, 'opcional': 3}"
+    },
+    {
+      "text": "LEGENDA e ESTADOS canonicos",
+      "passed": true,
+      "evidence": "legenda=['fundamental', 'importante', 'opcional'] estados=['pendente', 'estudando', 'feito', 'pulado']"
+    },
+    {
+      "text": "rota: 5 pares dentro do quadro 300x240",
+      "passed": true,
+      "evidence": "[[28, 206], [88, 160], [150, 132], [214, 80], [270, 42]]"
+    },
+    {
+      "text": "Nenhum campo fora do esquema (dado morto)",
+      "passed": false,
+      "evidence": "topico extra=[] etapa extra=['criterios']"
+    },
+    {
+      "text": "Resumo final existe e mostra npx supabase db push",
+      "passed": true,
+      "evidence": "resumo.md menciona db push"
+    }
+  ],
+  "summary": {
+    "pass_rate": 0.9,
+    "passed": 9,
+    "total": 10
+  }
+}

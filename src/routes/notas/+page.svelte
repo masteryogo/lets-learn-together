@@ -16,7 +16,7 @@
   import { page } from "$app/state";
   import { goto } from "$app/navigation";
 
-  import { TRILHAS, carregarTrilha, resolverId } from "$lib/trilhas.js";
+  import { carregarTrilha, listarTrilhas, PADRAO } from "$lib/trilhas.js";
   import Canto from "$lib/Canto.svelte";
   import Nota from "$lib/notas/Nota.svelte";
   import { Mural } from "$lib/notas/Mural.svelte.js";
@@ -30,7 +30,19 @@
 
   const mural = new Mural();
 
-  const atual = $derived(resolverId(page.url.searchParams.get("trilha")));
+  /* as fichas das trilhas: as abas do mural e o rótulo do título.
+     Enquanto não chegam, a trilha pedida na URL já vale — ela é o que
+     a pessoa escolheu, e esperar o banco para saber disso atrasaria o
+     mural sem motivo. */
+  let fichas = $state({});
+  $effect(() => {
+    listarTrilhas().then((lista) => (fichas = lista));
+  });
+
+  const pedida = $derived(page.url.searchParams.get("trilha"));
+  const atual = $derived(
+    pedida && (!Object.keys(fichas).length || fichas[pedida]) ? pedida : PADRAO
+  );
 
   /* os tópicos da trilha aberta, para prender uma nota a um deles. É
      o mesmo import dinâmico do roadmap: o conteúdo é um chunk à
@@ -57,7 +69,7 @@
     Object.fromEntries(topicos.map((t) => [t.id, t.titulo]))
   );
   const lista = $derived(mural.daTrilha(atual));
-  const rotulo = $derived(TRILHAS[atual].rotulo);
+  const rotulo = $derived(fichas[atual]?.rotulo ?? atual);
 
   /* o arrasto é de ponteiro fino: no toque a mesma área precisa rolar
      a página, e no celular o mural é grade, onde mover não quer dizer
@@ -127,7 +139,7 @@
   <h1 class="cabecalho-notas__titulo">Notas</h1>
 
   <nav class="filtro" aria-label="Escolher a trilha">
-    {#each Object.entries(TRILHAS) as [id, t]}
+    {#each Object.entries(fichas) as [id, t]}
       <!-- a cor vem do manifesto, não do CSS: trilha nova entra sem
            ninguém escrever uma regra para ela -->
       <a

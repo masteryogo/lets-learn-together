@@ -24,15 +24,6 @@ export const KANBAN_RAIAS = [
   { id: "conteudo",    rotulo: "Conteúdo e configuração" }
 ];
 
-export const KANBAN_NUMEROS = {
-  medidoEm: "2026-10-16",
-  trilhas: [
-    { rotulo: "ml", grupos: 15, topicos: 157 },
-    { rotulo: "cv", grupos: 24, topicos: 141 },
-    { rotulo: "langchain", grupos: 11, topicos: 55 }
-  ]
-};
-
 /* Os cards moravam aqui, escritos à mão, e foram para a tabela
    kanban_card em 21/10/2026 — ver a migration 0009, que os levou
    palavra por palavra. Saíram porque o quadro passou a aceitar
@@ -40,5 +31,9 @@ export const KANBAN_NUMEROS = {
    depender de deploy para mudar.
 
    O que ficou aqui é estrutura, não conteúdo: as colunas e as raias
-   mudam junto com a tela que as desenha, e os números de referência
-   são medidos à mão quando alguém conta os tópicos. */
+   mudam junto com a tela que as desenha. Os números de referência
+   também saíram, em 21/10/2026: eram contados à mão e carregavam a
+   data da contagem, enquanto o gatilho de `trilha` já os recalcula a
+   cada escrita. Número com data de medição é número que vai divergir
+   — o próprio quadro contava 15/157 para o ml enquanto o manifesto
+   dizia 5/156. */

@@ -22,7 +22,7 @@
   import Convite from "$lib/conta/Convite.svelte";
   import AvisoFalha from "$lib/conta/AvisoFalha.svelte";
   import { sessao } from "$lib/conta/Sessao.svelte.js";
-  import { TRILHAS } from "$lib/trilhas.js";
+  import { listarTrilhas } from "$lib/trilhas.js";
   import {
     aplicarPlano,
     diaISO,
@@ -45,10 +45,18 @@
 
   /* "pr" não é trilha do manifesto: projetos atravessam todas, e o
      calendário precisa de um lugar para eles */
-  const ASSUNTOS = [
-    ...Object.entries(TRILHAS).map(([id, t]) => ({ id, rotulo: t.rotulo })),
-    { id: "pr", rotulo: "Projetos" },
-  ];
+  /* as sugestões do campo de assunto. Vêm do banco, e "Projetos"
+     entra à mão porque ele atravessa todas as trilhas e não é uma. */
+  let ASSUNTOS = $state([{ id: "pr", rotulo: "Projetos" }]);
+
+  $effect(() => {
+    listarTrilhas().then((lista) => {
+      ASSUNTOS = [
+        ...Object.entries(lista).map(([id, t]) => ({ id, rotulo: t.rotulo })),
+        { id: "pr", rotulo: "Projetos" },
+      ];
+    });
+  });
 
   const hoje = new Date();
   const hojeISO = diaISO(hoje);

@@ -1,0 +1,54 @@
+{
+  "expectations": [
+    {
+      "text": "A migration tem SQL e todo literal JSON embutido faz parse",
+      "passed": true,
+      "evidence": "0/0 literais parseados, 20903 chars de SQL (escreve campo por campo, sem literal jsonb)"
+    },
+    {
+      "text": "Nao escreve as colunas de contagem (gatilho trilha_contagem)",
+      "passed": true,
+      "evidence": "colunas do insert: (sem insert)"
+    },
+    {
+      "text": "E um update na trilha certa, nao insert/delete",
+      "passed": true,
+      "evidence": "update=True delete=False"
+    },
+    {
+      "text": "Edicao cirurgica (jsonb_set no ramo), nao troca do documento",
+      "passed": true,
+      "evidence": "usa jsonb_set"
+    },
+    {
+      "text": "Localiza o alvo pelo id, nao por indice fixo",
+      "passed": false,
+      "evidence": "caminho posicional"
+    },
+    {
+      "text": "Todos os ids da etapa 1 de cv preservados no SQL",
+      "passed": true,
+      "evidence": "12 ids esperados, ausentes: []"
+    },
+    {
+      "text": "desc/titulo/prioridade inalterados em valor (chaves de progresso)",
+      "passed": true,
+      "evidence": "0 topicos reemitidos, 0 com valor alterado []"
+    },
+    {
+      "text": "Detalhes de fato ampliados",
+      "passed": true,
+      "evidence": "sql=20903 chars vs detalhe original=4675"
+    },
+    {
+      "text": "Resumo final existe e mostra npx supabase db push",
+      "passed": true,
+      "evidence": "resumo.md menciona db push"
+    }
+  ],
+  "summary": {
+    "pass_rate": 0.889,
+    "passed": 8,
+    "total": 9
+  }
+}

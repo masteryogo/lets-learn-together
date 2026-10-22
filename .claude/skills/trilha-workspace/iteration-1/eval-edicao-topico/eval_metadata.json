@@ -1,0 +1,15 @@
+{
+  "eval_id": 1,
+  "eval_name": "edicao-topico",
+  "prompt": "acrescenta um tópico sobre vector databases na etapa de LangGraph da trilha de langchain",
+  "assertions": [
+    "A migration é um update em public.trilha where id = 'langchain', não um insert ou um delete+insert",
+    "A edição é cirúrgica (jsonb_set / #> no caminho do grupo), não a substituição do conteudo inteiro",
+    "O caminho jsonb aponta para a etapa de LangGraph de fato, conferido contra o conteúdo atual",
+    "Nenhum id de tópico pré-existente é renomeado ou removido",
+    "O tópico novo tem id inédito seguindo o padrão de prefixo da etapa",
+    "O tópico novo tem os cinco campos (id, titulo, prioridade, desc, detalhe) e prioridade válida",
+    "A migration não escreve as colunas de contagem",
+    "A resposta final não aplica a migration"
+  ]
+}

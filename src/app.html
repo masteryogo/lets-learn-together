@@ -40,7 +40,90 @@
       if (!achado) return;
       location.replace(p.replace(/index\.html$/, "") + "roadmap?trilha=" + achado[1]);
     })();
+
+    /* A casca do roadmap é vazia: ssr desligado, e o HTML da rota tem
+       um <script> e nada mais. Entre o primeiro byte e o mapa há o
+       bundle, o cliente do Supabase e a consulta da trilha — e nada
+       para olhar no caminho.
+
+       Marcar a rota aqui é o que acende o esqueleto do <body>, e só
+       nela: as outras telas vêm pré-renderizadas e desenham sozinhas.
+       Vai depois do redirecionamento de propósito — quem chega por
+       um link antigo já saiu desta página antes desta linha. */
+    (function () {
+      if (/(^|\/)roadmap(\.html)?\/?$/.test(location.pathname)) {
+        document.documentElement.setAttribute("data-espera", "");
+      }
+    })();
   </script>
+
+  <style>
+    /* O esqueleto da espera.
+
+       As cores estão escritas aqui, e não como token: o base.css, onde
+       --fundo e --borda-sutil moram, só chega junto com o bundle — que
+       é exatamente o que se está esperando. São os dois valores de
+       --fundo e de --borda-sutil do base.css; se eles mudarem lá, mudam
+       aqui. É o preço de desenhar antes da folha existir.
+
+       Também não mora num {#if} do componente: esqueleto dentro do
+       componente só aparece depois de carregar o componente, que é
+       metade do que se está esperando. */
+    #espera { display: none; }
+
+    :root[data-espera] #espera {
+      display: grid;
+      /* o mesmo gabarito do .aplicacao: --rail-w e --lateral-w */
+      grid-template-columns: 3.25rem 21rem minmax(0, 1fr);
+      position: fixed;
+      inset: 0;
+      background: #f8f7f4;
+      padding: 0;
+    }
+
+    :root[data-tema="escuro"][data-espera] #espera { background: #22242a; }
+
+    #espera > div { padding: 22px 16.5px; }
+    .espera__rail { border-right: 1px solid #dedbd4; }
+    .espera__lateral { border-right: 1px solid #dedbd4; }
+    :root[data-tema="escuro"] .espera__rail,
+    :root[data-tema="escuro"] .espera__lateral { border-color: #3d414b; }
+
+    .espera__barra, .espera__cartao {
+      display: block;
+      background: #dedbd4;
+      margin-bottom: 11px;
+      /* --raio: 0. Pixel não tem curva, nem enquanto espera. */
+      border-radius: 0;
+      animation: espera-pulso 1.4s ease-in-out infinite;
+    }
+
+    :root[data-tema="escuro"] .espera__barra,
+    :root[data-tema="escuro"] .espera__cartao { background: #3d414b; }
+
+    .espera__barra { height: 11px; }
+    .espera__cartao { height: 66px; margin-bottom: 22px; }
+
+    /* no rail as marcas são botões quadrados, não linhas de texto:
+       uma barra de 11px na coluna de 3.25rem lê como pontilhado */
+    .espera__rail .espera__barra { height: 22px; margin-bottom: 16.5px; }
+
+    @keyframes espera-pulso {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.45; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .espera__barra, .espera__cartao { animation: none; }
+    }
+
+    /* no celular a lateral é gaveta e o rail deita: sobra a coluna do
+       conteúdo, que é a única que o esqueleto precisa fingir */
+    @media (max-width: 900px) {
+      :root[data-espera] #espera { grid-template-columns: minmax(0, 1fr); }
+      .espera__rail, .espera__lateral { display: none; }
+    }
+  </style>
   %sveltekit.head%
 </head>
 <!-- sem data-sveltekit-preload-data: cada tela tem a sua folha de estilo
@@ -55,5 +138,27 @@
      isto some junto com o problema. -->
 <body>
   <div style="display: contents">%sveltekit.body%</div>
+  <!-- irmão do alvo do SvelteKit, nunca filho: o mount do Svelte 5
+       acrescenta ao alvo em vez de limpá-lo, e um esqueleto lá dentro
+       sobreviveria embaixo do mapa. Quem o remove é o +layout. -->
+  <div id="espera" aria-hidden="true">
+    <div class="espera__rail">
+      <span class="espera__barra"></span>
+      <span class="espera__barra"></span>
+      <span class="espera__barra"></span>
+    </div>
+    <div class="espera__lateral">
+      <span class="espera__barra" style="width: 55%"></span>
+      <span class="espera__barra" style="width: 80%"></span>
+      <span class="espera__barra" style="width: 35%"></span>
+      <span class="espera__cartao"></span>
+    </div>
+    <div class="espera__conteudo">
+      <span class="espera__barra" style="width: 40%"></span>
+      <span class="espera__cartao"></span>
+      <span class="espera__cartao"></span>
+      <span class="espera__cartao"></span>
+    </div>
+  </div>
 </body>
 </html>
