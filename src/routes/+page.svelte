@@ -1,6 +1,7 @@
 <script>
   import { base } from "$app/paths";
   import { env } from "$env/dynamic/public";
+  import ObiMarca from "$lib/obi/ObiMarca.svelte";
 
   import "./landing.css";
 
@@ -31,7 +32,9 @@
 </svelte:head>
 
 <header class="cabecalho">
-  <a class="marca" href="{base}/" aria-label="Let's Learn Together, início">Let's Learn Together</a>
+  <a class="marca" href="{base}/" aria-label="Let's Learn Together, início">
+    <ObiMarca altura="clamp(30px,3.4vw,46px)" />
+  </a>
   <nav aria-label="Navegação principal">
     <a href="#como-funciona">Como funciona</a>
     <a href="#territorios">Trilhas</a>
@@ -44,7 +47,6 @@
 <main>
   <section class="abertura" aria-labelledby="titulo-principal">
     <div class="abertura__texto">
-      <p class="etiqueta">Mapa de estudo aberto</p>
       <h1 id="titulo-principal">Aprender fica mais leve quando você enxerga o caminho.</h1>
       <p class="abertura__resumo">
         Roadmaps de tecnologia feitos para transformar assuntos grandes em próximos passos possíveis.
@@ -55,22 +57,30 @@
       </div>
     </div>
 
-    <div class="mapa" aria-label="Um mapa ilustrado com rota de estudo">
-      <div class="mapa__alfinete mapa__alfinete--um"></div>
-      <div class="mapa__alfinete mapa__alfinete--dois"></div>
-      <span class="mapa__legenda mapa__legenda--inicio">comece aqui</span>
-      <svg viewBox="0 0 520 390" aria-hidden="true">
-        <path class="mapa__rota" d="M67 295 C116 252 111 178 185 180 S256 277 307 228 S345 107 432 92" />
-        <path class="mapa__rota-pontilhada" d="M67 295 C116 252 111 178 185 180 S256 277 307 228 S345 107 432 92" />
-        <circle cx="67" cy="295" r="10" class="mapa__marco mapa__marco--inicio" />
-        <circle cx="185" cy="180" r="10" class="mapa__marco" />
-        <circle cx="307" cy="228" r="10" class="mapa__marco" />
-        <circle cx="432" cy="92" r="13" class="mapa__marco mapa__marco--fim" />
-        <path class="mapa__montanha" d="M335 316 l43 -62 29 38 25 -32 52 56z" />
-        <path class="mapa__rio" d="M81 109 C132 128 148 83 195 108 S267 157 298 130" />
-      </svg>
-      <span class="mapa__legenda mapa__legenda--fim">você está aqui</span>
-      <span class="mapa__selo">1 passo<br />por vez</span>
+    <div class="palco">
+      <figure class="cartaz">
+        <div class="cartaz__alfinete cartaz__alfinete--um"></div>
+        <div class="cartaz__alfinete cartaz__alfinete--dois"></div>
+        <img
+          src="{base}/gif-secundaria.gif"
+          alt="Cartazes das trilhas de estudo passando um a um: dados, cibersegurança e outras."
+          width="800"
+          height="450"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </figure>
+      <div class="bilhete" aria-hidden="true">
+        <svg viewBox="40 60 420 260">
+          <path class="mapa__rota" d="M67 295 C116 252 111 178 185 180 S256 277 307 228 S345 107 432 92" />
+          <path class="mapa__rota-pontilhada" d="M67 295 C116 252 111 178 185 180 S256 277 307 228 S345 107 432 92" />
+          <circle cx="67" cy="295" r="10" class="mapa__marco mapa__marco--inicio" />
+          <circle cx="185" cy="180" r="10" class="mapa__marco" />
+          <circle cx="307" cy="228" r="10" class="mapa__marco" />
+          <circle cx="432" cy="92" r="13" class="mapa__marco mapa__marco--fim" />
+        </svg>
+        <span>1 passo por vez</span>
+      </div>
     </div>
   </section>
 
