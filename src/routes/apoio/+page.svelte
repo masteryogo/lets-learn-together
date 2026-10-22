@@ -50,17 +50,22 @@
 </script>
 
 <svelte:head>
-  <title>Parceria — Lets learn together</title>
+  <title>Parcerias — Let's Learn Together</title>
   <meta
     name="description"
-    content="Seja parceiro do Lets learn together: três níveis de parceria, o que cada um inclui, e como conversar com a equipe."
+    content="Seja parceiro do Let's Learn Together: três níveis de parceria, o que cada um inclui, e como conversar com a equipe."
   />
 </svelte:head>
 
 <div class="folha">
-  <nav class="topo">
-    <a class="topo__marca" href="{base}/" data-sveltekit-reload>Lets learn together</a>
-    <a class="topo__saida" href="{base}/" data-sveltekit-reload>voltar para a mesa</a>
+  <nav class="topo" aria-label="Navegação principal">
+    <a class="topo__marca" href="{base}/" data-sveltekit-reload>Let's Learn Together</a>
+    <div class="topo__links">
+      <a class="topo__saida" href="{base}/#como-funciona" data-sveltekit-reload>como funciona</a>
+      <a class="topo__saida" href="{base}/#territorios" data-sveltekit-reload>trilhas</a>
+      <a class="topo__saida" href="{base}/#planos" data-sveltekit-reload>planos</a>
+      <a class="topo__saida topo__saida--ativo" href="{base}/parcerias" data-sveltekit-reload>parcerias</a>
+    </div>
   </nav>
 
   <header class="hero">
@@ -207,7 +212,7 @@
           </div>
           <span class="selo__texto">
             <b>Apoiador</b>
-            <span>Lets learn together</span>
+            <span>Let's Learn Together</span>
           </span>
         </div>
       </div>

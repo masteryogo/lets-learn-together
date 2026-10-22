@@ -16,7 +16,7 @@
    Sem Supabase configurado não há trilha nenhuma — e a tela diz
    isso, em vez de desenhar uma mesa vazia que parece verdade.
    ============================================================ */
-import { supabase } from "$lib/supabase.js";
+import { supabase, temSupabase } from "$lib/supabase.js";
 
 export const PADRAO = "ml";
 
@@ -46,15 +46,19 @@ let fichas = null;
 export async function listarTrilhas() {
   if (fichas) return fichas;
 
+  if (!temSupabase) {
+    throw new Error("As variáveis públicas do Supabase não estão configuradas.");
+  }
+
   const sb = supabase();
-  if (!sb) return {};
+  if (!sb) throw new Error("Não consegui iniciar a conexão com as trilhas.");
 
   const { data, error } = await sb
     .from("trilha")
     .select("id, rotulo, cor, rota, categoria, etapas, grupos, topicos")
     .order("ordem");
 
-  if (error) return {};
+  if (error) throw new Error("Não consegui consultar as trilhas: " + error.message);
 
   fichas = Object.fromEntries(
     data.map((t) => [
