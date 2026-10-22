@@ -1,0 +1,388 @@
+/* ============================================================
+   A página de apoio — cianótipo.
+
+   Casca própria, e é de propósito: toda outra tela do site é papel
+   claro sobre tampo, feita para quem veio estudar. Esta fala com
+   empresa, e repetir o papel aqui fazia a proposta parecer a página
+   de termos.
+
+   Cianótipo é a cópia azul de uma planta: fundo tingido, linha
+   branca, nada preenchido. O que não muda: zero curvas e a grade de
+   5,5px.
+
+   DUAS FAMÍLIAS, e só aqui. A Departure Mono é bitmap e de um peso
+   só — ela assina (títulos, tabela, selo, rótulos) e cansa em seis
+   parágrafos seguidos, que é o que esta página tem. O texto corrido
+   vai para a IBM Plex Sans, declarada em src/app.css. É a única
+   tela do site que usa duas, e a única que precisa.
+   ============================================================ */
+/* ============================================================
+     Cianótipo — a cópia azul de uma planta.
+
+     A mesa do site é papel claro e fala com quem estuda; esta
+     página é de noite e fala com empresa.
+
+     DUAS FAMÍLIAS, e isso é novo aqui. A Departure Mono é bitmap,
+     de um peso só, feita para rótulo e número — numa página longa
+     de texto corrido ela cansa. Ela fica onde é assinatura:
+     títulos, números, tabela, selo. O texto corrido vai para a IBM
+     Plex Sans, desenhada ao lado de uma monoespaçada, que carrega o
+     mesmo ar de engenharia sem o custo de leitura.
+     ============================================================ */
+  :root {
+    color-scheme: dark;
+
+    --noite:     #071a2b;
+    /* O quanto o rodapé precisa recuar para alcançar a borda da janela:
+       o padding deste body, de volta em negativo. O carimbo é o fim da
+       folha, não um cartão pousado sobre ela — e, vivendo no layout,
+       ele não tem como saber o padding de cada tela. Cada folha declara
+       o seu; o componente só desconta. */
+    --sangria-x: 0px;
+    --sangria-t: 0px;
+    --sangria-b: 0px;
+
+    --chao:      #0b2639;
+    --fundo-alt: #09202f;
+    --linha:     #3d7399;
+    --linha-fraca: rgba(61,115,153,.38);
+    --giz:       #eef5fa;
+    --giz-fraco: #b6d0e2;
+    --cal:       #ffffff;
+    --marca:     #f5c518;
+    --futuro:    #e2793f;
+
+    --mono: "Departure Mono", ui-monospace, Consolas, monospace;
+    --sans: "IBM Plex Sans", system-ui, -apple-system, Segoe UI, sans-serif;
+
+    --folha: 1180px;
+    --gutter: clamp(16px, 2.4vw, 32px);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background:
+      repeating-linear-gradient(to right, rgba(61,115,153,.13) 0 1px, transparent 1px 55px),
+      repeating-linear-gradient(to bottom, rgba(61,115,153,.13) 0 1px, transparent 1px 55px),
+      radial-gradient(130% 70% at 50% 0%, var(--chao) 0%, var(--noite) 68%);
+    background-attachment: fixed;
+    color: var(--giz);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .folha { max-width: var(--folha); margin: 0 auto; padding: 0 var(--gutter); }
+
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--cal); outline-offset: 3px; }
+
+  h1, h2, h3, .mono { font-family: var(--mono); font-weight: 400; }
+
+  /* o rótulo de seção: minúsculo e pequeno, como o nome de campo num
+     carimbo de planta. Não é caixa alta — a Departure Mono já separa
+     o suficiente do texto em Plex. */
+  .rotulo {
+    margin: 0 0 11px;
+    font-family: var(--mono);
+    font-size: 14px;
+    letter-spacing: 0.14em;
+    color: var(--giz-fraco);
+  }
+
+  .secao { padding: clamp(55px, 9vh, 99px) 0; border-top: 1px solid var(--linha-fraca); }
+  .secao--fundo { background: var(--fundo-alt); }
+
+  .secao__titulo {
+    margin: 0 0 16px;
+    font-size: clamp(26px, 3.2vw, 36px);
+    line-height: 1.15;
+  }
+
+  .secao__intro { margin: 0 0 clamp(33px, 4vw, 48px); max-width: 62ch; color: var(--giz-fraco); }
+
+  /* ------------------------------------------------------- topo --- */
+  .topo {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 22px;
+    padding: 22px 0;
+    font-family: var(--mono);
+    font-size: 14px;
+  }
+
+  .topo__marca { color: var(--giz); text-decoration: none; }
+  .topo__saida { color: var(--giz-fraco); text-decoration: none; border-bottom: 1px solid transparent; }
+  .topo__saida:hover { color: var(--giz); border-bottom-color: var(--linha); }
+
+  /* ------------------------------------------------------- hero --- */
+  .hero { padding: clamp(44px, 9vh, 99px) 0 clamp(55px, 9vh, 99px); }
+
+  .hero__titulo {
+    margin: 0;
+    max-width: 21ch;
+    font-size: clamp(32px, 5.6vw, 58px);
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .hero__texto {
+    margin: 27px 0 0;
+    max-width: 54ch;
+    font-size: clamp(17px, 1.6vw, 20px);
+    color: var(--giz-fraco);
+  }
+
+  .hero__acoes { margin-top: 38px; display: flex; align-items: center; flex-wrap: wrap; gap: 22px; }
+
+  .hero__nota { margin: 22px 0 0; font-size: 15px; color: var(--giz-fraco); }
+
+  /* o único movimento da página: a rota se traça uma vez e para */
+  .hero__rota { margin-top: clamp(44px, 7vh, 77px); display: flex; align-items: center; gap: 0; }
+  .hero__marco { flex: none; width: 14px; height: 14px; border: 2px solid var(--marca); }
+  .hero__fio { flex: 1; border-top: 2px dashed var(--marca); }
+  .hero__rota { clip-path: inset(0 100% 0 0); animation: tracar 1.1s ease-out 0.3s both; }
+  @keyframes tracar { to { clip-path: inset(0 0 0 0); } }
+
+  .hero__passos {
+    margin: 11px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    font-size: 15px;
+    color: var(--giz-fraco);
+  }
+  .hero__passos b { display: block; font-family: var(--mono); font-weight: 400; font-size: 17px; color: var(--giz); }
+  .hero__passos li { padding-right: 22px; }
+
+  /* ------------------------------------------------------ botão --- */
+  .botao {
+    display: inline-block;
+    padding: 13px 28px;
+    font-family: var(--mono);
+    font-size: 17px;
+    color: var(--noite);
+    background: var(--marca);
+    border: none;
+    border-radius: 0;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .botao:hover { background: var(--cal); }
+
+  .elo {
+    font-family: var(--mono);
+    font-size: 16px;
+    color: var(--giz);
+    text-decoration: none;
+    border-bottom: 1px solid var(--linha);
+  }
+  .elo:hover { border-bottom-color: var(--cal); }
+
+  /* ----------------------------------------------------- níveis --- */
+  .niveis {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    gap: 1px;
+    background: var(--linha-fraca);
+    border: 1px solid var(--linha-fraca);
+  }
+
+  /* um vão de 1px e fundo comum: os três níveis são um bloco só,
+     dividido — e não três cartões flutuando lado a lado */
+  .nivel { display: flex; flex-direction: column; gap: 14px; padding: 28px; background: var(--noite); }
+
+  .nivel__nome { margin: 0; font-size: 24px; line-height: 1.1; }
+  .nivel__linha { margin: 0; font-size: 15px; color: var(--giz-fraco); flex: 1; }
+
+  /* fora do `flex: 1` da linha acima, para não empurrar o "Como
+     entrar" dos três níveis para alturas diferentes */
+  .nivel__ver { margin: 0; font-size: 15px; }
+
+  .nivel__entrar {
+    margin: 0;
+    padding-top: 14px;
+    font-size: 15px;
+    color: var(--giz-fraco);
+    border-top: 1px solid var(--linha-fraca);
+  }
+  .nivel__entrar b { display: block; font-family: var(--mono); font-weight: 400; color: var(--giz); }
+
+  /* o terceiro tem vaga contada, e o número é a informação */
+  .nivel__vagas { font-family: var(--mono); font-size: 15px; color: var(--marca); }
+  .nivel--fundador { background: #08202f; }
+  .nivel--fundador .nivel__nome { color: var(--marca); }
+
+  /* ----------------------------------------------- a comparação --- */
+  .comparacao { width: 100%; border-collapse: collapse; font-size: 16px; }
+
+  .comparacao th,
+  .comparacao td { padding: 13px 8px; text-align: left; border-bottom: 1px solid var(--linha-fraca); }
+
+  .comparacao thead th {
+    font-family: var(--mono);
+    font-weight: 400;
+    font-size: 15px;
+    color: var(--giz-fraco);
+    vertical-align: bottom;
+  }
+
+  .comparacao tbody th { font-weight: 400; color: var(--giz); }
+  .comparacao .marca { width: 7rem; text-align: center; font-family: var(--mono); font-size: 18px; }
+
+  /* ■ tem, □ não tem: a mesma dupla que marca estado no roadmap, e
+     pelo mesmo motivo — forma além de cor */
+  .tem { color: var(--marca); }
+  .nao { color: var(--linha); }
+  .depois { color: var(--futuro); font-size: 15px; }
+
+  /* o glifo diz o estado com a forma, para quem vê. A palavra diz o
+     mesmo para quem ouve — sem ela a tabela é lida como "quadrado
+     quadrado quadrado", nove vezes. */
+  .leitura {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .comparacao__nota { margin: 16px 0 0; font-size: 14px; color: var(--giz-fraco); }
+
+  /* o que a página não promete, dito antes de perguntarem. Fica
+     debaixo da tabela de propósito: é a linha que define o que
+     aqueles ■ valem, e sem ela a comparação promete posição e
+     permanência sem nunca dizer o que fica de fora. */
+  .ressalva {
+    margin: 28px 0 0;
+    padding: 18px 22px;
+    max-width: 72ch;
+    font-size: 15px;
+    color: var(--giz-fraco);
+    border-left: 3px solid var(--futuro);
+  }
+  .ressalva b { font-family: var(--mono); font-weight: 400; color: var(--giz); }
+
+  /* ------------------------------------------------------- selo --- */
+  .selo-area { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: clamp(33px, 5vw, 66px); align-items: center; }
+
+  /* o selo é desenhado, não é imagem: caixa dura, sem curva, no
+     mesmo traço do resto — é o que a empresa cola no próprio site */
+  .selo {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    background: var(--noite);
+    border: 2px solid var(--marca);
+  }
+
+  /* o desenho do selo é a rota subindo — os mesmos três marcos que
+     as cartas do site traçam. Era um xadrez de pixels alternados,
+     que não queria dizer nada: num selo, cada quadrado aceso tem de
+     ser uma afirmação. */
+  .selo__desenho { display: grid; grid-template-columns: repeat(3, 11px); gap: 4px; flex: none; }
+  .selo__pixel { width: 11px; height: 11px; }
+  .selo__pixel--aceso { background: var(--marca); }
+
+  .selo__texto { font-family: var(--mono); line-height: 1.3; }
+  .selo__texto b { display: block; font-weight: 400; font-size: 17px; color: var(--giz); }
+  .selo__texto span { font-size: 13px; color: var(--giz-fraco); }
+
+  /* ----------------------------------------------------- a ficha --- */
+  .ficha { max-width: 60ch; }
+  .campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: 22px; }
+
+  .campo { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+  .campo--longo { grid-column: 1 / -1; }
+  .campo label { font-family: var(--mono); font-size: 14px; color: var(--giz-fraco); }
+
+  .campo input,
+  .campo select,
+  .campo textarea {
+    padding: 10px 12px;
+    font-family: var(--sans);
+    font-size: 16px;
+    color: var(--giz);
+    background: rgba(7,26,43,.6);
+    border: 1px solid var(--linha);
+    border-radius: 0;
+  }
+  .campo textarea { resize: vertical; }
+  .campo input:focus,
+  .campo select:focus,
+  .campo textarea:focus { outline: none; border-color: var(--cal); }
+
+  /* a falha do envio. O protótipo não tinha este estado porque nele
+     o envio sempre dava certo; na tela de verdade, escrita que muda
+     a tela antes da resposta precisa de um lugar para dizer que não
+     chegou — o pior desfecho nunca é o erro, é a tela dizer que
+     enviou. */
+  .ficha__falha {
+    margin: 22px 0 0;
+    padding: 14px 18px;
+    font-size: 15px;
+    color: var(--giz);
+    border-left: 3px solid var(--futuro);
+  }
+
+  .ficha__pe { margin-top: 28px; display: flex; align-items: center; flex-wrap: wrap; gap: 22px; }
+  .ficha__nota { font-size: 14px; color: var(--giz-fraco); }
+
+  .recibo {
+    margin: 0;
+    padding: 24px;
+    background: var(--noite);
+    border-left: 3px solid var(--marca);
+  }
+  .recibo b { font-family: var(--mono); font-weight: 400; display: block; margin-bottom: 6px; color: var(--giz); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero__rota { animation: none; clip-path: none; }
+  }
+
+  @media (max-width: 46rem) {
+    .hero__passos { grid-template-columns: 1fr; gap: 14px; }
+    .hero__rota { display: none; }
+    /* a tabela vira lista: em 390px os três cabeçalhos de nível não
+       cabem na linha e o nome do benefício é espremido em quatro
+       linhas. Cada benefício passa a ser um bloco, e cada marca leva
+       o nome do nível junto — a informação é a mesma, a forma é que
+       deixa de ser tabela onde tabela não cabe. */
+    .comparacao thead { display: none; }
+
+    .comparacao tr {
+      display: block;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--linha-fraca);
+    }
+
+    .comparacao tbody th {
+      display: block;
+      padding: 0 0 10px;
+      border: none;
+    }
+
+    .comparacao td {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 7px;
+      width: auto;
+      padding: 0 20px 0 0;
+      border: none;
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--giz-fraco);
+    }
+
+    .comparacao td::before { content: attr(data-nivel); }
+  }

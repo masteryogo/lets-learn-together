@@ -19,5 +19,50 @@
   font-display: swap;
 }
 
+/* A segunda família existe por uma tela só: a de apoio, que é longa e
+   de texto corrido. A Departure Mono é bitmap e de um peso só — ela
+   cai bem em rótulo, número e título, e cansa em seis parágrafos
+   seguidos. A Plex Sans foi desenhada ao lado de uma monoespaçada, e
+   por isso as duas convivem sem brigar.
+
+   Só o peso 400: toda a folha de apoio desenha a hierarquia por
+   tamanho e cor, como o resto do site, e nenhuma regra pede 500 ou
+   600. Baixar os outros pesos seria mandar bytes que ninguém usa.
+
+   Dois arquivos porque o `latin` não traz ã, ç nem õ no mesmo corte:
+   o navegador baixa o `latin-ext` só quando a página precisa dele. */
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("/fonts/ibm-plex-sans-400-latin.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+    U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+    U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("/fonts/ibm-plex-sans-400-latin-ext.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7,
+    U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F,
+    U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
+:root {
+  /* A altura da fita de parceria, que é fixa no topo de toda tela
+     (src/lib/apoio/FitaApoio.svelte). Mora aqui, e não na folha de
+     cada tela, porque quem precisa do número não é só quem desenha a
+     fita: é todo elemento que também quer o topo — o padding das três
+     folhas e a barra lateral do roadmap. Com o número escrito em
+     quatro lugares, mudar a fita quebrava três deles em silêncio. */
+  --fita-altura: 66px;
+}
+
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
