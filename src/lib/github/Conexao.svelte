@@ -76,8 +76,13 @@
 </script>
 
 <section class="github" aria-labelledby="github-titulo">
-  <p class="github__sobretitulo">PORTFÓLIO OPCIONAL</p>
-  <h2 id="github-titulo">GitHub</h2>
+  <header class="github__cabecalho">
+    <div>
+      <p class="github__sobretitulo">PORTFÓLIO OPCIONAL</p>
+      <h2 id="github-titulo">GitHub</h2>
+    </div>
+    {#if githubRemoto.conexao}<span class="github__selo">CONECTADO</span>{/if}
+  </header>
 
   {#if githubRemoto.carregando}
     <p class="github__estado" role="status">Conferindo sua conexão…</p>
@@ -85,16 +90,18 @@
     <p class="github__estado" data-tom="ruim" role="status">{githubRemoto.ultimaFalha}</p>
   {:else if githubRemoto.conexao}
     <div class="github__estado" data-tom="bom" role="status">
-      Conectado como <strong>@{githubRemoto.conexao.conta_login}</strong>.
+      <p class="github__conectado">Conectado como <strong>@{githubRemoto.conexao.conta_login}</strong>.</p>
       {#if githubRemoto.conexao.repositorio_completo}
-        Repositório: <strong>{githubRemoto.conexao.repositorio_completo}</strong>{githubRemoto.conexao.branch ? ` · ${githubRemoto.conexao.branch}` : ""}.
+        <p class="github__repositorio-atual"><span>REPOSITÓRIO DO PORTFÓLIO</span><strong>{githubRemoto.conexao.repositorio_completo}</strong>{githubRemoto.conexao.branch ? ` · ${githubRemoto.conexao.branch}` : ""}</p>
         <div class="github__acoes">
           <button class="botao botao--secundario" type="button" onclick={abrirEscolha}>Trocar repositório</button>
           <button class="elo" type="button" onclick={desconectar}>Desconectar GitHub</button>
         </div>
       {:else}
-        Escolha um repositório antes de publicar uma atividade.
-        <button class="botao botao--secundario" type="button" onclick={abrirEscolha}>Escolher repositório</button>
+        <div class="github__escolha">
+          <p><span>REPOSITÓRIO DO PORTFÓLIO</span>Escolha onde suas atividades aprovadas serão publicadas.</p>
+          <button class="botao botao--secundario" type="button" onclick={abrirEscolha}>Escolher repositório</button>
+        </div>
       {/if}
       {#if escolhendoRepositorio}
         <label class="github__seletor">Repositório autorizado
@@ -106,7 +113,7 @@
           </select>
         </label>
         {#if githubRemoto.repositorios.length === 0}<p class="github__estado">Nenhum repositório pessoal disponível. Adicione um repositório à instalação da integração no GitHub.</p>{/if}
-        <button class="botao botao--secundario" type="button" disabled={!githubRemoto.repositorios.length} onclick={guardarRepositorio}>Usar este repositório</button>
+        <button class="botao botao--destaque" type="button" disabled={!githubRemoto.repositorios.length} onclick={guardarRepositorio}>Confirmar repositório</button>
       {/if}
       {#if recado}<p class="github__estado" role="status">{recado}</p>{/if}
     </div>
