@@ -28,7 +28,7 @@
 
 <main class="documento">
   <h1 class="documento__titulo">Privacidade</h1>
-  <p class="documento__data">Atualizada em 22 de outubro de 2026</p>
+  <p class="documento__data">Atualizada em 23 de outubro de 2026</p>
 
   <p>
     O <strong>Let's Learn Together</strong> é um site de roadmaps de estudo. Ele
@@ -56,6 +56,12 @@
       você escolher, o link do repositório ou um arquivo .zip de até 20 MB que
       enviar para avaliação.
     </li>
+    <li>
+      <strong>Sua conexão GitHub, se você ativá-la:</strong> o identificador e
+      login da conta vinculada, o identificador da instalação da integração e
+      o nome, identificador e branch do repositório que você escolher. Não
+      guardamos seu token de acesso do GitHub.
+    </li>
   </ul>
 
   <h2>O que não é guardado</h2>
@@ -80,6 +86,14 @@
     avaliá-lo, por um link temporário. Não executamos os arquivos enviados.
   </p>
   <p>
+    Ao escolher conectar o GitHub, enviamos ao <strong>GitHub</strong> somente
+    os pedidos necessários para conferir os repositórios autorizados e, quando
+    você apertar “Publicar no GitHub”, o código daquela atividade e os dados do
+    commit. O token temporário usado nessa conversa fica apenas no servidor e
+    expira em até uma hora. O repositório, inclusive se ele é público ou
+    privado, continua sujeito às configurações e à política do GitHub.
+  </p>
+  <p>
     Algumas preferências ficam só no seu navegador, e não no banco: o tema
     claro ou escuro e quais etapas você deixou fechadas. Elas não identificam
     ninguém e somem quando você limpa os dados do site.
@@ -88,8 +102,9 @@
   <h2>Por quanto tempo</h2>
   <p>
     Enquanto a conta existir. Ao pedir a exclusão, apagamos a conta e tudo que
-    está preso a ela — progresso, notas e sessões de estudo — sem cópia de
-    segurança que sobreviva.
+    está preso a ela — inclusive o vínculo com GitHub — sem cópia de segurança
+    que sobreviva. A exclusão não apaga arquivos ou commits que você já publicou
+    no GitHub, pois eles pertencem ao seu repositório.
   </p>
 
   <h2>Seus direitos</h2>

@@ -25,7 +25,7 @@
 
 <main class="documento">
   <h1 class="documento__titulo">Termos de uso</h1>
-  <p class="documento__data">Atualizados em 20 de outubro de 2026</p>
+  <p class="documento__data">Atualizados em 23 de outubro de 2026</p>
 
   <p>
     Ao usar o <strong>Let's Learn Together</strong>, você concorda com o que
@@ -73,6 +73,21 @@
   <p>
     Suas notas e sessões de estudo são suas. Não as usamos para nada além de
     mostrá-las de volta para você.
+  </p>
+
+  <h2>Integração com GitHub</h2>
+  <p>
+    A conexão com GitHub é opcional. Ao instalá-la e escolher um repositório,
+    você autoriza o site a listar apenas os repositórios liberados para a
+    integração e a gravar código <strong>somente</strong> quando você confirmar
+    a publicação de uma atividade. Não há publicação automática.
+  </p>
+  <p>
+    Você é responsável por conferir o repositório escolhido e pelo código que
+    decide publicar. Desconectar a integração interrompe novas publicações, mas não
+    desfaz commits nem apaga arquivos que já estão no GitHub. Para remover a
+    App ou mudar as permissões dela, use também as configurações da sua conta
+    GitHub.
   </p>
 
   <h2>Mudanças</h2>
