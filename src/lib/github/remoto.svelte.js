@@ -1,7 +1,6 @@
 /* O navegador só lê o vínculo já confirmado. A instalação é validada por
    uma Edge Function porque `installation_id` vindo da URL não prova a quem
    ela pertence — confiar nele aqui ligaria a conta errada. */
-import { env } from "$env/dynamic/public";
 import { supabase } from "$lib/supabase.js";
 import { sessao } from "$lib/conta/Sessao.svelte.js";
 
@@ -92,7 +91,7 @@ export async function desconectarGitHub() {
 }
 
 export function abrirInstalacaoGitHub() {
-  const url = env.PUBLIC_GITHUB_APP_INSTALACAO_URL;
+  const url = import.meta.env.PUBLIC_GITHUB_APP_INSTALACAO_URL;
   if (!url) return "A conexão com GitHub ainda está sendo preparada.";
   location.assign(url);
   return null;
