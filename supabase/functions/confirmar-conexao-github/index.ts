@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { SignJWT, importPKCS8 } from "npm:jose@6.2.13";
+import { jwtDaApp } from "../_shared/github.ts";
 
 const cabecalhosCors = {
   "Access-Control-Allow-Origin": "*",
@@ -11,17 +11,6 @@ function responder(corpo: unknown, status = 200) {
     status,
     headers: { ...cabecalhosCors, "Content-Type": "application/json" },
   });
-}
-
-async function jwtDaApp(id: string, chave: string) {
-  const pem = chave.replace(/\\n/g, "\n");
-  const chavePrivada = await importPKCS8(pem, "RS256");
-  return new SignJWT({})
-    .setProtectedHeader({ alg: "RS256" })
-    .setIssuer(id)
-    .setIssuedAt()
-    .setExpirationTime("9m")
-    .sign(chavePrivada);
 }
 
 Deno.serve(async (requisicao: Request) => {
