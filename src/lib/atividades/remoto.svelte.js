@@ -184,3 +184,20 @@ export async function acionarDesafio(atividadeId, codigo, acao) {
     atividadesRemotas.enviando = false;
   }
 }
+
+export async function publicarDesafioGitHub(atividadeId, codigo) {
+  const sb = supabase();
+  if (!sb || !sessao.conectado) return null;
+  atividadesRemotas.enviando = true;
+  atividadesRemotas.ultimaFalha = null;
+  try {
+    const { data, error } = await sb.functions.invoke("publicar-desafio-github", { body: { atividadeId, codigo } });
+    if (error || data?.erro) throw new Error(data?.erro ?? error.message);
+    return data;
+  } catch (erro) {
+    atividadesRemotas.ultimaFalha = erro?.message ?? "Não consegui publicar no GitHub.";
+    return null;
+  } finally {
+    atividadesRemotas.enviando = false;
+  }
+}

@@ -8,6 +8,7 @@ import { sessao } from "$lib/conta/Sessao.svelte.js";
 export const githubRemoto = $state({
   conexao: null,
   identidadeVinculada: false,
+  repositorios: [],
   carregando: false,
   ultimaFalha: null,
 });
@@ -25,7 +26,7 @@ export async function carregarConexaoGitHub() {
   try {
     const [conexao, identidades] = await Promise.all([
       sb.from("conexao_github")
-        .select("conta_login, repositorio_completo, branch, conectada_em")
+        .select("conta_login, repositorio_id, repositorio_completo, branch, conectada_em")
         .eq("usuario_id", sessao.usuario.id)
         .maybeSingle(),
       sb.auth.getUserIdentities(),
@@ -40,6 +41,37 @@ export async function carregarConexaoGitHub() {
     githubRemoto.ultimaFalha = erro.message;
   } finally {
     githubRemoto.carregando = false;
+  }
+}
+
+export async function carregarRepositoriosGitHub() {
+  const sb = supabase();
+  if (!sb || !sessao.conectado) return "Entre na conta antes de listar os repositórios.";
+  githubRemoto.ultimaFalha = null;
+  try {
+    const { data, error } = await sb.functions.invoke("gerenciar-repositorio-github", { body: { acao: "listar" } });
+    if (error || data?.erro) throw new Error(data?.erro ?? error.message);
+    githubRemoto.repositorios = data.repositorios;
+    return null;
+  } catch (erro) {
+    githubRemoto.repositorios = [];
+    githubRemoto.ultimaFalha = erro.message ?? "Não consegui listar seus repositórios.";
+    return githubRemoto.ultimaFalha;
+  }
+}
+
+export async function escolherRepositorioGitHub(repositorioId) {
+  const sb = supabase();
+  if (!sb || !sessao.conectado) return "Entre na conta antes de escolher o repositório.";
+  githubRemoto.ultimaFalha = null;
+  try {
+    const { data, error } = await sb.functions.invoke("gerenciar-repositorio-github", { body: { acao: "escolher", repositorioId } });
+    if (error || data?.erro) throw new Error(data?.erro ?? error.message);
+    await carregarConexaoGitHub();
+    return null;
+  } catch (erro) {
+    githubRemoto.ultimaFalha = erro.message ?? "Não consegui guardar seu repositório.";
+    return githubRemoto.ultimaFalha;
   }
 }
 

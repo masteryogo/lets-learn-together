@@ -6,7 +6,7 @@
   import { sessao } from "$lib/conta/Sessao.svelte.js";
   import { carregarTrilha } from "$lib/trilhas.js";
   import EditorCodigo from "$lib/atividades/EditorCodigo.svelte";
-  import { atividadesRemotas, acionarDesafio, avaliarProjeto, enviarTentativa, listarAcompanhamento, listarAtividades, listarRascunhos, obterArquivoProjeto } from "$lib/atividades/remoto.svelte.js";
+  import { atividadesRemotas, acionarDesafio, avaliarProjeto, enviarTentativa, listarAcompanhamento, listarAtividades, listarRascunhos, obterArquivoProjeto, publicarDesafioGitHub } from "$lib/atividades/remoto.svelte.js";
   import "./atividades.css";
   import "$lib/estilos/base.css";
 
@@ -24,6 +24,7 @@
   let sequenciaConcluida = $state(false);
   let acompanhamento = $state({ competencias: [], vinculos: [], tentativas: [], submissoes: [] });
   let revisoes = $state({});
+  let publicacoesGitHub = $state({});
   let acompanhamentoCarregando = $state(false);
   let requisicaoAcompanhamento = 0;
   let atividadesSequenciais = $derived(atividades.filter((atividade) => atividade.tipo !== "projeto"));
@@ -303,6 +304,13 @@
     if (resposta?.execucao) execucoes = { ...execucoes, [atividade.id]: resposta.execucao };
     if (resposta?.execucao) await recarregarAcompanhamento();
   }
+
+  async function publicarNoGitHub(atividade) {
+    const confirmacao = confirm("Publicar esta versão do seu código no repositório escolhido? Isso criará um commit no GitHub.");
+    if (!confirmacao) return;
+    const resposta = await publicarDesafioGitHub(atividade.id, respostaDa(atividade).codigo);
+    if (resposta?.url) publicacoesGitHub = { ...publicacoesGitHub, [atividade.id]: resposta.url };
+  }
 </script>
 
 <svelte:head><title>Praticar · Let's Learn Together</title></svelte:head>
@@ -515,7 +523,9 @@
             <div class="atividade__acoes">
               <button class="botao botao--secundario" type="button" disabled={!sessao.conectado || atividadesRemotas.enviando} onclick={() => executar(atividade)}>{atividadesRemotas.enviando ? "Executando…" : "▶ Executar"}</button>
               <button class="botao botao--destaque" type="button" disabled={!sessao.conectado || atividadesRemotas.enviando} onclick={() => enviar(atividade)}>{atividadesRemotas.enviando ? "Testando…" : "Avaliar solução"}</button>
+              <button class="botao botao--secundario" type="button" disabled={!sessao.conectado || atividadesRemotas.enviando || !resposta.codigo.trim()} onclick={() => publicarNoGitHub(atividade)}>{atividadesRemotas.enviando ? "Publicando…" : "Publicar no GitHub"}</button>
             </div>
+            {#if publicacoesGitHub[atividade.id]}<p class="atividade__salvamento">Publicado no GitHub: <a href={publicacoesGitHub[atividade.id]} target="_blank" rel="noreferrer">abrir arquivo ↗</a></p>{/if}
             <div class="atividade__saida">
               <p>CONSOLE <span>·</span> TESTES</p>
               {#if execucoes[atividade.id]}<section class="atividade__console" aria-live="polite"><strong>Execução · {execucoes[atividade.id].estado}</strong>{#if execucoes[atividade.id].saida}<pre>{execucoes[atividade.id].saida}</pre>{/if}{#if execucoes[atividade.id].erro}<p>Mensagem de erro</p><pre>{execucoes[atividade.id].erro}</pre>{/if}{#if !execucoes[atividade.id].saida && !execucoes[atividade.id].erro}<p>O programa não produziu saída.</p>{/if}</section>{:else if resultado}<p class="atividade__saida-vazia">Resultado dos testes aparece aqui após avaliar a solução.</p>{:else}<p class="atividade__saida-vazia">Execute seu código para ver a saída.</p>{/if}

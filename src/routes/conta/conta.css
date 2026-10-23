@@ -298,6 +298,8 @@ body { padding-bottom: 0; }
 .github__estado[data-tom="bom"] { color: var(--roxo-forte); }
 .github__estado[data-tom="ruim"] { color: var(--vermelho); }
 .github .botao { margin-top: .85rem; }
+.github__seletor { display: flex; flex-direction: column; gap: .35rem; margin-top: .85rem; color: var(--texto-suave); font-size: var(--t-micro); }
+.github__seletor select { font: inherit; color: var(--texto); background: var(--fundo); border: 1px solid var(--borda-sutil); padding: .5rem .6rem; }
 
 /* os dois documentos, discretos: eles precisam existir e estar à
    mão, não disputar atenção com o formulário */
