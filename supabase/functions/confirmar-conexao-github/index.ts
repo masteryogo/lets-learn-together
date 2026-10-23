@@ -61,10 +61,19 @@ Deno.serve(async (requisicao: Request) => {
   }
 
   let instalacao: any;
+  let credencialDaApp: string;
+  try {
+    credencialDaApp = await jwtDaApp(appId, chave);
+  } catch {
+    return responder({
+      erro: "Não consegui ler a chave privada da GitHub App. Confira GITHUB_APP_ID e GITHUB_APP_CHAVE_PRIVADA.",
+    }, 503);
+  }
+
   try {
     const cabecalhos = {
       Accept: "application/vnd.github+json",
-      Authorization: `Bearer ${await jwtDaApp(appId, chave)}`,
+      Authorization: `Bearer ${credencialDaApp}`,
       "X-GitHub-Api-Version": "2022-11-28",
     };
     const respostaGitHub = await fetch(
@@ -78,7 +87,9 @@ Deno.serve(async (requisicao: Request) => {
       },
     );
     if (respostaGitHub.status === 404) return responder({ erro: "Não encontrei esta instalação da integração." }, 404);
-    if (!respostaGitHub.ok) return responder({ erro: "Não consegui confirmar a instalação no GitHub." }, 502);
+    if (!respostaGitHub.ok) {
+      return responder({ erro: `GitHub recusou a credencial da App (${respostaGitHub.status}).` }, 502);
+    }
     const dadosGitHub = await respostaGitHub.json();
     instalacao = instalacaoRecebida
       ? dadosGitHub
