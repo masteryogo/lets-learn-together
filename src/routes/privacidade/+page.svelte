@@ -28,7 +28,7 @@
 
 <main class="documento">
   <h1 class="documento__titulo">Privacidade</h1>
-  <p class="documento__data">Atualizada em 20 de outubro de 2026</p>
+  <p class="documento__data">Atualizada em 22 de outubro de 2026</p>
 
   <p>
     O <strong>Let's Learn Together</strong> é um site de roadmaps de estudo. Ele
@@ -51,6 +51,11 @@
       <strong>Seu calendário:</strong> as sessões de estudo que você escreve ou
       gera pelo modelo do mês.
     </li>
+    <li>
+      <strong>Seus projetos:</strong> o resumo, os requisitos marcados e, se
+      você escolher, o link do repositório ou um arquivo .zip de até 20 MB que
+      enviar para avaliação.
+    </li>
   </ul>
 
   <h2>O que não é guardado</h2>
@@ -68,6 +73,11 @@
     Num banco de dados hospedado no <strong>Supabase</strong>, protegido por
     regras que só deixam cada pessoa ler e escrever as próprias linhas. O site
     em si é um arquivo estático servido pelo GitHub Pages.
+  </p>
+  <p>
+    Arquivos de projeto ficam em armazenamento privado do Supabase. O download
+    só é liberado para quem enviou o projeto e para a equipe autorizada a
+    avaliá-lo, por um link temporário. Não executamos os arquivos enviados.
   </p>
   <p>
     Algumas preferências ficam só no seu navegador, e não no banco: o tema

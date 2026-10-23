@@ -1,0 +1,46 @@
+services:
+  servidor:
+    image: judge0/judge0:1.13.1
+    volumes:
+      - ./judge0.conf:/judge0.conf:ro
+    expose:
+      - "2358"
+    privileged: true
+    restart: unless-stopped
+
+  trabalhadores:
+    image: judge0/judge0:1.13.1
+    command: ["./scripts/workers"]
+    volumes:
+      - ./judge0.conf:/judge0.conf:ro
+    privileged: true
+    restart: unless-stopped
+
+  banco:
+    image: postgres:16.15-alpine3.24
+    env_file: judge0.conf
+    volumes:
+      - dados:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  fila:
+    image: redis:7.4.11-alpine
+    command: ["sh", "-c", "redis-server --appendonly no --requirepass \"$$REDIS_PASSWORD\""]
+    env_file: judge0.conf
+    restart: unless-stopped
+
+  proxy:
+    image: nginx:1.30.6-alpine3.24
+    ports:
+      - "127.0.0.1:2359:8080"
+    environment:
+      JUDGE0_API_KEY: ${JUDGE0_API_KEY:?Defina JUDGE0_API_KEY no arquivo .env}
+      NGINX_ENVSUBST_FILTER: ^JUDGE0_API_KEY$
+    volumes:
+      - ./proxy.conf.template:/etc/nginx/templates/default.conf.template:ro
+    depends_on:
+      - servidor
+    restart: unless-stopped
+
+volumes:
+  dados:

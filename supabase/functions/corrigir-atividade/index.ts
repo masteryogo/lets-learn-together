@@ -16,6 +16,19 @@ function texto(valor: unknown) {
   return String(valor ?? "").trim().replace(/\s+/g, " ");
 }
 
+function validarRepositorio(valor: unknown) {
+  if (typeof valor !== "string" || valor.length > 300) return null;
+  try {
+    const url = new URL(valor);
+    if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash) return null;
+    if (!["github.com", "gitlab.com", "bitbucket.org"].includes(url.hostname.toLowerCase())) return null;
+    if (url.pathname.split("/").filter(Boolean).length < 2) return null;
+    return url.toString().replace(/\/+$/, "");
+  } catch {
+    return null;
+  }
+}
+
 function corrigir(tipo: string, resposta: Record<string, unknown>, gabarito: Record<string, unknown>) {
   if (tipo === "completar") {
     const esperadas = gabarito.lacunas as Record<string, string[]>;
@@ -65,6 +78,60 @@ Deno.serve(async (requisicao) => {
     .eq("publicada", true)
     .maybeSingle();
   if (falhaAtividade || !atividade) return responder({ erro: "Atividade não encontrada." }, 404);
+
+  if (atividade.tipo === "projeto") {
+    const configuracao = atividade.configuracao as Record<string, unknown>;
+    const repositorio = corpo.resposta.repositorio ? validarRepositorio(corpo.resposta.repositorio) : null;
+    const resumo = typeof corpo.resposta.resumo === "string" ? corpo.resposta.resumo.trim() : "";
+    const arquivoRecebido = corpo.resposta.arquivo && typeof corpo.resposta.arquivo === "object"
+      ? corpo.resposta.arquivo as Record<string, unknown>
+      : null;
+    const requisitos = Array.isArray(corpo.resposta.requisitos)
+      ? corpo.resposta.requisitos.filter((id): id is string => typeof id === "string")
+      : [];
+    const idsValidos = new Set(
+      Array.isArray(configuracao.requisitos)
+        ? (configuracao.requisitos as Array<Record<string, unknown>>).map((item) => item.id).filter((id): id is string => typeof id === "string")
+        : [],
+    );
+    let arquivo = null;
+    if (arquivoRecebido) {
+      const caminho = typeof arquivoRecebido.caminho === "string" ? arquivoRecebido.caminho : "";
+      const prefixo = `${user.id}/${atividadeId}/`;
+      if (!caminho.startsWith(prefixo) || !/^[0-9a-f-]{36}\.zip$/i.test(caminho.slice(prefixo.length))) {
+        return responder({ erro: "O arquivo enviado não pertence a esta entrega." }, 400);
+      }
+      const nomeArquivo = caminho.slice(prefixo.length);
+      const { data: objetos, error: falhaObjeto } = await administrador.storage
+        .from("entregas-projetos")
+        .list(`${user.id}/${atividadeId}`, { search: nomeArquivo });
+      const objeto = objetos?.find((item) => item.name === nomeArquivo);
+      if (falhaObjeto || !objeto || Number(objeto.metadata?.size) < 1 || Number(objeto.metadata?.size) > 20 * 1024 * 1024 || objeto.metadata?.mimetype !== "application/zip") {
+        return responder({ erro: "Não consegui confirmar o arquivo enviado." }, 400);
+      }
+      const nome = typeof arquivoRecebido.nome === "string" ? arquivoRecebido.nome.trim().slice(0, 180) : "projeto.zip";
+      arquivo = { caminho: objeto.name, nome: nome.replace(/[\\/\r\n]/g, "_") || "projeto.zip", tamanho: Number(objeto.metadata?.size) };
+    }
+    if ((!repositorio && !arquivo) || (corpo.resposta.repositorio && !repositorio) || resumo.length < 20 || resumo.length > Number(configuracao.limiteResumo ?? 2000) || requisitos.some((id) => !idsValidos.has(id))) {
+      return responder({ erro: "Informe um repositório válido ou um arquivo .zip, escreva o resumo e confira os requisitos selecionados." }, 400);
+    }
+    const respostaProjeto = { ...(repositorio ? { repositorio } : {}), ...(arquivo ? { arquivo } : {}), resumo, requisitos: [...new Set(requisitos)] };
+    const { data: tentativa, error: falhaTentativa } = await administrador
+      .from("tentativa_atividade")
+      .insert({
+        usuario_id: user.id,
+        atividade_id: atividadeId,
+        resposta: respostaProjeto,
+        correta: false,
+        pontuacao: 0,
+        feedback: "Projeto enviado. Ele ainda precisa ser revisado por uma pessoa antes da competência ser demonstrada.",
+        detalhes: { tipo: "projeto", status: "aguardando_avaliacao" },
+      })
+      .select("id, correta, pontuacao, feedback, detalhes, criada_em")
+      .single();
+    if (falhaTentativa) return responder({ erro: "Não consegui registrar o envio do projeto." }, 500);
+    return responder({ tentativa });
+  }
 
   const { data: chave, error: falhaChave } = await administrador
     .from("atividade_gabarito")
