@@ -141,10 +141,15 @@ Deno.serve(async (requisicao) => {
   if (falhaChave || !chave) return responder({ erro: "Não consegui corrigir esta atividade." }, 500);
 
   const resultado = corrigir(atividade.tipo, corpo.resposta, chave.configuracao as Record<string, unknown>);
-  const explicacao = texto((chave.configuracao as Record<string, unknown>).explicacao);
-  const feedback = resultado.correta
-    ? `Correto. ${explicacao}`
-    : `Ainda não. ${explicacao}`;
+  const configuracaoGabarito = chave.configuracao as Record<string, unknown>;
+  const explicacao = texto(configuracaoGabarito.explicacao);
+  const feedback = ["quiz", "erro"].includes(atividade.tipo)
+    ? resultado.correta
+      ? texto(configuracaoGabarito.explicacaoCorreta) || explicacao
+      : texto(configuracaoGabarito.explicacaoIncorreta) || explicacao
+    : resultado.correta
+      ? `Correto. ${explicacao}`
+      : `Ainda não. ${explicacao}`;
   const { data: tentativa, error: falhaTentativa } = await administrador
     .from("tentativa_atividade")
     .insert({ usuario_id: user.id, atividade_id: atividadeId, resposta: corpo.resposta, correta: resultado.correta, pontuacao: resultado.correta ? 100 : 0, feedback, detalhes: resultado.detalhes })

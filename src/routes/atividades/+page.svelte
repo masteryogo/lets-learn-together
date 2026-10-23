@@ -20,10 +20,16 @@
   let arquivosProjetos = $state({});
   let resultados = $state({});
   let execucoes = $state({});
+  let indiceEtapa = $state(0);
+  let sequenciaConcluida = $state(false);
   let acompanhamento = $state({ competencias: [], vinculos: [], tentativas: [], submissoes: [] });
   let revisoes = $state({});
   let acompanhamentoCarregando = $state(false);
   let requisicaoAcompanhamento = 0;
+  let atividadesSequenciais = $derived(atividades.filter((atividade) => atividade.tipo !== "projeto"));
+  let atividadesComplementares = $derived(atividades.filter((atividade) => !["quiz", "erro"].includes(atividade.tipo)));
+  let atividadeAtual = $derived(atividadesSequenciais[indiceEtapa] ?? null);
+  let perguntaAtual = $derived(atividadeAtual && ["quiz", "erro"].includes(atividadeAtual.tipo) ? atividadeAtual : null);
 
   $effect(() => {
     if (!trilhaId || !topicoId) {
@@ -120,6 +126,73 @@
         ? (atual.includes(id) ? atual.filter((item) => item !== id) : [...atual, id])
         : [id],
     });
+    delete resultados[atividade.id];
+  }
+
+  function definirLacuna(atividade, lacunaId, valor) {
+    const atuais = respostaDa(atividade).lacunas;
+    definir(atividade.id, { lacunas: { ...atuais, [lacunaId]: valor } });
+    delete resultados[atividade.id];
+  }
+
+  function lacunasPreenchidas(atividade, resposta) {
+    return atividade.configuracao.lacunas.every((lacuna) =>
+      String(resposta.lacunas[lacuna.id] ?? "").trim().length > 0
+    );
+  }
+
+  function partesDaPrevia(atividade, resposta) {
+    const lacunas = atividade.configuracao.lacunas;
+    const textoDaEscolha = (lacuna) =>
+      lacuna.alternativas?.find((alternativa) => alternativa.id === resposta.lacunas[lacuna.id])?.texto;
+
+    if (atividade.configuracao.codigo) {
+      const partes = [];
+      let restante = atividade.configuracao.codigo;
+      for (const lacuna of lacunas) {
+        const indice = restante.indexOf("___");
+        if (indice < 0) break;
+        const escolha = textoDaEscolha(lacuna);
+        partes.push({ texto: restante.slice(0, indice), escolhida: false });
+        partes.push({ texto: escolha ?? "_____", escolhida: Boolean(escolha) });
+        restante = restante.slice(indice + 3);
+      }
+      partes.push({ texto: restante, escolhida: false });
+      return partes;
+    }
+
+    return lacunas.flatMap((lacuna, indice) => {
+      const frase = lacuna.rotulo ?? "Complete a frase";
+      const escolha = textoDaEscolha(lacuna);
+      const partes = frase.includes("___")
+        ? [
+            { texto: frase.slice(0, frase.indexOf("___")), escolhida: false },
+            { texto: escolha ?? "_____", escolhida: Boolean(escolha) },
+            { texto: frase.slice(frase.indexOf("___") + 3), escolhida: false },
+          ]
+        : [
+            { texto: `${frase}: `, escolhida: false },
+            { texto: escolha ?? "_____", escolhida: Boolean(escolha) },
+          ];
+      return indice < lacunas.length - 1 ? [...partes, { texto: "\n", escolhida: false }] : partes;
+    });
+  }
+
+  async function confirmarPergunta(atividade) {
+    await enviar(atividade);
+  }
+
+  function avancarEtapa() {
+    if (indiceEtapa < atividadesSequenciais.length - 1) indiceEtapa += 1;
+    else sequenciaConcluida = true;
+  }
+
+  function reiniciarSequencia() {
+    for (const atividade of atividadesSequenciais) {
+      delete resultados[atividade.id];
+    }
+    indiceEtapa = 0;
+    sequenciaConcluida = false;
   }
 
   function alternarRequisito(atividade, id) {
@@ -252,26 +325,111 @@
       <p>Resolva os exercícios e entenda o raciocínio por trás de cada resposta.</p>
     </header>
 
-    {#if !sessao.carregando && !sessao.conectado}
-      <section class="atividades__convite"><p>Entre na conta para enviar respostas e guardar suas tentativas.</p><a class="botao botao--destaque" href="{base}/conta" data-sveltekit-reload>Entrar</a></section>
-    {/if}
-
     {#if atividades.length === 0}
       <section class="atividades__vazio"><h2>A prática deste tópico está chegando</h2><p>O conteúdo já pode ser estudado no roadmap. Este tópico ainda não recebeu uma atividade.</p></section>
     {/if}
 
-    {#each atividades as atividade (atividade.id)}
+    {#if atividadesSequenciais.length > 0}
+      <section class="quiz" aria-label="Quiz do tópico">
+        {#if sequenciaConcluida}
+          {@const aprovadas = atividadesSequenciais.filter((atividade) => resultados[atividade.id]?.correta).length}
+          <div class="quiz__conclusao">
+            <p class="quiz__sobretitulo">Sequência concluída</p>
+            <h2>Você passou por {atividadesSequenciais.length} etapas práticas</h2>
+            <p class="quiz__pontuacao">{aprovadas} de {atividadesSequenciais.length} aprovadas</p>
+            <p>Revise as explicações ou refaça a sequência para praticar os conceitos deste tópico.</p>
+            <button class="botao botao--destaque" type="button" onclick={reiniciarSequencia}>Refazer sequência</button>
+          </div>
+        {:else if perguntaAtual}
+          {@const respostaQuiz = respostaDa(perguntaAtual)}
+          {@const resultadoQuiz = resultados[perguntaAtual.id]}
+          {@const tentativasQuiz = tentativasDa(perguntaAtual.id)}
+          {@const formatoVerdadeiroFalso = perguntaAtual.configuracao.formato === "verdadeiro-falso"}
+          <header class="quiz__progresso">
+            <div><p class="quiz__sobretitulo">Etapa {indiceEtapa + 1} <span>de {atividadesSequenciais.length}</span></p><span>{perguntaAtual.dificuldade}</span></div>
+            <progress value={indiceEtapa + 1} max={atividadesSequenciais.length} aria-label="Progresso da sequência"></progress>
+          </header>
+          <article class="quiz__cartao">
+            <p class="quiz__tipo">{formatoVerdadeiroFalso ? "Verdadeiro ou falso" : "Múltipla escolha"} <span>·</span> {perguntaAtual.tipo === "erro" ? "identifique o erro" : "escolha a resposta"}</p>
+            <h2>{perguntaAtual.titulo}</h2>
+            <p class="quiz__enunciado">{perguntaAtual.enunciado}</p>
+            {#if perguntaAtual.configuracao.codigo}<pre class="atividade__codigo"><code>{perguntaAtual.configuracao.codigo}</code></pre>{/if}
+            <fieldset class="quiz__alternativas" aria-label="Alternativas da pergunta">
+              {#each perguntaAtual.configuracao.alternativas as alternativa, indice}
+                {@const selecionada = respostaQuiz.alternativas.includes(alternativa.id)}
+                <label class:quiz__opcao--selecionada={selecionada} class:quiz__opcao--verdadeiro={formatoVerdadeiroFalso && alternativa.id === "verdadeiro"} class:quiz__opcao--falso={formatoVerdadeiroFalso && alternativa.id === "falso"}>
+                  <input type={perguntaAtual.configuracao.multipla ? "checkbox" : "radio"} name={perguntaAtual.id} checked={selecionada} onchange={() => alternarAlternativa(perguntaAtual, alternativa.id)} />
+                  {#if !formatoVerdadeiroFalso}<span class="quiz__letra">{String.fromCharCode(65 + indice)}</span>{/if}
+                  <span>{alternativa.texto}</span>
+                </label>
+              {/each}
+            </fieldset>
+            {#if !sessao.carregando && !sessao.conectado}
+              <p class="quiz__convite">Entre na conta para confirmar respostas e guardar seu progresso. <a href="{base}/conta" data-sveltekit-reload>Entrar</a></p>
+            {/if}
+            {#if resultadoQuiz}
+              <div class="quiz__feedback" data-correta={resultadoQuiz.correta ? "sim" : "nao"} aria-live="polite">
+                <strong>{resultadoQuiz.correta ? "Resposta correta" : "Não foi dessa vez"}</strong>
+                <p>{resultadoQuiz.feedback}</p>
+              </div>
+            {/if}
+            <footer class="quiz__acoes">
+              <button class="botao botao--secundario" type="button" disabled={indiceEtapa === 0} onclick={() => indiceEtapa -= 1}>← Etapa anterior</button>
+              {#if resultadoQuiz}
+                <button class="botao botao--destaque" type="button" onclick={avancarEtapa}>{indiceEtapa === atividadesSequenciais.length - 1 ? "Concluir sequência" : "Próxima etapa →"}</button>
+              {:else}
+                <button class="botao botao--destaque" type="button" disabled={!sessao.conectado || respostaQuiz.alternativas.length === 0 || atividadesRemotas.enviando} onclick={() => confirmarPergunta(perguntaAtual)}>{atividadesRemotas.enviando ? "Corrigindo…" : "Confirmar resposta"}</button>
+              {/if}
+            </footer>
+          </article>
+          {#if sessao.conectado}
+            <details class="atividade__historico quiz__historico">
+              <summary>Histórico desta pergunta <span>{tentativasQuiz.length}</span></summary>
+              {#if tentativasQuiz.length}
+                <ol>
+                  {#each tentativasQuiz as tentativa (tentativa.id)}
+                    <li data-correta={tentativa.correta ? "sim" : "nao"}><time datetime={tentativa.criada_em}>{dataDaTentativa(tentativa.criada_em)}</time><strong>{tentativa.correta ? "Resposta correta" : "Resposta incorreta"}</strong><span>{tentativa.pontuacao}%</span>{#if tentativa.feedback}<p>{tentativa.feedback}</p>{/if}</li>
+                  {/each}
+                </ol>
+              {:else}<p class="atividade__historico-vazio">Suas tentativas desta pergunta aparecerão aqui.</p>{/if}
+            </details>
+          {/if}
+        {/if}
+      </section>
+    {/if}
+
+    {#if atividadesSequenciais.length > 0 && !sequenciaConcluida}
+      {#if !perguntaAtual}
+        <header class="quiz__progresso quiz__progresso--atividade">
+          <div><p class="quiz__sobretitulo">Etapa {indiceEtapa + 1} <span>de {atividadesSequenciais.length} · {atividadeAtual?.tipo}</span></p><span>{atividadeAtual?.dificuldade}</span></div>
+          <progress value={indiceEtapa + 1} max={atividadesSequenciais.length} aria-label="Progresso da sequência"></progress>
+        </header>
+      {/if}
+    {/if}
+
+    {#each atividadesComplementares.filter((item) => (!sequenciaConcluida && item.id === atividadeAtual?.id) || item.tipo === "projeto") as atividade (atividade.id)}
       {@const resposta = respostaDa(atividade)}
       {@const resultado = resultados[atividade.id]}
       {@const tentativas = tentativasDa(atividade.id)}
       {@const projetoAguardando = tentativas.some((tentativa) => tentativa.detalhes?.status === "aguardando_avaliacao")}
-      <article class="atividade" class:atividade--projeto={atividade.tipo === "projeto"} data-tipo={atividade.tipo}>
+      <article class="atividade" class:atividade--projeto={atividade.tipo === "projeto"} class:atividade--completar={atividade.tipo === "completar"} data-tipo={atividade.tipo}>
         <section class="atividade__instrucao">
           <p class="atividade__tipo">{atividade.tipo} <span>·</span> {atividade.dificuldade}</p>
           {#if sessao.conectado}<p class="atividade__estado" data-estado={estadoDaAtividade(atividade.id)}>{estadoDaAtividade(atividade.id)}</p>{/if}
           <h2>{atividade.titulo}</h2>
           <p class="atividade__enunciado">{atividade.enunciado}</p>
-          {#if atividade.configuracao.codigo}<pre class="atividade__codigo"><code>{atividade.configuracao.codigo}</code></pre>{/if}
+          {#if atividade.configuracao.codigo && atividade.tipo !== "completar"}<pre class="atividade__codigo"><code>{atividade.configuracao.codigo}</code></pre>{/if}
+          {#if atividade.tipo === "completar"}
+            {@const partesPrevias = partesDaPrevia(atividade, resposta)}
+            <div class="atividade__lacuna-previa" aria-live="polite">
+              <p>Sua prévia</p>
+              {#if atividade.configuracao.codigo}
+                <pre><code>{#each partesPrevias as parte}<span class:atividade__lacuna-escolhida={parte.escolhida}>{parte.texto}</span>{/each}</code></pre>
+              {:else}
+                <p>{#each partesPrevias as parte}<span class:atividade__lacuna-escolhida={parte.escolhida}>{parte.texto}</span>{/each}</p>
+              {/if}
+            </div>
+          {/if}
           {#if atividade.tipo === "projeto"}
             <div class="projeto__objetivo"><strong>Objetivo</strong><p>{atividade.configuracao.objetivo}</p></div>
             <h3>Requisitos do projeto</h3>
@@ -302,11 +460,30 @@
               {/each}
             </div>
           {:else if atividade.tipo === "saida"}
-            <label class="atividade__campo">{atividade.configuracao.rotuloResposta}<input value={resposta.texto} oninput={(evento) => definir(atividade.id, { texto: evento.currentTarget.value })} /></label>
+            <div class="saida__painel">
+              <header class="saida__cabecalho"><span>Terminal Python</span><span>Previsão</span></header>
+              <label class="saida__entrada">
+                <span class="saida__rotulo">{atividade.configuracao.rotuloResposta}</span>
+                <span class="saida__linha"><span aria-hidden="true">›</span><textarea rows="3" placeholder="Digite o que será exibido…" value={resposta.texto} oninput={(evento) => definir(atividade.id, { texto: evento.currentTarget.value })}></textarea></span>
+              </label>
+              <p>Considere exatamente o texto e as quebras de linha exibidas pelo programa.</p>
+            </div>
           {:else if atividade.tipo === "completar"}
             {#each atividade.configuracao.lacunas as lacuna}
-              <label class="atividade__campo">{lacuna.rotulo}<input value={resposta.lacunas[lacuna.id] ?? ""} oninput={(evento) => definir(atividade.id, { lacunas: { ...resposta.lacunas, [lacuna.id]: evento.currentTarget.value } })} /></label>
+              {#if lacuna.alternativas?.length}
+                <fieldset class="atividade__lacuna">
+                  <legend>Escolha para preencher</legend>
+                  <div class="atividade__lacuna-opcoes">
+                    {#each lacuna.alternativas as alternativa}
+                      <button class="atividade__lacuna-opcao" class:atividade__lacuna-opcao--selecionada={resposta.lacunas[lacuna.id] === alternativa.id} type="button" aria-pressed={resposta.lacunas[lacuna.id] === alternativa.id} onclick={() => definirLacuna(atividade, lacuna.id, alternativa.id)}>{alternativa.texto}</button>
+                    {/each}
+                  </div>
+                </fieldset>
+              {:else}
+                <label class="atividade__campo">{lacuna.rotulo}<input value={resposta.lacunas[lacuna.id] ?? ""} oninput={(evento) => definirLacuna(atividade, lacuna.id, evento.currentTarget.value)} /></label>
+              {/if}
             {/each}
+            <button class="botao botao--destaque" type="button" disabled={!sessao.conectado || atividadesRemotas.enviando || !lacunasPreenchidas(atividade, resposta)} onclick={() => enviar(atividade)}>{atividadesRemotas.enviando ? "Corrigindo…" : "Verificar resposta"}</button>
           {:else if atividade.tipo === "projeto"}
             {#if !sessao.conectado}
               <p>Entre na sua conta para salvar o projeto e receber uma avaliação.</p>
@@ -345,7 +522,7 @@
               {#if resultado}<section class="atividade__testes" aria-live="polite"><p class="atividade__resultado" data-correta={resultado.correta ? "sim" : "nao"}><strong>{resultado.correta ? "Solução aprovada." : `${resultado.pontuacao}% dos testes passaram.`}</strong> {resultado.feedback}</p><ul>{#each resultado.detalhes.testes ?? [] as teste}<li data-aprovado={teste.aprovado ? "sim" : "nao"}>Teste {teste.numero}: {teste.aprovado ? "passou" : teste.estado}</li>{/each}</ul></section>{/if}
             </div>
           {:else}
-            <button class="botao botao--destaque" type="button" disabled={!sessao.conectado || atividadesRemotas.enviando} onclick={() => enviar(atividade)}>{atividadesRemotas.enviando ? "Corrigindo…" : "Verificar resposta"}</button>
+            <button class="botao botao--destaque" type="button" disabled={!sessao.conectado || atividadesRemotas.enviando || (atividade.tipo === "completar" && !lacunasPreenchidas(atividade, resposta))} onclick={() => enviar(atividade)}>{atividadesRemotas.enviando ? "Corrigindo…" : "Verificar resposta"}</button>
           {/if}
           {#if resultado && atividade.tipo !== "desafio"}<p class="atividade__resultado" data-correta={resultado.correta ? "sim" : "nao"}><strong>{resultado.correta ? "Correto." : "Tente de novo."}</strong> {resultado.feedback}</p>{/if}
         </section>
@@ -372,6 +549,16 @@
               <p class="atividade__historico-vazio">Suas tentativas desta atividade aparecerão aqui.</p>
             {/if}
           </details>
+        {/if}
+        {#if atividade.tipo !== "projeto"}
+          <footer class="quiz__acoes atividade__etapas">
+            <button class="botao botao--secundario" type="button" disabled={indiceEtapa === 0} onclick={() => indiceEtapa -= 1}>← Etapa anterior</button>
+            {#if resultado}
+              <button class="botao botao--destaque" type="button" onclick={avancarEtapa}>{indiceEtapa === atividadesSequenciais.length - 1 ? "Concluir sequência" : "Próxima etapa →"}</button>
+            {:else}
+              <span>Confirme sua resposta para avançar.</span>
+            {/if}
+          </footer>
         {/if}
         {#if atividade.tipo === "projeto" && acompanhamento.ehAdministrador}
           {@const pendentes = acompanhamento.submissoes.filter((tentativa) => tentativa.atividade_id === atividade.id && tentativa.detalhes?.status === "aguardando_avaliacao")}
