@@ -12,6 +12,15 @@ export const githubRemoto = $state({
   ultimaFalha: null,
 });
 
+/* O cliente devolve FunctionsHttpError para qualquer resposta não-2xx e
+   deixa o JSON da função em context. Sem ler esse corpo, uma configuração
+   ausente vira a frase técnica genérica e impede a pessoa de corrigir. */
+async function mensagemDaFuncao(erro, padrao) {
+  const resposta = erro?.context;
+  const corpo = await resposta?.clone?.().json().catch(() => null);
+  return corpo?.erro ?? erro?.message ?? padrao;
+}
+
 export async function carregarConexaoGitHub() {
   const sb = supabase();
   if (!sb || !sessao.conectado) {
@@ -54,7 +63,7 @@ export async function carregarRepositoriosGitHub() {
     return null;
   } catch (erro) {
     githubRemoto.repositorios = [];
-    githubRemoto.ultimaFalha = erro.message ?? "Não consegui listar seus repositórios.";
+    githubRemoto.ultimaFalha = await mensagemDaFuncao(erro, "Não consegui listar seus repositórios.");
     return githubRemoto.ultimaFalha;
   }
 }
@@ -69,7 +78,7 @@ export async function escolherRepositorioGitHub(repositorioId) {
     await carregarConexaoGitHub();
     return null;
   } catch (erro) {
-    githubRemoto.ultimaFalha = erro.message ?? "Não consegui guardar seu repositório.";
+    githubRemoto.ultimaFalha = await mensagemDaFuncao(erro, "Não consegui guardar seu repositório.");
     return githubRemoto.ultimaFalha;
   }
 }
@@ -85,7 +94,7 @@ export async function desconectarGitHub() {
     githubRemoto.repositorios = [];
     return null;
   } catch (erro) {
-    githubRemoto.ultimaFalha = erro.message ?? "Não consegui desconectar o GitHub.";
+    githubRemoto.ultimaFalha = await mensagemDaFuncao(erro, "Não consegui desconectar o GitHub.");
     return githubRemoto.ultimaFalha;
   }
 }
@@ -110,7 +119,7 @@ export async function confirmarConexaoGitHub(instalacaoId = null) {
     await carregarConexaoGitHub();
     return null;
   } catch (erro) {
-    githubRemoto.ultimaFalha = erro.message ?? "Não consegui confirmar a conexão com o GitHub.";
+    githubRemoto.ultimaFalha = await mensagemDaFuncao(erro, "Não consegui confirmar a conexão com o GitHub.");
     return githubRemoto.ultimaFalha;
   }
 }
