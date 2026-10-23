@@ -24,16 +24,20 @@
 </style>
 
 <svelte:head>
-  <title>Let's Learn Together — encontre o seu próximo passo</title>
+  <title>Let's Learn Together — tecnologia para autodidatas</title>
   <meta
     name="description"
-    content="Roadmaps visuais para estudar tecnologia com rumo, critério e espaço para acompanhar o próprio caminho."
+    content="Roadmaps para quem aprende tecnologia por conta própria: ordem, critério por tópico e progresso salvo. 506 tópicos em 5 trilhas, de graça."
   />
 </svelte:head>
 
 <header class="cabecalho">
-  <a class="marca" href="{base}/" aria-label="Let's Learn Together, início">
+  <a class="marca" href="{base}/">
     <ObiMarca altura="clamp(30px,3.4vw,46px)" />
+    <span class="marca__texto">
+      <span class="marca__nome">Let's Learn Together</span>
+      <span class="marca__descritor">tecnologia para autodidatas</span>
+    </span>
   </a>
   <nav aria-label="Navegação principal">
     <a href="#como-funciona">Como funciona</a>
@@ -47,12 +51,10 @@
 <main>
   <section class="abertura" aria-labelledby="titulo-principal">
     <div class="abertura__texto">
-      <h1 id="titulo-principal">Aprender fica mais leve quando você enxerga o caminho.</h1>
-      <p class="abertura__resumo">
-        Roadmaps de tecnologia feitos para transformar assuntos grandes em próximos passos possíveis.
-      </p>
+      <p class="etiqueta">Para quem aprende por conta própria</p>
+      <h1 id="titulo-principal">Aprenda tecnologia sozinho, sem adivinhar a ordem.</h1>
       <div class="abertura__acoes">
-        <a class="botao botao--principal" href={abrirApp}>Explorar as trilhas <span aria-hidden="true">→</span></a>
+        <a class="botao botao--principal" href={abrirApp}>Abrir as trilhas <span aria-hidden="true">→</span></a>
         <a class="botao botao--texto" href="#como-funciona">Ver como funciona</a>
       </div>
     </div>
@@ -77,14 +79,14 @@
     <p class="etiqueta">Estudar sem se perder</p>
     <h2 id="titulo-manifesto">Menos abas abertas. Mais direção.</h2>
     <div class="manifesto__grade">
-      <article><span class="manifesto__numero">01</span><h3>Escolha um território</h3><p>Você entra por uma trilha e sabe onde está antes de começar a correr.</p></article>
-      <article><span class="manifesto__numero">02</span><h3>Siga uma rota de verdade</h3><p>Cada assunto tem ordem, prioridade e um critério claro para seguir em frente.</p></article>
-      <article><span class="manifesto__numero">03</span><h3>Faça o percurso seu</h3><p>Marque progresso, organize sessões de estudo e guarde suas próprias descobertas.</p></article>
+      <article><span class="manifesto__numero">01</span><h3>Escolha uma trilha</h3><p>Cinco trilhas, de Python do zero a visão computacional. Você vê o tamanho antes de começar.</p></article>
+      <article><span class="manifesto__numero">02</span><h3>Siga a ordem</h3><p>Cada tópico tem prioridade e um critério que diz quando você já pode seguir em frente.</p></article>
+      <article><span class="manifesto__numero">03</span><h3>Marque o que fez</h3><p>Com uma conta, o progresso fica salvo. O que não serve agora você marca como pulado, e ele sai do mapa.</p></article>
     </div>
   </section>
 
   <section class="territorios" id="territorios" aria-labelledby="titulo-territorios">
-    <div class="territorios__cabecalho"><div><p class="etiqueta">Territórios em construção</p><h2 id="titulo-territorios">Não comece do zero. Comece de onde você está.</h2></div><a class="link-seta" href={abrirApp}>Abrir o mapa completo <span aria-hidden="true">→</span></a></div>
+    <div class="territorios__cabecalho"><div><p class="etiqueta">Territórios em construção</p><h2 id="titulo-territorios">Não comece do zero. Comece de onde você está.</h2></div><a class="link-seta" href={abrirApp}>Abrir as trilhas <span aria-hidden="true">→</span></a></div>
     <div class="cartas">
       <article class="carta carta--ml"><span class="carta__faixa">Trilha</span><h3>Aprendizado<br />de Máquina</h3><svg viewBox="0 0 280 138" aria-hidden="true"><path d="M25 115 L73 87 126 98 174 56 252 23" /><circle cx="25" cy="115" r="5" /><circle cx="73" cy="87" r="5" /><circle cx="126" cy="98" r="5" /><circle cx="174" cy="56" r="5" /><circle cx="252" cy="23" r="7" /></svg><footer><span>5 etapas</span><span>156 tópicos</span></footer></article>
       <article class="carta carta--cv"><span class="carta__faixa">Trilha</span><h3>Visão<br />Computacional</h3><svg viewBox="0 0 280 138" aria-hidden="true"><path d="M24 108 L64 80 55 50 106 62 144 29 188 64 251 36" /><circle cx="24" cy="108" r="5" /><circle cx="64" cy="80" r="5" /><circle cx="55" cy="50" r="5" /><circle cx="106" cy="62" r="5" /><circle cx="144" cy="29" r="5" /><circle cx="188" cy="64" r="5" /><circle cx="251" cy="36" r="7" /></svg><footer><span>14 etapas</span><span>141 tópicos</span></footer></article>
@@ -99,30 +101,30 @@
 
   <section class="planos" id="planos" aria-labelledby="titulo-planos">
     <div class="planos__cabecalho">
-      <p class="etiqueta">Planos futuros</p>
-      <h2 id="titulo-planos">A plataforma cresce junto com o seu jeito de aprender.</h2>
+      <p class="etiqueta">Para onde isto vai</p>
+      <h2 id="titulo-planos">O roadmap é por onde a gente começou. Não é onde a gente para.</h2>
       <p>
-        Estamos desenhando os próximos recursos com calma. Sem preços e sem promessas vazias: só o que ajudar a estudar melhor.
+        A meta é ensinar, não listar assuntos. O mapa veio primeiro porque saber o caminho é o que falta antes de estudar. O que vem depois está sendo construído em cima dele, e o uso continua gratuito.
       </p>
     </div>
     <div class="planos__grade">
       <article class="plano">
-        <p class="plano__selo">Em construção</p>
-        <h3>Explorar</h3>
-        <p>Para encontrar uma rota clara e começar pelo próximo passo possível.</p>
-        <ul><li>Roadmaps abertos</li><li>Critérios por assunto</li><li>Trilhas em expansão</li></ul>
+        <p class="plano__selo">No ar</p>
+        <h3>O mapa</h3>
+        <p>Saber o que estudar, em que ordem, e enxergar o que já ficou de pé.</p>
+        <ul><li>Roadmaps com critério</li><li>Calendário de estudos</li><li>Mural de notas</li></ul>
       </article>
       <article class="plano plano--destaque">
-        <p class="plano__selo">Em construção</p>
-        <h3>Planejar</h3>
-        <p>Para transformar uma rota de estudo em um ritmo que cabe na sua semana.</p>
-        <ul><li>Calendário de estudos</li><li>Distribuição de assuntos</li><li>Visão do mês</li></ul>
+        <p class="plano__selo">Primeiros exercícios no ar</p>
+        <h3>A prática</h3>
+        <p>Ler sobre um assunto não é saber o assunto. Os primeiros exercícios corrigem e devolvem o resultado na hora, por enquanto na trilha de Python.</p>
+        <ul><li>Prever a saída do código</li><li>Achar o erro</li><li>Completar o trecho</li><li>Devolutiva por tentativa</li></ul>
       </article>
       <article class="plano">
-        <p class="plano__selo">Em construção</p>
-        <h3>Acompanhar</h3>
-        <p>Para guardar descobertas e enxergar o caminho que você já percorreu.</p>
-        <ul><li>Progresso por tópico</li><li>Mural de notas</li><li>Histórico pessoal</li></ul>
+        <p class="plano__selo">Em desenho</p>
+        <h3>O ensino</h3>
+        <p>Material próprio, competência medida em vez de caixinha marcada, e uma rota que reage ao que você acerta e erra.</p>
+        <ul><li>Conteúdo autoral</li><li>Competências por tópico</li><li>Rota que se ajusta</li></ul>
       </article>
     </div>
   </section>
@@ -140,12 +142,12 @@
     >Ver proposta de parceria <span aria-hidden="true">→</span></a>
   </section>
 
-  <section class="convite" aria-labelledby="titulo-convite"><p class="etiqueta">Seu próximo passo cabe aqui</p><h2 id="titulo-convite">Abra uma trilha.<br />Faça dela a sua rota.</h2><a class="botao botao--principal" href={abrirApp}>Começar a estudar <span aria-hidden="true">→</span></a></section>
+  <section class="convite" aria-labelledby="titulo-convite"><p class="etiqueta">Seu próximo passo cabe aqui</p><h2 id="titulo-convite">Abra uma trilha.<br />Faça dela a sua rota.</h2><a class="botao botao--principal" href={abrirApp}>Abrir as trilhas <span aria-hidden="true">→</span></a></section>
 </main>
 
 <footer class="rodape">
   <div class="rodape__principal">
-    <div class="rodape__marca"><a class="marca" href="{base}/" aria-label="Let's Learn Together, início">Let's Learn Together</a><p>Feito para quem aprende construindo caminho.</p><p class="rodape__autoria">feito por <a href="https://github.com/masteryogo" target="_blank" rel="noopener noreferrer">@masteryogo</a> &amp; <a href="https://github.com/melchisedekdev" target="_blank" rel="noopener noreferrer">@melchisedekdev</a></p><a class="rodape__apoio" href="{base}/parcerias" data-sveltekit-reload>Conversar sobre parceria <span aria-hidden="true">→</span></a></div>
+    <div class="rodape__marca"><a class="marca" href="{base}/" aria-label="Let's Learn Together, início">Let's Learn Together</a><p>Autodidata não quer dizer sozinho.</p><p class="rodape__autoria">feito por <a href="https://github.com/masteryogo" target="_blank" rel="noopener noreferrer">@masteryogo</a> &amp; <a href="https://github.com/melchisedekdev" target="_blank" rel="noopener noreferrer">@melchisedekdev</a></p><a class="rodape__apoio" href="{base}/parcerias" data-sveltekit-reload>Conversar sobre parceria <span aria-hidden="true">→</span></a></div>
     <div><h2>Produto</h2><a href="#territorios">Trilhas</a><a href={abrirApp}>Abrir aplicativo</a><a href="#planos">Planos futuros</a></div>
     <div><h2>Junto com a gente</h2><a href="#como-funciona">Como funciona</a><a href="#parcerias">Parcerias</a><a href="{base}/parcerias" data-sveltekit-reload>Ver proposta <span aria-hidden="true">→</span></a></div>
     <div><h2>Legal</h2><a href="{base}/termos" data-sveltekit-reload>Termos de uso</a><a href="{base}/privacidade" data-sveltekit-reload>Privacidade</a></div>
