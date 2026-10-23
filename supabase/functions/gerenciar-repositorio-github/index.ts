@@ -25,7 +25,7 @@ Deno.serve(async (requisicao) => {
 
   const corpo = await requisicao.json().catch(() => null);
   const acao = corpo?.acao;
-  if (acao !== "listar" && acao !== "escolher") return responder({ erro: "Ação GitHub inválida." }, 400);
+  if (acao !== "listar" && acao !== "escolher" && acao !== "desconectar") return responder({ erro: "Ação GitHub inválida." }, 400);
 
   const administrador = createClient(url, servico);
   const { data: conexao, error: falhaConexao } = await administrador.from("conexao_github")
@@ -33,6 +33,15 @@ Deno.serve(async (requisicao) => {
     .eq("usuario_id", user.id)
     .maybeSingle();
   if (falhaConexao || !conexao) return responder({ erro: "Conecte a integração GitHub antes de escolher um repositório." }, 409);
+
+  /* Desconectar não revoga a instalação no GitHub: isso seria uma mudança
+     de escopo que pode afetar outros usos da App. Aqui só some o vínculo
+     desta conta, e os arquivos que já foram publicados permanecem seus. */
+  if (acao === "desconectar") {
+    const { error: falhaRemocao } = await administrador.from("conexao_github").delete().eq("usuario_id", user.id);
+    if (falhaRemocao) return responder({ erro: "Não consegui desconectar a integração GitHub." }, 500);
+    return responder({ desconectada: true });
+  }
 
   let token: string;
   let repositorios: any[];

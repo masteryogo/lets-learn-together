@@ -75,6 +75,22 @@ export async function escolherRepositorioGitHub(repositorioId) {
   }
 }
 
+export async function desconectarGitHub() {
+  const sb = supabase();
+  if (!sb || !sessao.conectado) return "Entre na conta antes de desconectar o GitHub.";
+  githubRemoto.ultimaFalha = null;
+  try {
+    const { data, error } = await sb.functions.invoke("gerenciar-repositorio-github", { body: { acao: "desconectar" } });
+    if (error || data?.erro) throw new Error(data?.erro ?? error.message);
+    githubRemoto.conexao = null;
+    githubRemoto.repositorios = [];
+    return null;
+  } catch (erro) {
+    githubRemoto.ultimaFalha = erro.message ?? "Não consegui desconectar o GitHub.";
+    return githubRemoto.ultimaFalha;
+  }
+}
+
 export function abrirInstalacaoGitHub() {
   const url = env.PUBLIC_GITHUB_APP_INSTALACAO_URL;
   if (!url) return "A conexão com GitHub ainda está sendo preparada.";

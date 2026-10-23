@@ -6,6 +6,7 @@
     carregarRepositoriosGitHub,
     escolherRepositorioGitHub,
     confirmarConexaoGitHub,
+    desconectarGitHub,
     githubRemoto,
   } from "./remoto.svelte.js";
 
@@ -61,6 +62,12 @@
       recado = "Repositório escolhido. Cada publicação continuará pedindo sua confirmação.";
     }
   }
+
+  async function desconectar() {
+    if (!confirm("Desconectar o GitHub desta conta? Seus arquivos já publicados não serão apagados.")) return;
+    recado = await desconectarGitHub();
+    if (!recado) recado = "GitHub desconectado desta conta. Seus arquivos publicados continuam no repositório.";
+  }
 </script>
 
 <section class="github" aria-labelledby="github-titulo">
@@ -76,6 +83,10 @@
       Conectado como <strong>@{githubRemoto.conexao.conta_login}</strong>.
       {#if githubRemoto.conexao.repositorio_completo}
         Repositório: <strong>{githubRemoto.conexao.repositorio_completo}</strong>{githubRemoto.conexao.branch ? ` · ${githubRemoto.conexao.branch}` : ""}.
+        <div class="github__acoes">
+          <button class="botao botao--secundario" type="button" onclick={abrirEscolha}>Trocar repositório</button>
+          <button class="elo" type="button" onclick={desconectar}>Desconectar GitHub</button>
+        </div>
       {:else}
         Escolha um repositório antes de publicar uma atividade.
         <button class="botao botao--secundario" type="button" onclick={abrirEscolha}>Escolher repositório</button>
@@ -102,5 +113,6 @@
     <button class="botao botao--secundario" type="button" onclick={conectar}>
       {githubRemoto.identidadeVinculada ? "Instalar integração GitHub" : "Vincular minha conta GitHub"}
     </button>
+    {#if recado}<p class="github__estado" role="status">{recado}</p>{/if}
   {/if}
 </section>
