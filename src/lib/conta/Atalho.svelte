@@ -81,10 +81,19 @@
           <a
             class="conta-menu__item"
             role="menuitem"
-            href="{base}/conta"
+            href="{base}/perfil"
             data-sveltekit-reload
           >
             Perfil
+          </a>
+
+          <a
+            class="conta-menu__item"
+            role="menuitem"
+            href="{base}/configuracoes"
+            data-sveltekit-reload
+          >
+            Configurações
           </a>
 
           {#if aoZerar}

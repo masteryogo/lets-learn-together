@@ -428,15 +428,13 @@
           <a
             class="conta__item"
             role="menuitem"
-            href="{base}/conta"
+            href="{base}/perfil"
             data-sveltekit-reload>Perfil</a
           >
-          <!-- a seção de configurações nasce na tela de perfil no passo
-               seguinte; a âncora já é a daquela seção -->
           <a
             class="conta__item"
             role="menuitem"
-            href="{base}/conta#configuracoes"
+            href="{base}/configuracoes"
             data-sveltekit-reload>Configurações</a
           >
           <button class="conta__item" role="menuitem" type="button" onclick={sair}>

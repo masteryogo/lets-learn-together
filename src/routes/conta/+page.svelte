@@ -18,7 +18,6 @@
   import { FALAS, FLUXO } from "$lib/conta/fluxo.js";
   import { sessao } from "$lib/conta/Sessao.svelte.js";
   import Ficha from "$lib/conta/Ficha.svelte";
-  import ConexaoGitHub from "$lib/github/Conexao.svelte";
   import Obi from "$lib/obi/Obi.svelte";
   import { ControleObi } from "$lib/obi/ControleObi.svelte.js";
   import { olhar } from "$lib/obi/olhar.js";
@@ -346,10 +345,6 @@
     aoGesto={gesto}
     aoFechar={fecharOlhos}
   />
-
-  {#if sessao.conectado && atual === "pronto"}
-    <ConexaoGitHub />
-  {/if}
 
   <!-- os dois documentos: é aqui que alguém decide criar conta, e é
        aqui que eles precisam estar a um clique. O Google também os
