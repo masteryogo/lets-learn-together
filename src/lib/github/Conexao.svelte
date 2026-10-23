@@ -46,6 +46,11 @@
     recado = abrirInstalacaoGitHub();
   }
 
+  async function confirmarInstalacaoExistente() {
+    recado = await confirmarConexaoGitHub();
+    if (!recado) recado = "GitHub conectado. Agora escolha o repositório do seu portfólio.";
+  }
+
   async function abrirEscolha() {
     recado = await carregarRepositoriosGitHub();
     escolhendoRepositorio = !recado;
@@ -113,6 +118,9 @@
     <button class="botao botao--secundario" type="button" onclick={conectar}>
       {githubRemoto.identidadeVinculada ? "Instalar integração GitHub" : "Vincular minha conta GitHub"}
     </button>
+    {#if githubRemoto.identidadeVinculada}
+      <button class="elo github__confirmar" type="button" onclick={confirmarInstalacaoExistente}>Já instalei a integração</button>
+    {/if}
     {#if recado}<p class="github__estado" role="status">{recado}</p>{/if}
   {/if}
 </section>

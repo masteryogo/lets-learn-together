@@ -97,14 +97,14 @@ export function abrirInstalacaoGitHub() {
   return null;
 }
 
-export async function confirmarConexaoGitHub(instalacaoId) {
+export async function confirmarConexaoGitHub(instalacaoId = null) {
   const sb = supabase();
   if (!sb || !sessao.conectado) return "Entre na conta antes de confirmar a conexão.";
-  if (!/^\d+$/.test(instalacaoId)) return "A instalação recebida do GitHub é inválida.";
+  if (instalacaoId !== null && !/^\d+$/.test(instalacaoId)) return "A instalação recebida do GitHub é inválida.";
   githubRemoto.ultimaFalha = null;
   try {
     const { data, error } = await sb.functions.invoke("confirmar-conexao-github", {
-      body: { instalacaoId },
+      body: instalacaoId === null ? {} : { instalacaoId },
     });
     if (error || data?.erro) throw new Error(data?.erro ?? error.message);
     await carregarConexaoGitHub();

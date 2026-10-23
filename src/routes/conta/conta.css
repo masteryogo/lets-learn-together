@@ -298,6 +298,7 @@ body { padding-bottom: 0; }
 .github__estado[data-tom="bom"] { color: var(--roxo-forte); }
 .github__estado[data-tom="ruim"] { color: var(--vermelho); }
 .github .botao { margin-top: .85rem; }
+.github__confirmar { display: block; margin-top: .65rem; }
 .github__acoes { display: flex; align-items: baseline; gap: .85rem; flex-wrap: wrap; }
 .github__acoes .elo { margin-top: .85rem; }
 .github__seletor { display: flex; flex-direction: column; gap: .35rem; margin-top: .85rem; color: var(--texto-suave); font-size: var(--t-micro); }

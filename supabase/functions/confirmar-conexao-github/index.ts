@@ -43,8 +43,10 @@ Deno.serve(async (requisicao: Request) => {
   if (falhaSessao || !user) return responder({ erro: "Entre na conta para conectar o GitHub." }, 401);
 
   const corpo = await requisicao.json().catch(() => null);
-  const instalacaoId = typeof corpo?.instalacaoId === "string" ? corpo.instalacaoId : "";
-  if (!/^\d+$/.test(instalacaoId)) return responder({ erro: "Instalação GitHub inválida." }, 400);
+  const instalacaoRecebida = typeof corpo?.instalacaoId === "string" ? corpo.instalacaoId : null;
+  if (instalacaoRecebida !== null && !/^\d+$/.test(instalacaoRecebida)) {
+    return responder({ erro: "Instalação GitHub inválida." }, 400);
+  }
 
   const administrador = createClient(url, servico);
   const { data: usuario, error: falhaUsuario } = await administrador.auth.admin.getUserById(user.id);
@@ -60,19 +62,34 @@ Deno.serve(async (requisicao: Request) => {
 
   let instalacao: any;
   try {
-    const respostaGitHub = await fetch(`https://api.github.com/app/installations/${instalacaoId}`, {
+    const cabecalhos = {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${await jwtDaApp(appId, chave)}`,
+      "X-GitHub-Api-Version": "2022-11-28",
+    };
+    const respostaGitHub = await fetch(
+      instalacaoRecebida
+        ? `https://api.github.com/app/installations/${instalacaoRecebida}`
+        : "https://api.github.com/app/installations?per_page=100",
+      {
       headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${await jwtDaApp(appId, chave)}`,
-        "X-GitHub-Api-Version": "2022-11-28",
+          ...cabecalhos,
+        },
       },
-    });
+    );
     if (respostaGitHub.status === 404) return responder({ erro: "Não encontrei esta instalação da integração." }, 404);
     if (!respostaGitHub.ok) return responder({ erro: "Não consegui confirmar a instalação no GitHub." }, 502);
-    instalacao = await respostaGitHub.json();
+    const dadosGitHub = await respostaGitHub.json();
+    instalacao = instalacaoRecebida
+      ? dadosGitHub
+      : Array.isArray(dadosGitHub)
+        ? dadosGitHub.find((item) => item.target_type === "User" && item.account?.id === idGitHub)
+        : null;
   } catch {
     return responder({ erro: "Não consegui falar com o GitHub agora." }, 502);
   }
+
+  if (!instalacao) return responder({ erro: "Não encontrei uma instalação da integração na sua conta GitHub." }, 404);
 
   /* A primeira versão aceita somente a conta pessoal vinculada. Uma
      organização exige verificar também a associação da pessoa a ela. */
@@ -85,7 +102,7 @@ Deno.serve(async (requisicao: Request) => {
 
   const { error: falhaGravacao } = await administrador.from("conexao_github").upsert({
     usuario_id: user.id,
-    instalacao_id: Number(instalacaoId),
+    instalacao_id: Number(instalacao.id),
     conta_id: instalacao.account.id,
     conta_login: instalacao.account.login,
     repositorio_id: null,
