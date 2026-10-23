@@ -28,9 +28,10 @@
     /* enquanto o servidor não responde: sem isto, dois cliques viram
        dois cadastros, e o segundo volta como "já existe conta" */
     ocupado = false,
-    /* só os passos de entrar e criar oferecem o Google: confirmar
-       e-mail ou trocar senha não são portas de entrada */
+    /* só os passos de entrar e criar oferecem provedores sociais:
+       confirmar e-mail ou trocar senha não são portas de entrada */
     aoGoogle = null,
+    aoGitHub = null,
     aoConfirmar,
     aoIr,
     aoGesto,
@@ -205,6 +206,12 @@
         <path fill="#EA4335" d="M24 10.6c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.1 29.9 2 24 2 15.4 2 8.1 6.7 4.5 13.9l7.3 5.7c1.7-5.2 6.5-9 12.2-9z" />
       </svg>
       Entrar com Google
+    </button>
+  {/if}
+
+  {#if aoGitHub}
+    <button class="botao ficha__social" type="button" disabled={ocupado} onclick={aoGitHub}>
+      Entrar com GitHub
     </button>
   {/if}
 

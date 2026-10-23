@@ -276,13 +276,28 @@ body { padding-bottom: 0; }
   font-size: var(--t-micro);
   letter-spacing: var(--tracking-rotulo);
 }
-.ficha__google {
+.ficha__google,
+.ficha__social {
   width: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
 }
+
+.github {
+  width: min(100%, 29rem);
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 2px solid var(--linha);
+  background: var(--fundo-elevado);
+}
+.github__sobretitulo { margin: 0; color: var(--texto-suave); font-size: var(--t-micro); letter-spacing: var(--tracking-rotulo); }
+.github h2 { margin: .35rem 0 .7rem; font-size: var(--t-subtitulo); }
+.github__estado { margin: 0; color: var(--texto-suave); line-height: 1.5; }
+.github__estado[data-tom="bom"] { color: var(--roxo-forte); }
+.github__estado[data-tom="ruim"] { color: var(--vermelho); }
+.github .botao { margin-top: .85rem; }
 
 /* os dois documentos, discretos: eles precisam existir e estar à
    mão, não disputar atenção com o formulário */

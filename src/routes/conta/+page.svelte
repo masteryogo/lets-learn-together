@@ -18,6 +18,7 @@
   import { FALAS, FLUXO } from "$lib/conta/fluxo.js";
   import { sessao } from "$lib/conta/Sessao.svelte.js";
   import Ficha from "$lib/conta/Ficha.svelte";
+  import ConexaoGitHub from "$lib/github/Conexao.svelte";
   import Obi from "$lib/obi/Obi.svelte";
   import { ControleObi } from "$lib/obi/ControleObi.svelte.js";
   import { olhar } from "$lib/obi/olhar.js";
@@ -255,6 +256,16 @@
     if (falha) recado = { tom: "ruim", texto: falha };
   }
 
+  async function comGitHub() {
+    if (enviando) return;
+    enviando = true;
+    const falha = await sessao.entrarComGitHub();
+    enviando = false;
+    /* como no Google, a autorização bem-sucedida troca de página antes
+       de voltar aqui; só uma recusa imediata ainda pode virar recado */
+    if (falha) recado = { tom: "ruim", texto: falha };
+  }
+
   async function gesto(qual) {
     if (enviando) return;
     enviando = true;
@@ -329,11 +340,16 @@
     {recado}
     ocupado={enviando}
     aoGoogle={atual === "entrar" || atual === "criar" ? comGoogle : null}
+    aoGitHub={atual === "entrar" || atual === "criar" ? comGitHub : null}
     aoConfirmar={confirmar}
     aoIr={ir}
     aoGesto={gesto}
     aoFechar={fecharOlhos}
   />
+
+  {#if sessao.conectado && atual === "pronto"}
+    <ConexaoGitHub />
+  {/if}
 
   <!-- os dois documentos: é aqui que alguém decide criar conta, e é
        aqui que eles precisam estar a um clique. O Google também os

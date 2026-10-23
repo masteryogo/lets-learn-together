@@ -142,6 +142,33 @@ export class Sessao {
     return error ? recado(error) : null;
   }
 
+  /* GitHub entra pela mesma porta do Google: autentica a conta, mas
+     não pede acesso a repositório. Essa autorização é outro vínculo,
+     explícito e opcional, para não transformar login em permissão de escrita. */
+  async entrarComGitHub() {
+    const sb = supabase();
+    if (!sb) return SEM_BANCO;
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: "github",
+      options: { redirectTo: paraOndeVoltar() },
+    });
+    return error ? recado(error) : null;
+  }
+
+  /* Quem entrou por e-mail ou Google ainda precisa provar qual conta
+     GitHub é sua. Vincular identidade não pede acesso a repositórios;
+     apenas dá à Function uma identidade confiável para comparar com a
+     instalação da App. O painel do Supabase precisa ter Manual Linking ligado. */
+  async vincularGitHub() {
+    const sb = supabase();
+    if (!sb) return SEM_BANCO;
+    const { error } = await sb.auth.linkIdentity({
+      provider: "github",
+      options: { redirectTo: paraOndeVoltar() },
+    });
+    return error ? recado(error) : null;
+  }
+
   /* O tipo não é detalhe: o token do cadastro é "signup" e o da
      redefinição é "email", e um não vale pelo outro. Quem chama sabe
      de qual passo veio — por isso o parâmetro, com o cadastro como

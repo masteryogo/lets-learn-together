@@ -55,6 +55,7 @@ jobs:
           # RLS. Mascarada no log, ela só atrapalharia o diagnóstico.
           PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+          PUBLIC_GITHUB_APP_INSTALACAO_URL: ${{ vars.PUBLIC_GITHUB_APP_INSTALACAO_URL }}
         run: npm run build
 
       - uses: actions/upload-pages-artifact@v3
