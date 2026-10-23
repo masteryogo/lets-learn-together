@@ -4,6 +4,9 @@
 import { supabase } from "$lib/supabase.js";
 import { sessao } from "$lib/conta/Sessao.svelte.js";
 
+const CHAVE_CACHE = "github:conexao:v1";
+const DURACAO_CACHE = 15 * 60 * 1000;
+
 export const githubRemoto = $state({
   conexao: null,
   identidadeVinculada: false,
@@ -21,11 +24,57 @@ async function mensagemDaFuncao(erro, padrao) {
   return corpo?.erro ?? erro?.message ?? padrao;
 }
 
-export async function carregarConexaoGitHub() {
+/* A ligação já confirmada não muda sozinha. Guardá-la durante a sessão
+   evita que cada troca de tela refaça duas consultas e mostre um estado de
+   espera que não ensina nada. Token e qualquer poder de escrita continuam
+   exclusivamente no servidor. */
+function lerCache(usuarioId) {
+  try {
+    const cache = JSON.parse(sessionStorage.getItem(CHAVE_CACHE));
+    if (cache?.usuarioId !== usuarioId || cache?.expiraEm <= Date.now() || !cache?.conexao) {
+      sessionStorage.removeItem(CHAVE_CACHE);
+      return null;
+    }
+    return cache;
+  } catch {
+    return null;
+  }
+}
+
+function guardarCache(usuarioId, conexao) {
+  if (!conexao) return;
+  try {
+    sessionStorage.setItem(CHAVE_CACHE, JSON.stringify({
+      usuarioId,
+      conexao,
+      expiraEm: Date.now() + DURACAO_CACHE,
+    }));
+  } catch {
+    /* cache é só rapidez: com armazenamento bloqueado, consultar continua seguro */
+  }
+}
+
+function apagarCache() {
+  try {
+    sessionStorage.removeItem(CHAVE_CACHE);
+  } catch {
+    /* não há cache a apagar */
+  }
+}
+
+export async function carregarConexaoGitHub(forcar = false) {
   const sb = supabase();
   if (!sb || !sessao.conectado) {
     githubRemoto.conexao = null;
     githubRemoto.identidadeVinculada = false;
+    return;
+  }
+
+  const cache = forcar ? null : lerCache(sessao.usuario.id);
+  if (cache) {
+    githubRemoto.conexao = cache.conexao;
+    githubRemoto.identidadeVinculada = true;
+    githubRemoto.ultimaFalha = null;
     return;
   }
 
@@ -44,6 +93,7 @@ export async function carregarConexaoGitHub() {
     }
     githubRemoto.conexao = conexao.data;
     githubRemoto.identidadeVinculada = identidades.data.identities.some((identidade) => identidade.provider === "github");
+    guardarCache(sessao.usuario.id, conexao.data);
   } catch (erro) {
     githubRemoto.conexao = null;
     githubRemoto.ultimaFalha = erro.message;
@@ -75,7 +125,7 @@ export async function escolherRepositorioGitHub(repositorioId) {
   try {
     const { data, error } = await sb.functions.invoke("gerenciar-repositorio-github", { body: { acao: "escolher", repositorioId } });
     if (error || data?.erro) throw new Error(data?.erro ?? error.message);
-    await carregarConexaoGitHub();
+    await carregarConexaoGitHub(true);
     return null;
   } catch (erro) {
     githubRemoto.ultimaFalha = await mensagemDaFuncao(erro, "Não consegui guardar seu repositório.");
@@ -92,6 +142,7 @@ export async function desconectarGitHub() {
     if (error || data?.erro) throw new Error(data?.erro ?? error.message);
     githubRemoto.conexao = null;
     githubRemoto.repositorios = [];
+    apagarCache();
     return null;
   } catch (erro) {
     githubRemoto.ultimaFalha = await mensagemDaFuncao(erro, "Não consegui desconectar o GitHub.");
@@ -116,7 +167,7 @@ export async function confirmarConexaoGitHub(instalacaoId = null) {
       body: instalacaoId === null ? {} : { instalacaoId },
     });
     if (error || data?.erro) throw new Error(data?.erro ?? error.message);
-    await carregarConexaoGitHub();
+    await carregarConexaoGitHub(true);
     return null;
   } catch (erro) {
     githubRemoto.ultimaFalha = await mensagemDaFuncao(erro, "Não consegui confirmar a conexão com o GitHub.");
