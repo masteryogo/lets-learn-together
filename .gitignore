@@ -14,3 +14,7 @@ supabase/.temp/
 # credenciais locais — só o .env.example é versionado
 .env
 .env.local
+
+# credenciais do executor Python auto-hospedado
+infra/executor-python/.env
+infra/executor-python/judge0.conf

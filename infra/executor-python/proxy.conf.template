@@ -1,0 +1,14 @@
+server {
+    listen 8080;
+    client_max_body_size 18k;
+
+    location / {
+        if ($http_x_api_key != "${JUDGE0_API_KEY}") {
+            return 401;
+        }
+
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_pass http://servidor:2358;
+    }
+}
