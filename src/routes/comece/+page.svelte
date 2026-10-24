@@ -70,7 +70,9 @@
     if (respostas.interesses.includes(id)) {
       respostas = { ...respostas, interesses: respostas.interesses.filter((interesse) => interesse !== id) };
     } else if (respostas.interesses.length < 3) {
-      respostas = { ...respostas, interesses: [...respostas.interesses, id] };
+      const interesses = [...respostas.interesses, id];
+      respostas = { ...respostas, interesses };
+      if (interesses.length === 3) etapa = 4;
     }
   }
   async function concluir() {
@@ -162,7 +164,11 @@
       <footer class="comece__acoes">
         {#if etapa > 0}<button class="comece__elo" type="button" onclick={anterior}>Voltar</button>{/if}
         {#if etapa < 4}
-          <button class="comece__elo" type="button" onclick={proxima}>Pular por enquanto</button>
+          {#if etapa === 3 && respostas.interesses.length > 0}
+            <button class="botao botao--destaque" type="button" onclick={proxima}>Continuar</button>
+          {:else}
+            <button class="comece__elo" type="button" onclick={proxima}>Pular por enquanto</button>
+          {/if}
         {:else}
           <button class="botao botao--destaque" type="button" disabled={onboardingRemoto.salvando} onclick={concluir}>{onboardingRemoto.salvando ? "Guardando…" : "Ver minha sugestão"}</button>
         {/if}
