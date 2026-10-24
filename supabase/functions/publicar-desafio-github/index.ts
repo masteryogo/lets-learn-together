@@ -62,6 +62,7 @@ Deno.serve(async (requisicao) => {
   }
   if (falhaAtividade || !atividade || atividade.tipo !== "desafio") return responder({ erro: "Desafio não encontrado." }, 404);
 
+  const urlPublicacao = `https://github.com/${conexao.repositorio_completo}/blob/${encodeURIComponent(conexao.branch)}/praticas/${encodeURIComponent(atividade.id)}.py`;
   let token: string;
   try {
     token = await tokenDaInstalacao(Number(conexao.instalacao_id));
@@ -79,5 +80,18 @@ Deno.serve(async (requisicao) => {
   } catch (erro) {
     return responder({ erro: erro instanceof Error ? erro.message : "Não consegui publicar no GitHub." }, 502);
   }
-  return responder({ url: `https://github.com/${conexao.repositorio_completo}/blob/${encodeURIComponent(conexao.branch)}/praticas/${encodeURIComponent(atividade.id)}.py` });
+
+  const { error: falhaHistorico } = await administrador.from("publicacao_github").insert({
+    usuario_id: user.id,
+    atividade_id: atividade.id,
+    atividade_titulo: atividade.titulo,
+    repositorio_completo: conexao.repositorio_completo,
+    url: urlPublicacao,
+  });
+  /* O arquivo já existe no GitHub neste ponto. Não o chamamos de falha se o
+     histórico local cair; devolvemos o link e tornamos a pendência explícita. */
+  return responder({
+    url: urlPublicacao,
+    aviso: falhaHistorico ? "O código foi publicado, mas não consegui registrar esta publicação no seu perfil." : null,
+  });
 });

@@ -27,14 +27,29 @@ body { padding-bottom: 4rem; }
 .perfil-cabecalho .navegacao-conta { margin-top: 0.75rem; width: fit-content; }
 
 .perfil-grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
+.perfil-aviso { grid-column: 1 / -1; margin: 0; padding: .75rem 1rem; border: 1px solid var(--borda-sutil); color: var(--texto-suave); }
 .perfil-cartao { min-height: 15rem; padding: clamp(1.25rem, 3vw, 2rem); border: 1px solid var(--linha); background: var(--fundo-elevado); box-shadow: var(--sombra-dura-sm); display: flex; flex-direction: column; align-items: flex-start; }
 .perfil-cartao--portfolio { background: var(--fundo); }
+.perfil-cartao--metricas { grid-column: 1 / -1; min-height: auto; background: var(--fundo); }
+.perfil-cartao--publicacoes { background: var(--fundo); }
 .perfil-cartao h2 { margin: 0; font-size: var(--t-subtitulo); font-weight: 400; }
 .perfil-cartao p:not(.perfil-cartao__rotulo) { max-width: 38ch; color: var(--texto-suave); line-height: 1.55; }
 .perfil-cartao a { margin-top: auto; color: var(--roxo-forte); text-underline-offset: 3px; }
 .perfil-cartao__falha { color: var(--vermelho) !important; }
+.perfil-cartao__nota { margin: 1rem 0 0 !important; font-size: var(--t-micro); }
+.perfil-metricas { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-top: 1rem; background: var(--linha); }
+.perfil-metricas p { min-height: 6rem; display: flex; flex-direction: column; justify-content: space-between; margin: 0 !important; padding: .85rem; background: var(--fundo-elevado); }
+.perfil-metricas strong { color: var(--roxo-forte); font-size: var(--t-subtitulo); font-weight: 400; }
+.perfil-metricas span { color: var(--texto-suave); font-size: var(--t-micro); line-height: 1.35; }
+.perfil-lista { width: 100%; display: grid; gap: .75rem; margin: 1rem 0; padding: 0; list-style: none; }
+.perfil-lista li { display: flex; gap: .6rem; align-items: flex-start; color: var(--roxo-forte); }
+.perfil-lista li > div { display: grid; gap: .15rem; color: var(--texto); }
+.perfil-lista strong, .perfil-lista a { color: var(--texto); font-weight: 400; }
+.perfil-lista small { color: var(--texto-suave); font-size: var(--t-micro); }
 
 @media (max-width: 42rem) {
   .area-conta { width: min(100% - 1.25rem, 68rem); padding-top: 5rem; }
   .perfil-grade { grid-template-columns: 1fr; }
+  .perfil-cartao--metricas { grid-column: auto; }
+  .perfil-metricas { grid-template-columns: 1fr; }
 }

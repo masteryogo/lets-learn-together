@@ -27,6 +27,7 @@
 .atividade__amostra p { margin: 0 0 .25rem; color: var(--texto); }
 .atividade__amostra code { overflow-wrap: anywhere; }
 .atividade__salvamento { color: var(--texto-suave); font-size: var(--t-micro); }
+.atividade__salvamento[data-tom="ruim"] { color: var(--vermelho); }
 .atividade__resolucao { min-width: 0; padding: 1.25rem; }
 .atividade__alternativas { display: grid; gap: .75rem; margin: .5rem 0 1.25rem; }
 .atividade__alternativas label { display: flex; gap: .65rem; align-items: flex-start; padding: .8rem; border: 1px solid var(--borda-sutil); background: var(--fundo); cursor: pointer; }

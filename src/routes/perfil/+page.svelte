@@ -3,13 +3,17 @@
   import NavegacaoConta from "$lib/conta/NavegacaoConta.svelte";
   import { sessao } from "$lib/conta/Sessao.svelte.js";
   import { carregarConexaoGitHub, githubRemoto } from "$lib/github/remoto.svelte.js";
+  import { carregarResumoPerfil, perfilRemoto } from "$lib/perfil/remoto.svelte.js";
 
   import "$lib/estilos/base.css";
   import "./perfil.css";
 
   $effect(() => sessao.iniciar());
   $effect(() => {
-    if (sessao.conectado) carregarConexaoGitHub();
+    if (sessao.conectado) {
+      carregarConexaoGitHub();
+      carregarResumoPerfil();
+    }
   });
 </script>
 
@@ -37,6 +41,52 @@
     </header>
 
     <section class="perfil-grade" aria-label="Resumo do perfil">
+      {#if perfilRemoto.ultimaFalha}
+        <p class="perfil-aviso" role="status">{perfilRemoto.ultimaFalha}</p>
+      {:else if perfilRemoto.carregando}
+        <p class="perfil-aviso" role="status">Atualizando sua evolução…</p>
+      {:else if perfilRemoto.resumo}
+        <article class="perfil-cartao perfil-cartao--metricas">
+          <p class="perfil-cartao__rotulo">EVOLUÇÃO REAL</p>
+          <h2>Seu avanço até aqui</h2>
+          <div class="perfil-metricas">
+            <p><strong>{perfilRemoto.resumo.topicosFeitos}</strong><span>tópicos concluídos</span></p>
+            <p><strong>{perfilRemoto.resumo.atividadesAprovadas}</strong><span>atividades aprovadas</span></p>
+            <p><strong>{perfilRemoto.resumo.competenciasDemonstradas}</strong><span>competências demonstradas</span></p>
+          </div>
+          {#if perfilRemoto.resumo.topicosEstudando}<p class="perfil-cartao__nota">Você tem {perfilRemoto.resumo.topicosEstudando} tópico{perfilRemoto.resumo.topicosEstudando === 1 ? "" : "s"} em estudo.</p>{/if}
+        </article>
+
+        <article class="perfil-cartao perfil-cartao--avancos">
+          <p class="perfil-cartao__rotulo">ÚLTIMOS AVANÇOS</p>
+          <h2>Atividades aprovadas</h2>
+          {#if perfilRemoto.resumo.ultimosAvancos.length}
+            <ul class="perfil-lista">
+              {#each perfilRemoto.resumo.ultimosAvancos as atividade}
+                <li><span>■</span><div><strong>{atividade.titulo}</strong><small>{atividade.trilha ? `${atividade.trilha} · ` : ""}{atividade.data}</small></div></li>
+              {/each}
+            </ul>
+          {:else}
+            <p>A primeira atividade aprovada aparece aqui.</p>
+          {/if}
+          <a href="{base}/atividades" data-sveltekit-reload>Ir para atividades →</a>
+        </article>
+
+        <article class="perfil-cartao perfil-cartao--publicacoes">
+          <p class="perfil-cartao__rotulo">GITHUB · HISTÓRICO</p>
+          <h2>Publicações suas</h2>
+          {#if perfilRemoto.resumo.publicacoes.length}
+            <ul class="perfil-lista">
+              {#each perfilRemoto.resumo.publicacoes as publicacao}
+                <li><span>↗</span><div><a href={publicacao.url} target="_blank" rel="noreferrer">{publicacao.atividade_titulo}</a><small>{publicacao.repositorio_completo} · {publicacao.data}</small></div></li>
+              {/each}
+            </ul>
+          {:else}
+            <p>Quando você publicar uma atividade, o histórico aparecerá aqui.</p>
+          {/if}
+        </article>
+      {/if}
+
       <article class="perfil-cartao perfil-cartao--identidade">
         <p class="perfil-cartao__rotulo">IDENTIDADE</p>
         <h2>Esta é sua conta.</h2>

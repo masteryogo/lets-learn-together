@@ -25,6 +25,7 @@
   let acompanhamento = $state({ competencias: [], vinculos: [], tentativas: [], submissoes: [] });
   let revisoes = $state({});
   let publicacoesGitHub = $state({});
+  let avisosPublicacaoGitHub = $state({});
   let acompanhamentoCarregando = $state(false);
   let requisicaoAcompanhamento = 0;
   let atividadesSequenciais = $derived(atividades.filter((atividade) => atividade.tipo !== "projeto"));
@@ -309,7 +310,10 @@
     const confirmacao = confirm("Publicar esta versão do seu código no repositório escolhido? Isso criará um commit no GitHub.");
     if (!confirmacao) return;
     const resposta = await publicarDesafioGitHub(atividade.id, respostaDa(atividade).codigo);
-    if (resposta?.url) publicacoesGitHub = { ...publicacoesGitHub, [atividade.id]: resposta.url };
+    if (resposta?.url) {
+      publicacoesGitHub = { ...publicacoesGitHub, [atividade.id]: resposta.url };
+      if (resposta.aviso) avisosPublicacaoGitHub = { ...avisosPublicacaoGitHub, [atividade.id]: resposta.aviso };
+    }
   }
 </script>
 
@@ -526,6 +530,7 @@
               <button class="botao botao--secundario" type="button" disabled={!sessao.conectado || atividadesRemotas.enviando || !resposta.codigo.trim()} onclick={() => publicarNoGitHub(atividade)}>{atividadesRemotas.enviando ? "Publicando…" : "Publicar no GitHub"}</button>
             </div>
             {#if publicacoesGitHub[atividade.id]}<p class="atividade__salvamento">Publicado no GitHub: <a href={publicacoesGitHub[atividade.id]} target="_blank" rel="noreferrer">abrir arquivo ↗</a></p>{/if}
+            {#if avisosPublicacaoGitHub[atividade.id]}<p class="atividade__salvamento" data-tom="ruim">{avisosPublicacaoGitHub[atividade.id]}</p>{/if}
             <div class="atividade__saida">
               <p>CONSOLE <span>·</span> TESTES</p>
               {#if execucoes[atividade.id]}<section class="atividade__console" aria-live="polite"><strong>Execução · {execucoes[atividade.id].estado}</strong>{#if execucoes[atividade.id].saida}<pre>{execucoes[atividade.id].saida}</pre>{/if}{#if execucoes[atividade.id].erro}<p>Mensagem de erro</p><pre>{execucoes[atividade.id].erro}</pre>{/if}{#if !execucoes[atividade.id].saida && !execucoes[atividade.id].erro}<p>O programa não produziu saída.</p>{/if}</section>{:else if resultado}<p class="atividade__saida-vazia">Resultado dos testes aparece aqui após avaliar a solução.</p>{:else}<p class="atividade__saida-vazia">Execute seu código para ver a saída.</p>{/if}
