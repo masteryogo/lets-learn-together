@@ -1561,6 +1561,21 @@ body {
    [i] ficaria sozinho ocupando a linha de um topico escondido */
 .topico-par:has(.topico[data-oculto]) { display: none; }
 
+/* sugestão de reforço: avisa sem atenuar nem esconder o mapa, porque a
+   pessoa continua dona do ritmo e a trilha não vira uma catraca. */
+.recomendacoes { max-width: 76rem; margin: 0 auto 1.25rem; border: 2px solid var(--linha); border-left: 5px solid var(--amarelo-forte); background: var(--fundo-elevado); box-shadow: var(--sombra-dura); }
+.recomendacoes > header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--borda-sutil); }
+.recomendacoes header p { margin: 0; color: var(--texto-suave); font-size: var(--t-micro); letter-spacing: var(--tracking-rotulo); }
+.recomendacoes h2 { margin: .35rem 0; font-size: 1.2rem; }
+.recomendacoes header span { color: var(--texto-suave); font-size: var(--t-micro); }
+.recomendacoes ul { display: grid; margin: 0; padding: 0; list-style: none; }
+.recomendacoes li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .9rem 1.25rem; border-top: 1px solid var(--borda-sutil); }
+.recomendacoes li:first-child { border-top: 0; }
+.recomendacoes li p { margin: .35rem 0 0; color: var(--texto-suave); font-size: var(--t-micro); }
+.recomendacoes a { flex: none; color: var(--roxo-forte); font-size: var(--t-micro); text-decoration: none; }
+.recomendacoes a:hover { text-decoration: underline; }
+.recomendacoes__falha { max-width: 76rem; margin: 0 auto 1.25rem; padding: .85rem 1rem; border-left: 4px solid var(--vermelho); background: var(--fundo-elevado); color: var(--texto-suave); font-size: var(--t-micro); }
+
 /* grupos sem nenhum tópico visível colapsam o título. Vale para as duas
    razões de sumir — a busca e os pulados escondidos: um título de grupo
    pairando sobre o nada é igualmente estranho nos dois casos. */

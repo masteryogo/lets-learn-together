@@ -30,6 +30,8 @@
   import Espiada from "$lib/roadmap/Espiada.svelte";
   import AvisoFalha from "$lib/conta/AvisoFalha.svelte";
   import { sincronia } from "$lib/roadmap/sincronia.svelte.js";
+  import { carregarRecomendacoes, recomendacoes } from "$lib/roadmap/recomendacoes.svelte.js";
+  import Recomendacoes from "$lib/roadmap/Recomendacoes.svelte";
   import { listar as listarNotas } from "$lib/notas/remoto.svelte.js";
 
   import "$lib/obi/obi.css";
@@ -62,6 +64,17 @@
 
   const progresso = $derived(new Progresso(data.trilha));
   $effect(() => progresso.carregar());
+
+  /* Só recomenda reforço para assunto marcado como feito cuja última
+     prática avaliável falhou. A escolha de continuar segue sempre da pessoa. */
+  let assinaturaDasRecomendacoes = $state(null);
+  $effect(() => {
+    const estados = progresso.estados;
+    const assinatura = `${data.trilha}|${Object.entries(estados).sort(([a], [b]) => a.localeCompare(b)).map(([id, estado]) => `${id}:${estado}`).join("|")}`;
+    if (!sessao.conectado || assinatura === assinaturaDasRecomendacoes) return;
+    assinaturaDasRecomendacoes = assinatura;
+    carregarRecomendacoes(data.trilha, estados);
+  });
 
   /* a conta pode chegar depois do mapa — o getSession é assíncrono, e
      quem entra em outra aba chega sem recarregar esta. Por isso o
@@ -642,6 +655,12 @@
       data-sem-pulados={!progresso.revelarPulados && pulados.length ? "sim" : null}
       aria-label="Roadmap de estudos"
     >
+      {#if sessao.conectado && recomendacoes.itens.length}
+        <Recomendacoes itens={recomendacoes.itens} {indice} trilha={data.trilha} />
+      {/if}
+      {#if sessao.conectado && recomendacoes.ultimaFalha}
+        <p class="recomendacoes__falha" role="status">Não consegui atualizar as sugestões de reforço. {recomendacoes.ultimaFalha}</p>
+      {/if}
       {#each etapas as etapa (etapa.id)}
         <Etapa
           {etapa}
