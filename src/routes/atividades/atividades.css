@@ -95,6 +95,16 @@
 .atividade__resultado { margin: 1rem 0 0; padding: 1rem; border-left: 4px solid var(--amarelo-forte); background: var(--fundo); }
 .atividade__resultado[data-correta="sim"] { border-color: var(--verde-forte); }
 .atividade__resultado[data-correta="nao"] { border-color: var(--vermelho); }
+.feedback-pedagogico { margin-top: 1rem; border: 1px solid var(--borda-sutil); background: var(--fundo); }
+.feedback-pedagogico > header { padding: .85rem 1rem; border-left: 4px solid var(--vermelho); border-bottom: 1px solid var(--borda-sutil); }
+.feedback-pedagogico[data-correta="sim"] > header { border-left-color: var(--verde-forte); }
+.feedback-pedagogico header p, .feedback-pedagogico dt { margin: 0; color: var(--texto-suave); font-size: var(--t-micro); letter-spacing: var(--tracking-rotulo); }
+.feedback-pedagogico header strong { display: block; margin-top: .3rem; color: var(--vermelho); }
+.feedback-pedagogico[data-correta="sim"] header strong { color: var(--verde-forte); }
+.feedback-pedagogico dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; }
+.feedback-pedagogico dl > div { padding: .9rem 1rem; border-right: 1px solid var(--borda-sutil); }
+.feedback-pedagogico dl > div:last-child { border-right: 0; }
+.feedback-pedagogico dd { margin: .45rem 0 0; color: var(--texto-suave); font-size: var(--t-micro); line-height: 1.55; }
 .atividade__estado[data-estado="aguardando avaliação"] { border-color: var(--amarelo-forte); color: var(--texto); }
 .projeto__objetivo { margin: 1.25rem 0; padding: .9rem 1rem; border-left: 3px solid var(--roxo-forte); background: var(--fundo); }
 .projeto__objetivo p { margin: .4rem 0 0; color: var(--texto-suave); }
@@ -201,4 +211,7 @@
   .quiz__acoes .botao { width: 100%; }
   .atividade__lacuna-opcoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .atividade__lacuna-opcao { min-height: 2.75rem; }
+  .feedback-pedagogico dl { grid-template-columns: 1fr; }
+  .feedback-pedagogico dl > div { border-right: 0; border-bottom: 1px solid var(--borda-sutil); }
+  .feedback-pedagogico dl > div:last-child { border-bottom: 0; }
 }

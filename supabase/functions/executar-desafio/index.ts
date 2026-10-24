@@ -45,6 +45,20 @@ function urlDoExecutor(valor: string) {
   return url.toString().replace(/\/+$/, "");
 }
 
+/* Testes aprovados demonstram comportamento, mas não substituem revisão de
+   qualidade. O diagnóstico deixa esse limite claro para quem está aprendendo. */
+function diagnosticoDoDesafio(correta: boolean, feedback: string, gabarito: Record<string, unknown>) {
+  return {
+    porQue: feedback,
+    nivelProfissional: texto(gabarito.nivelProfissional) || (correta
+      ? "Os testes validaram o comportamento esperado. Ainda revise nomes, organização, casos de borda e mensagens de erro."
+      : "Isole o caso que falhou, acompanhe os valores passo a passo e confira entrada, saída e condições de borda."),
+    proximoPasso: texto(gabarito.proximoPasso) || (correta
+      ? "Avance para o próximo desafio e tente explicar por que sua solução funciona antes de reutilizá-la."
+      : "Ajuste a solução, execute novamente e envie uma nova versão para confirmar todos os testes."),
+  };
+}
+
 async function executarNoIsolamento(codigo: string, entrada: string) {
   const endereco = Deno.env.get("JUDGE0_URL");
   const chave = Deno.env.get("JUDGE0_API_KEY");
@@ -190,7 +204,7 @@ Deno.serve(async (requisicao) => {
     const feedback = correta
       ? `Todos os ${resultados.length} testes passaram. ${explicacao}`
       : `${aprovados} de ${resultados.length} testes passaram. Revise a entrada, a saída e os casos com números negativos. ${explicacao}`;
-    const detalhes = { acao, testes: resultados };
+    const detalhes = { acao, testes: resultados, diagnostico: diagnosticoDoDesafio(correta, feedback, gabarito) };
     const { data: tentativaAtualizada, error: falhaAtualizacao } = await administrador
       .from("tentativa_atividade")
       .update({ correta, pontuacao, feedback, detalhes })

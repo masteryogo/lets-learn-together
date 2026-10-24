@@ -6,6 +6,7 @@
   import { sessao } from "$lib/conta/Sessao.svelte.js";
   import { carregarTrilha } from "$lib/trilhas.js";
   import EditorCodigo from "$lib/atividades/EditorCodigo.svelte";
+  import FeedbackPedagogico from "$lib/atividades/FeedbackPedagogico.svelte";
   import { atividadesRemotas, acionarDesafio, avaliarProjeto, enviarTentativa, listarAcompanhamento, listarAtividades, listarRascunhos, obterArquivoProjeto, publicarDesafioGitHub } from "$lib/atividades/remoto.svelte.js";
   import "./atividades.css";
   import "$lib/estilos/base.css";
@@ -384,6 +385,7 @@
                 <strong>{resultadoQuiz.correta ? "Resposta correta" : "Não foi dessa vez"}</strong>
                 <p>{resultadoQuiz.feedback}</p>
               </div>
+              <FeedbackPedagogico resultado={resultadoQuiz} />
             {/if}
             <footer class="quiz__acoes">
               <button class="botao botao--secundario" type="button" disabled={indiceEtapa === 0} onclick={() => indiceEtapa -= 1}>← Etapa anterior</button>
@@ -536,10 +538,12 @@
               {#if execucoes[atividade.id]}<section class="atividade__console" aria-live="polite"><strong>Execução · {execucoes[atividade.id].estado}</strong>{#if execucoes[atividade.id].saida}<pre>{execucoes[atividade.id].saida}</pre>{/if}{#if execucoes[atividade.id].erro}<p>Mensagem de erro</p><pre>{execucoes[atividade.id].erro}</pre>{/if}{#if !execucoes[atividade.id].saida && !execucoes[atividade.id].erro}<p>O programa não produziu saída.</p>{/if}</section>{:else if resultado}<p class="atividade__saida-vazia">Resultado dos testes aparece aqui após avaliar a solução.</p>{:else}<p class="atividade__saida-vazia">Execute seu código para ver a saída.</p>{/if}
               {#if resultado}<section class="atividade__testes" aria-live="polite"><p class="atividade__resultado" data-correta={resultado.correta ? "sim" : "nao"}><strong>{resultado.correta ? "Solução aprovada." : `${resultado.pontuacao}% dos testes passaram.`}</strong> {resultado.feedback}</p><ul>{#each resultado.detalhes.testes ?? [] as teste}<li data-aprovado={teste.aprovado ? "sim" : "nao"}>Teste {teste.numero}: {teste.aprovado ? "passou" : teste.estado}</li>{/each}</ul></section>{/if}
             </div>
+            {#if resultado}<FeedbackPedagogico {resultado} />{/if}
           {:else}
             <button class="botao botao--destaque" type="button" disabled={!sessao.conectado || atividadesRemotas.enviando || (atividade.tipo === "completar" && !lacunasPreenchidas(atividade, resposta))} onclick={() => enviar(atividade)}>{atividadesRemotas.enviando ? "Corrigindo…" : "Verificar resposta"}</button>
           {/if}
           {#if resultado && atividade.tipo !== "desafio"}<p class="atividade__resultado" data-correta={resultado.correta ? "sim" : "nao"}><strong>{resultado.correta ? "Correto." : "Tente de novo."}</strong> {resultado.feedback}</p>{/if}
+          {#if resultado && !["desafio", "projeto"].includes(atividade.tipo)}<FeedbackPedagogico {resultado} />{/if}
         </section>
         {#if sessao.conectado}
           <details class="atividade__historico">

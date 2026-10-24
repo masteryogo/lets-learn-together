@@ -50,6 +50,23 @@ function corrigir(tipo: string, resposta: Record<string, unknown>, gabarito: Rec
   return { correta, detalhes: { marcadas: [...marcadas] } };
 }
 
+/* O resultado automático confirma a resposta, não a maturidade da solução.
+   Este resumo separa as duas coisas e dá um próximo passo concreto sem
+   expor o gabarito no navegador. */
+function diagnosticoPedagogico(correta: boolean, explicacao: string, gabarito: Record<string, unknown>) {
+  return {
+    porQue: explicacao || (correta
+      ? "Sua resposta atende ao conceito avaliado nesta prática."
+      : "A resposta não atende ao conceito avaliado nesta prática."),
+    nivelProfissional: texto(gabarito.nivelProfissional) || (correta
+      ? "Além de acertar, explique a decisão, escolha nomes claros e confira casos fora do exemplo."
+      : "Antes de avançar, consiga explicar o conceito com suas palavras e aplique-o em um exemplo diferente."),
+    proximoPasso: texto(gabarito.proximoPasso) || (correta
+      ? "Avance para a próxima etapa e procure reconhecer este mesmo conceito em outro contexto."
+      : "Revise a explicação acima e tente esta atividade outra vez antes de seguir."),
+  };
+}
+
 Deno.serve(async (requisicao) => {
   if (requisicao.method === "OPTIONS") return new Response("ok", { headers: cabecalhosCors });
   if (requisicao.method !== "POST") return responder({ erro: "Método não permitido." }, 405);
@@ -150,9 +167,18 @@ Deno.serve(async (requisicao) => {
     : resultado.correta
       ? `Correto. ${explicacao}`
       : `Ainda não. ${explicacao}`;
+  const diagnostico = diagnosticoPedagogico(resultado.correta, feedback, configuracaoGabarito);
   const { data: tentativa, error: falhaTentativa } = await administrador
     .from("tentativa_atividade")
-    .insert({ usuario_id: user.id, atividade_id: atividadeId, resposta: corpo.resposta, correta: resultado.correta, pontuacao: resultado.correta ? 100 : 0, feedback, detalhes: resultado.detalhes })
+    .insert({
+      usuario_id: user.id,
+      atividade_id: atividadeId,
+      resposta: corpo.resposta,
+      correta: resultado.correta,
+      pontuacao: resultado.correta ? 100 : 0,
+      feedback,
+      detalhes: { ...resultado.detalhes, diagnostico },
+    })
     .select("id, correta, pontuacao, feedback, detalhes, criada_em")
     .single();
   if (falhaTentativa) return responder({ erro: "Não consegui registrar sua tentativa." }, 500);
