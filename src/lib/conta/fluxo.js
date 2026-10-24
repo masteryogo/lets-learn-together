@@ -17,7 +17,7 @@ export const FALAS = {
   conferir: "Mandei o caminho. Confere lá.",
   esqueci: "Acontece. Mando outro caminho.",
   novaSenha: "Não vou olhar, prometo.",
-  pronto: "Pronto. A mesa está posta.",
+  pronto: "Pronto. Vamos achar um bom começo.",
 };
 
 export const FLUXO = {
@@ -108,7 +108,7 @@ export const FLUXO = {
     titulo: "Tudo certo",
     linha: "O progresso deste navegador já está na conta.",
     campos: [],
-    acao: "Ir para a mesa",
+    acao: "Escolher meu caminho",
     /* gesto, não passo: voltar para a tela de entrar sem encerrar a
        sessão deixaria a conta aberta por trás do formulário — e o
        próximo a usar o aparelho entraria sem saber em quem */

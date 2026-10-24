@@ -76,6 +76,13 @@
         <ConexaoGitHub />
       </section>
 
+      <section class="configuracoes__secao" aria-labelledby="caminho">
+        <p class="configuracoes__sobretitulo">SEU CAMINHO</p>
+        <h2 id="caminho">Atualizar preferências</h2>
+        <p class="configuracoes__descricao">Seu objetivo, experiência, interesses e ritmo ajudam o LLT a sugerir um ponto de partida sem limitar as trilhas que você pode explorar.</p>
+        <a class="botao botao--secundario" href="{base}/comece" data-sveltekit-reload>Refazer escolhas</a>
+      </section>
+
       <section class="configuracoes__secao configuracoes__secao--perigo" aria-labelledby="sessao">
         <p class="configuracoes__sobretitulo">SESSÃO</p>
         <h2 id="sessao">Sair desta conta</h2>

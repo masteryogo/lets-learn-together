@@ -214,7 +214,8 @@
        e não goto: a mesa tem folha de estilo própria, e a travessia
        entre telas é documento novo. */
     if (atual === "entrar" || atual === "pronto") {
-      atravessar();
+      saindo = true;
+      setTimeout(() => (location.href = `${base}/comece`), 180);
       return;
     }
 
